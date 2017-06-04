@@ -1,0 +1,12 @@
+[package]
+name = "feed-rs"
+version = "0.1.0"
+authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
+
+[dependencies]
+xml5ever     = "^0.7"
+serde        = "^1"
+serde_derive = "^1"
+serde_json   = "^1"
+chrono       = { version = "^0", features = ["serde"] }
+uuid = { version = "^0", features = ["v4"] }
