@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use xml5ever::rcdom::{NodeData, Handle};
 use feed::Feed;
-use entry::{Entry, Link};
+use entry::{Entry};
 use super::{attr, text, uuid_gen, timestamp_from_rfc3339};
 
 pub fn handle_atom(handle: Handle) -> Option<Feed> {
@@ -64,7 +64,7 @@ pub fn handle_entry(handle: Handle) -> Option<Entry> {
                         //entry.content = text(child.clone()),
                         let attributes = &attrs.borrow();
                         let content_type = attr("type", attributes).unwrap_or("text".to_string());
-                        let src = attr("src", attributes);
+                        let _ = attr("src", attributes);
                         match content_type.as_ref() {
                             "text" => (),
                             "html" => (),

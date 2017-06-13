@@ -6,9 +6,12 @@ extern crate chrono;
 extern crate xml5ever;
 extern crate uuid;
 
-mod entry;
-mod feed;
+pub mod entry;
+pub mod feed;
 pub mod parser;
+
+pub use self::entry::Entry;
+pub use self::feed::Feed;
 
 #[cfg(test)]
 mod tests {

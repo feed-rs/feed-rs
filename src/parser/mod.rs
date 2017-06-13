@@ -1,4 +1,3 @@
-use chrono::prelude::*;
 use chrono::{DateTime, NaiveDateTime};
 use std::io::Read;
 use xml5ever::rcdom::{RcDom, NodeData, Handle};
@@ -22,7 +21,7 @@ pub fn parse<R>(input: &mut R) -> Option<Feed> where R: Read {
 fn walk(handle: Handle) -> Option<Feed> {
     let node = handle;
     match node.data {
-        NodeData::Document => println!("#document"),
+        NodeData::Document => (),
         NodeData::Element { ref name, ref attrs, .. } => {
             let tag_name = name.local.as_ref();
             let version  = attr("version", &attrs.borrow()).unwrap_or("".to_string());

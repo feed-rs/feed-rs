@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, UTC};
+use chrono::{NaiveDateTime};
 use entry::Entry;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -10,7 +10,6 @@ pub struct Feed {
 
     pub website:      Option<String>,
     pub topics:       Option<Vec<String>>,
-    pub status:       Option<String>,
     pub last_updated: Option<NaiveDateTime>,
 
     pub visual_url:   Option<String>,
@@ -29,7 +28,6 @@ impl Feed {
             language:     None,
             website:      None,
             topics:       None,
-            status:       None,
             last_updated: None,
             visual_url:   None,
             icon_url:     None,
