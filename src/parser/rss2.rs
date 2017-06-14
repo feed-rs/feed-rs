@@ -4,34 +4,51 @@ use feed::Feed;
 use entry::{Entry, Link};
 use super::{attr, text, uuid_gen, timestamp_from_rfc2822};
 
+static ATOM_NS: &'static str = "http://www.w3.org/2005/Atom";
+
 pub fn handle_rss2(handle: Handle) -> Option<Feed> {
     let node = handle;
+    let mut feed = Feed::new();
+    handle_channel(node.clone(), &mut feed);
     for child in node.children.borrow().iter() {
         match child.data {
             NodeData::Element { ref name, .. } => {
                 let tag_name = name.local.as_ref();
                 match tag_name {
-                    "channel" => return handle_channel(child.clone()),
+                    "channel" => handle_channel(child.clone(), &mut feed),
                     _ => (),
                 }
             },
             _ => {},
         }
     }
-    None
+    Some(feed)
 }
 
-pub fn handle_channel(handle: Handle) -> Option<Feed> {
-    let mut feed = Feed::new();
+pub fn handle_channel(handle: Handle, feed: &mut Feed) {
     let node = handle;
     for child in node.children.borrow().iter() {
         match child.data {
-            NodeData::Element { ref name, .. } => {
+            NodeData::Element { ref name, ref attrs, .. } => {
                 let tag_name = name.local.as_ref();
+                let ns       = name.ns.as_ref();
                 match tag_name {
                     "title" => feed.title = text(child.clone()),
                     "description" => feed.description = text(child.clone()),
-                    "link" => feed.website = text(child.clone()),
+                    "link" => {
+                        if ATOM_NS == ns {
+                            let attributes = &attrs.borrow();
+                            let href       = attr("href", attributes);
+                            let rel        = attr("rel", attributes);
+                            if let (Some(href), Some("self")) = (href, rel.as_ref().map(String::as_ref)) {
+                                feed.website = Some(href)
+                            }
+                        } else {
+                            if let Some(url) = text(child.clone()) {
+                                feed.website = Some(url)
+                            }
+                        }
+                    },
                     "language" => feed.language = text(child.clone()),
                     "lastBuildDate" => feed.last_updated = timestamp_from_rfc2822(child.clone()),
                     "pubDate" => (),
@@ -59,7 +76,6 @@ pub fn handle_channel(handle: Handle) -> Option<Feed> {
             _ => {},
         }
     }
-    Some(feed)
 }
 
 pub fn image_url(handle: Handle) -> Option<String> {
