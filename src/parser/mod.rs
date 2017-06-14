@@ -12,9 +12,11 @@ mod rss2;
 mod atom;
 
 pub fn parse<R>(input: &mut R) -> Option<Feed> where R: Read {
+    let mut buf = String::new();
+    let _ = input.read_to_string(&mut buf);
     let dom = parse_document(RcDom::default(), Default::default())
         .from_utf8()
-        .read_from(input)
+        .read_from(&mut buf.replace(" rdf:", " ").as_bytes()) // FIXME
         .unwrap();
     walk(dom.document)
 }
