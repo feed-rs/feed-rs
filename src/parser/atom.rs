@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use xml5ever::rcdom::{NodeData, Handle};
 use feed::Feed;
-use entry::{Entry};
+use entry::{Entry, Link};
 use super::{attr, text, uuid_gen, timestamp_from_rfc3339};
 
 pub fn handle_atom(handle: Handle) -> Option<Feed> {
@@ -74,7 +74,10 @@ pub fn handle_entry(handle: Handle) -> Option<Entry> {
                     },
                     "author" => {},
                     "link" => {
-                        // rel alternate
+                        let attributes = &attrs.borrow();
+                        if let Some(url) = attr("href", attributes) {
+                            entry.alternate.push(Link::new("text/html", url));
+                        }
                     },
                     "published" => entry.published = timestamp_from_rfc3339(child.clone()).unwrap_or(UTC::now().naive_utc()),
                     "updated" => entry.updated = timestamp_from_rfc3339(child.clone()),
