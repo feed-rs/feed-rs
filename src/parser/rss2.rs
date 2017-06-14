@@ -41,7 +41,7 @@ pub fn handle_channel(handle: Handle) -> Option<Feed> {
                     "docs" => (),
                     "cloud" => (),
                     "ttl" => (),
-                    "image" => (),
+                    "image" => feed.visual_url = image_url(child.clone()),
                     "textInput" => (),
                     "skipHours" => (),
                     "skipDays" => (),
@@ -60,6 +60,23 @@ pub fn handle_channel(handle: Handle) -> Option<Feed> {
         }
     }
     Some(feed)
+}
+
+pub fn image_url(handle: Handle) -> Option<String> {
+    let node = handle;
+    for child in node.children.borrow().iter() {
+        match child.data {
+            NodeData::Element { ref name, .. } => {
+                let tag_name = name.local.as_ref();
+                match tag_name {
+                    "url" => return text(child.clone()),
+                    _ => (),
+                }
+            }
+            _ => (),
+        }
+    }
+    None
 }
 
 pub fn handle_item(handle: Handle) -> Option<Entry> {
