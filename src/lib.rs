@@ -19,6 +19,12 @@ mod tests {
 
     #[test]
     fn it_works() {
+        println!("----------------------- rss1 ---------------------");
+        let mut f = File::open("fixture/rss_1.0.xml").unwrap();
+        if let Some(feed) = super::parser::parse(&mut f) {
+            println!("{:?}", feed);
+        }
+
         println!("----------------------- rss2 ---------------------");
         let mut f = File::open("fixture/rss_2.0.xml").unwrap();
         if let Some(feed) = super::parser::parse(&mut f) {

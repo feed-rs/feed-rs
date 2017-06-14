@@ -7,6 +7,7 @@ use xml5ever::driver::{parse_document};
 use uuid::Uuid;
 use feed::Feed;
 
+mod rss1;
 mod rss2;
 mod atom;
 
@@ -28,6 +29,7 @@ fn walk(handle: Handle) -> Option<Feed> {
             match (tag_name, version.as_ref()) {
                 ("feed", _)    => return atom::handle_atom(node.clone()),
                 ("rss", "2.0") => return rss2::handle_rss2(node.clone()),
+                ("RDF", _)     => return rss1::handle_rss1(node.clone()),
                 _ => (),
             }
         },
