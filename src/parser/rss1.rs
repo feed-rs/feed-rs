@@ -123,7 +123,12 @@ pub fn handle_item(handle: Handle, id: String) -> Entry {
                             .map(|s| vec![Link::new("text/html", s)])
                             .unwrap_or(vec![])
                     },
+                    // dc
                     "date" => entry.published = timestamp(child.clone()).unwrap_or(UTC::now().naive_utc()),
+                    "creator" => entry.author = text(child.clone()),
+                    "subject" => if let Some(s) = text(child.clone()) {
+                        entry.keywords.push(s)
+                    },
                     _ => (),
                 }
             }
