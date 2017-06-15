@@ -1,7 +1,8 @@
+use chrono::prelude::*;
 use xml5ever::rcdom::{NodeData, Handle};
 use feed::Feed;
 use entry::{Entry, Link};
-use super::{attr, text, timestamp_from_rfc3339};
+use super::{attr, text, timestamp};
 
 pub fn handle_rss1(handle: Handle) -> Option<Feed> {
     let node = handle;
@@ -57,7 +58,7 @@ pub fn handle_channel(handle: Handle) -> Option<Feed> {
                     "image" => (),
                     "textinput" => (),
                     "items" => handle_items(child.clone(), &mut feed),
-                    "date" => feed.last_updated = timestamp_from_rfc3339(child.clone()),
+                    "date" => feed.last_updated = timestamp(child.clone()),
                     "language" => feed.language = text(child.clone()),
                     _ => (),
                 }
@@ -122,6 +123,7 @@ pub fn handle_item(handle: Handle, id: String) -> Entry {
                             .map(|s| vec![Link::new("text/html", s)])
                             .unwrap_or(vec![])
                     },
+                    "date" => entry.published = timestamp(child.clone()).unwrap_or(UTC::now().naive_utc()),
                     _ => (),
                 }
             }

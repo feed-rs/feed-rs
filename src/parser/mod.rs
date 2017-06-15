@@ -81,3 +81,10 @@ pub fn timestamp_from_rfc2822(handle: Handle) -> Option<NaiveDateTime> {
         .and_then(|s| DateTime::parse_from_rfc2822(&s.trim()).ok())
         .map(|n| n.naive_utc())
 }
+
+pub fn timestamp(handle: Handle) -> Option<NaiveDateTime> {
+    text(handle)
+        .and_then(|s| DateTime::parse_from_rfc2822(&s.trim()).ok().or(
+            DateTime::parse_from_rfc3339(&s.trim()).ok()
+        )).map(|n| n.naive_utc())
+}

@@ -2,7 +2,7 @@ use chrono::prelude::*;
 use xml5ever::rcdom::{NodeData, Handle};
 use feed::Feed;
 use entry::{Entry, Link};
-use super::{attr, text, uuid_gen, timestamp_from_rfc2822};
+use super::{attr, text, uuid_gen, timestamp};
 
 static ATOM_NS: &'static str = "http://www.w3.org/2005/Atom";
 
@@ -50,7 +50,7 @@ pub fn handle_channel(handle: Handle, feed: &mut Feed) {
                         }
                     },
                     "language" => feed.language = text(child.clone()),
-                    "lastBuildDate" => feed.last_updated = timestamp_from_rfc2822(child.clone()),
+                    "lastBuildDate" => feed.last_updated = timestamp(child.clone()),
                     "pubDate" => (),
                     "managingEditor" => (),
                     "webMaster" => (),
@@ -97,6 +97,7 @@ pub fn image_url(handle: Handle) -> Option<String> {
 
 pub fn handle_item(handle: Handle) -> Option<Entry> {
     let mut entry = Entry::new();
+    let mut published: Option<NaiveDateTime> = None;
     let node = handle;
     for child in node.children.borrow().iter() {
         match child.data {
@@ -128,8 +129,7 @@ pub fn handle_item(handle: Handle) -> Option<Entry> {
                         }
                     },
                     "guid" => entry.id = text(child.clone()).unwrap_or(uuid_gen()),
-                    "pubDate" =>
-                        entry.published = timestamp_from_rfc2822(child.clone()).unwrap_or(UTC::now().naive_utc()),
+                    "pubDate" => published = timestamp(child.clone()),
                     "source" => {}, // TODO
                     _ => (),
                 }
@@ -137,5 +137,6 @@ pub fn handle_item(handle: Handle) -> Option<Entry> {
             _ => (),
         }
     }
+    entry.published = published.unwrap_or(UTC::now().naive_utc());
     Some(entry)
 }

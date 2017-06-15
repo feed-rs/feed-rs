@@ -1,8 +1,9 @@
 use chrono::prelude::*;
+use chrono::{NaiveDateTime};
 use xml5ever::rcdom::{NodeData, Handle};
 use feed::Feed;
 use entry::{Entry, Link};
-use super::{attr, text, uuid_gen, timestamp_from_rfc3339};
+use super::{attr, text, uuid_gen, timestamp};
 
 pub fn handle_atom(handle: Handle) -> Option<Feed> {
     let node = handle;
@@ -15,7 +16,7 @@ pub fn handle_atom(handle: Handle) -> Option<Feed> {
                     "id"    => feed.id = text(child.clone()).unwrap_or(uuid_gen()),
                     "title" => feed.title = text(child.clone()),
                     "subtitle" => feed.description = text(child.clone()),
-                    "updated" => feed.last_updated = timestamp_from_rfc3339(child.clone()),
+                    "updated" => feed.last_updated = timestamp(child.clone()),
                     "link" => {
                         // rel
                         //    self
@@ -52,6 +53,7 @@ pub fn handle_atom(handle: Handle) -> Option<Feed> {
 pub fn handle_entry(handle: Handle) -> Option<Entry> {
     let node = handle;
     let mut entry = Entry::new();
+    let mut published: Option<NaiveDateTime> = None;
     for child in node.children.borrow().iter() {
         match child.data {
             NodeData::Element { ref name, ref attrs, .. } => {
@@ -79,8 +81,13 @@ pub fn handle_entry(handle: Handle) -> Option<Entry> {
                             entry.alternate.push(Link::new("text/html", url));
                         }
                     },
-                    "published" => entry.published = timestamp_from_rfc3339(child.clone()).unwrap_or(UTC::now().naive_utc()),
-                    "updated" => entry.updated = timestamp_from_rfc3339(child.clone()),
+                    "published" => published = timestamp(child.clone()),
+                    "updated" => {
+                        entry.updated = timestamp(child.clone());
+                        if published.is_none() {
+                            published = timestamp(child.clone());
+                        }
+                    },
                     "category" => {
                         let attributes = &attrs.borrow();
                         let term   = attr("term", attributes);
@@ -100,5 +107,6 @@ pub fn handle_entry(handle: Handle) -> Option<Entry> {
             _ => (),
         }
     }
+    entry.published = published.unwrap_or(UTC::now().naive_utc());
     Some(entry)
 }
