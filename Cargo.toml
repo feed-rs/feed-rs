@@ -2,7 +2,10 @@
 name = "feed-rs"
 version = "0.1.0"
 authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
-
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
 [dependencies]
 xml5ever     = "^0.7"
 serde        = "^1"
