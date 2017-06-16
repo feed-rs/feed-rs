@@ -77,8 +77,17 @@ pub fn handle_entry(handle: Handle) -> Option<Entry> {
                     "author" => {},
                     "link" => {
                         let attributes = &attrs.borrow();
+                        let rel       = attr("rel", attributes).unwrap_or("alternate".to_string());
+                        let mime_type = attr("type", attributes).unwrap_or("text/html".to_string());
+                        let length    = attr("length", attributes).and_then(|s| s.parse::<i64>().ok()).unwrap_or(0);
                         if let Some(url) = attr("href", attributes) {
-                            entry.alternate.push(Link::new("text/html", url));
+                            match rel.as_ref() {
+                                "enclosure" => entry.enclosure.push(Link::enc(mime_type, length, url)),
+                                "alternate" => entry.alternate.push(Link::new(&mime_type, url)),
+                                rel           => {
+                                    println!("unprocessed rel {}", rel);
+                                },
+                            }
                         }
                     },
                     "published" => published = timestamp(child.clone()),
