@@ -85,7 +85,7 @@ pub fn handle_entry(handle: Handle) -> Option<Entry> {
                                 "enclosure" => entry.enclosure.push(Link::enc(mime_type, length, url)),
                                 "alternate" => entry.alternate.push(Link::new(&mime_type, url)),
                                 rel           => {
-                                    println!("unprocessed rel {}", rel);
+                                    // println!("unprocessed rel {}", rel);
                                 },
                             }
                         }
