@@ -116,6 +116,6 @@ pub fn handle_entry(handle: Handle) -> Option<Entry> {
             _ => (),
         }
     }
-    entry.published = published.unwrap_or(UTC::now().naive_utc());
+    entry.published = published.unwrap_or(Utc::now().naive_utc());
     Some(entry)
 }

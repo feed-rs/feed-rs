@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, UTC};
+use chrono::{NaiveDateTime, Utc};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Entry {
@@ -31,7 +31,7 @@ impl Entry {
             content:     None,
             summary:     None,
             author:      None,
-            published:   UTC::now().naive_utc(),
+            published:   Utc::now().naive_utc(),
             updated:     None,
             alternate:   vec![],
             keywords:    vec![],

@@ -124,7 +124,7 @@ pub fn handle_item(handle: Handle, id: String) -> Entry {
                             .unwrap_or(vec![])
                     },
                     // dc
-                    "date" => entry.published = timestamp(child.clone()).unwrap_or(UTC::now().naive_utc()),
+                    "date" => entry.published = timestamp(child.clone()).unwrap_or(Utc::now().naive_utc()),
                     "creator" => entry.author = text(child.clone()),
                     "subject" => if let Some(s) = text(child.clone()) {
                         entry.keywords.push(s)
