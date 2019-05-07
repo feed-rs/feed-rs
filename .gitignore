@@ -9,4 +9,6 @@ target/
 **/*.rs.bk
 Cargo.lock
 
-*~
+# Ignore CLion project dir
+.idea
+~

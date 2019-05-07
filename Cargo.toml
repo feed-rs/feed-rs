@@ -1,20 +1,22 @@
 [package]
 name = "feed-rs"
-version = "0.1.3"
-authors = ["Hiroki Kumamoto <kumabook@live.jp>"]
+version = "0.2.0"
+authors = ["Hiroki Kumamoto <kumabook@live.jp>", "Mark Pritchard <mpritcha@gmail.com>"]
 include = [
     "**/*.rs",
     "Cargo.toml",
+    "LICENSE",
 ]
 license = "MIT"
 homepage = "https://github.com/feed-rs/feed-rs"
 repository = "https://github.com/feed-rs/feed-rs.git"
-description = "A simple RSS feed parser (rss 2.0, ATOM, rss 1.0)"
+description = "A simple RSS feed parser (RSS 2.0, ATOM, RSS 1.0)"
 keywords = ["feed", "rss", "atom"]
+
 [dependencies]
-xml5ever     = "^0.7"
-serde        = "^1"
-serde_derive = "^1"
-serde_json   = "^1"
-chrono       = { version = "^0", features = ["serde"] }
-uuid = { version = "^0", features = ["v4"] }
+xml5ever = "^0.7"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "0.7", features = ["v4"] }
