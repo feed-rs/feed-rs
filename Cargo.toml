@@ -7,8 +7,8 @@ include = [
     "Cargo.toml",
 ]
 license = "MIT"
-homepage = "https://github.com/kumabook/feed-rs"
-repository = "https://github.com/kumabook/feed-rs.git"
+homepage = "https://github.com/feed-rs/feed-rs"
+repository = "https://github.com/feed-rs/feed-rs.git"
 description = "A simple RSS feed parser (rss 2.0, ATOM, rss 1.0)"
 keywords = ["feed", "rss", "atom"]
 [dependencies]
