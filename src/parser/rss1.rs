@@ -1,7 +1,9 @@
 use chrono::prelude::*;
-use xml5ever::rcdom::{NodeData, Handle};
-use feed::Feed;
-use entry::{Entry, Link};
+use xml5ever::rcdom::{Handle, NodeData};
+
+use crate::entry::{Entry, Link};
+use crate::feed::Feed;
+
 use super::{attr, text, timestamp};
 
 pub fn handle_rss1(handle: Handle) -> Option<Feed> {

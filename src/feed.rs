@@ -1,5 +1,6 @@
-use chrono::{NaiveDateTime};
-use entry::Entry;
+use chrono::NaiveDateTime;
+
+use crate::entry::Entry;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Feed {

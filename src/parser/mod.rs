@@ -1,11 +1,13 @@
-use chrono::{DateTime, NaiveDateTime};
 use std::io::Read;
-use xml5ever::rcdom::{RcDom, NodeData, Handle};
-use xml5ever::{Attribute};
-use xml5ever::tendril::{TendrilSink};
-use xml5ever::driver::{parse_document};
+
+use chrono::{DateTime, NaiveDateTime};
 use uuid::Uuid;
-use feed::Feed;
+use xml5ever::Attribute;
+use xml5ever::driver::parse_document;
+use xml5ever::rcdom::{Handle, NodeData, RcDom};
+use xml5ever::tendril::TendrilSink;
+
+use crate::feed::Feed;
 
 mod rss1;
 mod rss2;

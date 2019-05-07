@@ -1,8 +1,10 @@
 use chrono::prelude::*;
-use xml5ever::rcdom::{NodeData, Handle};
-use feed::Feed;
-use entry::{Entry, Link};
-use super::{attr, text, uuid_gen, timestamp};
+use xml5ever::rcdom::{Handle, NodeData};
+
+use crate::entry::{Entry, Link};
+use crate::feed::Feed;
+
+use super::{attr, text, timestamp, uuid_gen};
 
 static ATOM_NS: &'static str = "http://www.w3.org/2005/Atom";
 

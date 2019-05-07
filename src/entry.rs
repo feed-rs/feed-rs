@@ -45,14 +45,14 @@ impl Link {
     pub fn new(mime_type: &str, href: String) -> Link {
         Link {
             mime_type: mime_type.to_string(),
-            href:      href,
+            href,
             length:    None,
         }
     }
     pub fn enc(mime_type: String, length: i64, href: String) -> Link {
         Link {
-            mime_type: mime_type,
-            href:      href,
+            mime_type,
+            href,
             length:    Some(length),
         }
     }

@@ -1,17 +1,9 @@
 #[macro_use]
 extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
-extern crate chrono;
-extern crate xml5ever;
-extern crate uuid;
 
 pub mod entry;
 pub mod feed;
 pub mod parser;
-
-pub use self::entry::Entry;
-pub use self::feed::Feed;
 
 #[cfg(test)]
 mod tests {

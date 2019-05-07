@@ -1,9 +1,11 @@
+use chrono::NaiveDateTime;
 use chrono::prelude::*;
-use chrono::{NaiveDateTime};
-use xml5ever::rcdom::{NodeData, Handle};
-use feed::Feed;
-use entry::{Entry, Link};
-use super::{attr, text, uuid_gen, timestamp};
+use xml5ever::rcdom::{Handle, NodeData};
+
+use crate::entry::{Entry, Link};
+use crate::feed::Feed;
+
+use super::{attr, text, timestamp, uuid_gen};
 
 pub fn handle_atom(handle: Handle) -> Option<Feed> {
     let node = handle;
