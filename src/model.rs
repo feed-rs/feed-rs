@@ -8,21 +8,24 @@ use crate::util;
 /// The model is based on the Atom standard as a start with RSS1+2 mapped on to it
 /// Atom:
 ///     Feed -> Feed, Entry -> Entry
-/// RSS 2:
+/// RSS 1 + 2:
 ///     Channel -> Feed, Item -> Entry
 ///
 /// Atom spec: http://www.atomenabled.org/developers/syndication/
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html
+/// RSS 1 spec: https://validator.w3.org/feed/docs/rss1.html
 /// 
 /// Certain elements are not mapped given their limited utility:
 ///   * RSS 2:
 ///     * channel - docs (pointer to the spec), cloud (for callbacks), textInput (text box e.g. for search)
 ///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
+///   * RSS 1:
+///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
 pub struct Feed {
     /// Atom (required): Identifies the feed using a universally unique and permanent URI.
     pub id: String,
     /// Atom (required): Contains a human readable title for the feed. Often the same as the title of the associated website. This value should not be blank.
-    /// RSS 2 (required) "title": The name of the channel. It's how people refer to your service.
+    /// RSS 1 + 2 (required) "title": The name of the channel. It's how people refer to your service.
     pub title: String,
     /// Atom (required): Indicates the last time the feed was modified in a significant way.
     /// RSS 2 (optional) "lastBuildDate": The last time the content of the channel changed.
@@ -31,10 +34,10 @@ pub struct Feed {
     /// Atom (recommended): Collection of authors defined at the feed level.
     /// RSS 2 (optional) "managingEditor": Email address for person responsible for editorial content.
     pub authors: Vec<Person>,
-    /// RSS 2 (required): Phrase or sentence describing the channel.
+    /// RSS 1 + 2 (required): Phrase or sentence describing the channel.
     pub description: Option<String>,
     /// Atom (recommended): Identifies a related Web page.
-    /// RSS 2 (required): The URL to the HTML website corresponding to the channel.
+    /// RSS 1 + 2 (required): The URL to the HTML website corresponding to the channel.
     pub link: Option<Link>,
 
     /// Atom (optional): Specifies a category that the feed belongs to. A feed may have multiple category elements.
@@ -51,8 +54,8 @@ pub struct Feed {
     /// RSS 2 (optional): The language the channel is written in.
     pub language: Option<String>,
     /// Atom (optional): Identifies a larger image which provides visual identification for the feed.
-    /// RSS 2 (optional) "image": Specifies a GIF, JPEG or PNG image that can be displayed with the channel.
-    pub logo: Option<String>,
+    /// RSS 1 + 2 (optional) "image": Specifies a GIF, JPEG or PNG image that can be displayed with the channel.
+    pub logo: Option<Image>,
     /// RSS 2 (optional): The publication date for the content in the channel.
     pub pub_date: Option<NaiveDateTime>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
@@ -64,6 +67,7 @@ pub struct Feed {
     pub ttl: Option<u32>,
 
     /// Atom (optional): Individual entries within the feed (e.g. a blog post)
+    /// RSS 1+2 (optional): Individual items within the channel.
     pub entries: Vec<Entry>,
 }
 
@@ -100,7 +104,7 @@ pub struct Entry {
     /// Atom (required): Identifies the entry using a universally unique and permanent URI.
     /// RSS 2 (optional) "guid": A string that uniquely identifies the item.
     pub id: String,
-    /// Atom (required): Contains a human readable title for the entry.
+    /// Atom, RSS 1(required): Contains a human readable title for the entry.
     /// RSS 2 (optional): The title of the item.
     pub title: String,
     /// Atom (required): Indicates the last time the entry was modified in a significant way.
@@ -114,9 +118,10 @@ pub struct Entry {
     pub content: Option<Content>,
     /// Atom (recommended): Identifies a related Web page.
     /// RSS 2 (optional): The URL of the item.
+    /// RSS 1 (required): The item's URL.
     pub link: Option<Link>,
     /// Atom (recommended): Conveys a short summary, abstract, or excerpt of the entry.
-    /// RSS 2 (optional): The item synopsis.
+    /// RSS 1+2 (optional): The item synopsis.
     pub summary: Option<String>,
 
     /// Atom (optional): Specifies a category that the entry belongs to. A feed may have multiple category elements.
@@ -218,13 +223,14 @@ impl Generator {
 
 /// Represents a a link to an image.
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
+/// RSS 1 spec: https://validator.w3.org/feed/docs/rss1.html#s5.4
 #[derive(Debug)]
 pub struct Image {
-    /// RSS 2: the URL of a GIF, JPEG or PNG image that represents the channel.
+    /// RSS 1 + 2: the URL of a GIF, JPEG or PNG image that represents the channel.
     pub url: String,
-    /// RSS 2: describes the image, it's used in the ALT attribute of the HTML <img> tag when the channel is rendered in HTML.
+    /// RSS 1 + 2: describes the image, it's used in the ALT attribute of the HTML <img> tag when the channel is rendered in HTML.
     pub title: String,
-    /// RSS 2: the URL of the site, when the channel is rendered, the image is a link to the site.
+    /// RSS 1 + 2: the URL of the site, when the channel is rendered, the image is a link to the site.
     pub link: Link,
 
     /// RSS 2 (optional): width of the image, defaults to 88, max 144
