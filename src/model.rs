@@ -1,6 +1,7 @@
 use chrono::{NaiveDateTime, Utc};
 
 use crate::util;
+use crate::util::timestamp_from_rfc3339;
 
 #[derive(Debug)]
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
@@ -72,7 +73,7 @@ pub struct Feed {
 }
 
 impl Feed {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let id = util::uuid_gen();
         let title = format!("feed: {}", id);
 
@@ -99,7 +100,7 @@ impl Feed {
 }
 
 /// An item within a feed
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Entry {
     /// Atom (required): Identifies the entry using a universally unique and permanent URI.
     /// RSS 2 (optional) "guid": A string that uniquely identifies the item.
@@ -139,7 +140,7 @@ pub struct Entry {
 }
 
 impl Entry {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let id = util::uuid_gen();
         let title = format!("entry: {}", id);
 
@@ -160,10 +161,38 @@ impl Entry {
     }
 }
 
+#[cfg(test)]
+impl Entry {
+    pub fn id(mut self, id: &str) -> Self {
+        self.id = id.to_string();
+        self
+    }
+
+    pub fn link(mut self, href: &str) -> Self {
+        self.link = Some(Link::new(href.to_string()));
+        self
+    }
+
+    pub fn summary(mut self, summary: &str) -> Self {
+        self.summary = Some(summary.to_string());
+        self
+    }
+
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = title.to_string();
+        self
+    }
+
+    pub fn updated(mut self, updated: &str) -> Self {
+        self.updated = timestamp_from_rfc3339(updated).unwrap();
+        self
+    }
+}
+
 /// Represents the category of a feed or entry
 /// Atom spec: http://www.atomenabled.org/developers/syndication/#category
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltcategorygtSubelementOfLtitemgt
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Category {
     /// Atom (required): Identifies the category.
     pub term: String,
@@ -182,7 +211,7 @@ impl Category {
 /// The content, or link to the content, for a given entry.
 /// Atom spec: http://www.atomenabled.org/developers/syndication/#contentElement
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Content {
     /// Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
    /// TODO enum
@@ -205,7 +234,7 @@ impl Content {
 
 /// Information on the tools used to generate the feed
 /// Atom: Identifies the software used to generate the feed, for debugging and other purposes.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Generator {
     /// Atom: Link to the tool
     pub uri: Option<String>,
@@ -224,7 +253,7 @@ impl Generator {
 /// Represents a a link to an image.
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
 /// RSS 1 spec: https://validator.w3.org/feed/docs/rss1.html#s5.4
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Image {
     /// RSS 1 + 2: the URL of a GIF, JPEG or PNG image that represents the channel.
     pub url: String,
@@ -249,7 +278,7 @@ impl Image {
 
 /// Represents a link to an associated resource for the feed or entry.
 /// Atom spec: http://www.atomenabled.org/developers/syndication/#link
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Link {
     /// The URI of the referenced resource (typically a Web page).
     pub href: String,
@@ -280,7 +309,7 @@ impl Link {
 
 /// Represents an author, contributor etc.
 /// Atom spec: http://www.atomenabled.org/developers/syndication/#person
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Person {
     /// Atom: human-readable name for the person.
     pub name: String,

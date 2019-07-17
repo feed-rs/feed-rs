@@ -1,6 +1,4 @@
-use std::error::Error;
 use std::fs;
-use std::io::Read;
 use std::path::PathBuf;
 
 /// Return the path to our test data directory

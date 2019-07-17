@@ -1,27 +1,25 @@
 use std::io::Read;
 
-use chrono::{DateTime, NaiveDateTime};
-use uuid::Uuid;
-use xml5ever::Attribute;
-use xml5ever::driver::parse_document;
-use xml5ever::rcdom::{Handle, NodeData, RcDom};
-use xml5ever::tendril::TendrilSink;
+use crate::model::Feed;
+use crate::util::element_source::ElementSource;
+use crate::util::attr_value;
 
-use crate::feed::Feed;
-
-mod rss1;
-mod rss2;
 mod atom;
 
-pub fn parse<R>(input: &mut R) -> Option<Feed> where R: Read {
-    let mut buf = String::new();
-    let _ = input.read_to_string(&mut buf);
-    let dom = parse_document(RcDom::default(), Default::default())
-        .from_utf8()
-        .read_from(&mut buf.replace(" rdf:", " ").as_bytes()) // FIXME
-        .unwrap();
-    walk(dom.document)
+/// Parse the XML input (Atom or a flavour of RSS) into our model
+pub fn parse<R: Read>(input: R) -> Option<Feed> {
+    // Set up the source of XML elements from the input
+    let source = ElementSource::new(input);
+    let root = source.root().unwrap();
+
+    // Dispatch to the correct parser
+    let version = attr_value(&root.attributes, "version");
+    match (root.name.local_name.as_str(), version) {
+        ("feed", _) => atom::parse(root),
+        _ => None
+    }
 }
+/*
 
 fn walk(handle: Handle) -> Option<Feed> {
     let node = handle;
@@ -45,10 +43,6 @@ fn walk(handle: Handle) -> Option<Feed> {
         }
     }
     None
-}
-
-pub fn uuid_gen() -> String {
-    Uuid::new_v4().to_string()
 }
 
 pub fn attr(attr_name: &str, attrs: &Vec<Attribute>) -> Option<String> {
@@ -90,3 +84,4 @@ pub fn timestamp(handle: Handle) -> Option<NaiveDateTime> {
             DateTime::parse_from_rfc3339(&s.trim()).ok()
         )).map(|n| n.naive_utc())
 }
+*/
