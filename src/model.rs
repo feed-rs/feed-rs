@@ -2,7 +2,10 @@ use chrono::{NaiveDateTime, Utc};
 
 use crate::util;
 
-#[derive(Debug)]
+#[cfg(test)]
+use crate::util::timestamp_from_rfc3339;
+
+#[derive(Debug, PartialEq)]
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
 ///
 /// The model is based on the Atom standard as a start with RSS1+2 mapped on to it
@@ -96,6 +99,59 @@ impl Feed {
     }
 }
 
+#[cfg(test)]
+impl Feed {
+    pub fn author(mut self, person: Person) -> Self {
+        self.authors.push(person);
+        self
+    }
+
+    pub fn contributor(mut self, person: Person) -> Self {
+        self.contributors.push(person);
+        self
+    }
+
+    pub fn description(mut self, description: Text) -> Self {
+        self.description = Some(description);
+        self
+    }
+
+    pub fn entry(mut self, entry: Entry) -> Self {
+        self.entries.push(entry);
+        self
+    }
+
+    pub fn generator(mut self, generator: Generator) -> Self {
+        self.generator = Some(generator);
+        self
+    }
+
+    pub fn id(mut self, id: &str) -> Self {
+        self.id = id.to_string();
+        self
+    }
+
+    pub fn link(mut self, link: Link) -> Self {
+        self.links.push(link);
+        self
+    }
+
+    pub fn rights(mut self, rights: Text) -> Self {
+        self.rights = Some(rights);
+        self
+    }
+
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = Some(Text::new(title.to_string()));
+        self
+    }
+
+    pub fn updated(mut self, updated: &str) -> Self {
+        self.updated = timestamp_from_rfc3339(updated).unwrap();
+        self
+    }
+}
+
 /// An item within a feed
 #[derive(Debug, PartialEq)]
 pub struct Entry {
@@ -157,8 +213,6 @@ impl Entry {
     }
 }
 
-#[cfg(test)]
-use crate::util::timestamp_from_rfc3339;
 #[cfg(test)]
 impl Entry {
     pub fn author(mut self, person: Person) -> Self {
@@ -239,6 +293,19 @@ impl Generator {
     }
 }
 
+#[cfg(test)]
+impl Generator {
+    pub fn uri(mut self, uri: &str) -> Self {
+        self.uri = Some(uri.to_owned());
+        self
+    }
+
+    pub fn version(mut self, version: &str) -> Self {
+        self.version = Some(version.to_owned());
+        self
+    }
+}
+
 /// Represents a a link to an image.
 /// Atom spec: item + logo in http://www.atomenabled.org/developers/syndication/#optionalFeedElements
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
@@ -277,7 +344,7 @@ pub struct Link {
     /// Indicates the media type of the resource.
     pub media_type: Option<String>,
     /// Indicates the language of the referenced resource.
-    pub hreflang: Option<String>,
+    pub href_lang: Option<String>,
     /// Human readable information about the link, typically for display purposes.
     pub title: Option<String>,
     /// The length of the resource, in bytes.
@@ -290,7 +357,7 @@ impl Link {
             href,
             rel: None,
             media_type: None,
-            hreflang: None,
+            href_lang: None,
             title: None,
             length: None,
         }
@@ -299,6 +366,11 @@ impl Link {
 
 #[cfg(test)]
 impl Link {
+    pub fn href_lang(mut self, lang: &str) -> Self {
+        self.href_lang = Some(lang.to_owned());
+        self
+    }
+
     pub fn length(mut self, length: u64) -> Self {
         self.length = Some(length);
         self
@@ -367,5 +439,13 @@ pub struct Text {
 impl Text {
     pub fn new(content: String) -> Text {
         Text { content_type: "text".to_owned(), src: None, content }
+    }
+}
+
+#[cfg(test)]
+impl Text {
+    pub fn content_type(mut self, content_type: &str) -> Self {
+        self.content_type = content_type.to_owned();
+        self
     }
 }
