@@ -126,6 +126,11 @@ impl Feed {
         self
     }
 
+    pub fn icon(mut self, image: Image) -> Self {
+        self.icon = Some(image);
+        self
+    }
+
     pub fn id(mut self, id: &str) -> Self {
         self.id = id.to_string();
         self
@@ -136,13 +141,18 @@ impl Feed {
         self
     }
 
+    pub fn logo(mut self, image: Image) -> Self {
+        self.logo = Some(image);
+        self
+    }
+
     pub fn rights(mut self, rights: Text) -> Self {
         self.rights = Some(rights);
         self
     }
 
-    pub fn title(mut self, title: &str) -> Self {
-        self.title = Some(Text::new(title.to_string()));
+    pub fn title(mut self, title: Text) -> Self {
+        self.title = Some(title);
         self
     }
 
@@ -220,6 +230,16 @@ impl Entry {
         self
     }
 
+    pub fn category(mut self, category: Category) -> Self {
+        self.categories.push(category);
+        self
+    }
+
+    pub fn content(mut self, content: Text) -> Self {
+        self.content = Some(content);
+        self
+    }
+
     pub fn contributor(mut self, person: Person) -> Self {
         self.contributors.push(person);
         self
@@ -240,13 +260,13 @@ impl Entry {
         self
     }
 
-    pub fn summary(mut self, summary: &str) -> Self {
-        self.summary = Some(Text::new(summary.to_string()));
+    pub fn summary(mut self, summary: Text) -> Self {
+        self.summary = Some(summary);
         self
     }
 
-    pub fn title(mut self, title: &str) -> Self {
-        self.title = Some(Text::new(title.to_string()));
+    pub fn title(mut self, title: Text) -> Self {
+        self.title = Some(title);
         self
     }
 
@@ -272,6 +292,19 @@ pub struct Category {
 impl Category {
     pub fn new(term: String) -> Category {
         Category { term, scheme: None, label: None }
+    }
+}
+
+#[cfg(test)]
+impl Category {
+    pub fn label(mut self, label: &str) -> Self {
+        self.label = Some(label.to_owned());
+        self
+    }
+
+    pub fn scheme(mut self, scheme: &str) -> Self {
+        self.scheme = Some(scheme.to_owned());
+        self
     }
 }
 

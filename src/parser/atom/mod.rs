@@ -7,6 +7,8 @@ use crate::util::element_source::Element;
 #[cfg(test)]
 mod tests;
 
+// TODO expand test coverage to verify all elements + attributes are parsed
+
 /// Parses an Atom feed into our model
 pub fn parse<R: Read>(root: Element<R>) -> Option<Feed> {
     let mut feed = Feed::new();
@@ -70,13 +72,13 @@ fn handle_entry<R: Read>(element: Element<R>) -> Entry {
         match tag_name {
             // Extract the fields from the spec
             "id" => if let Some(id) = child.child_as_text() { entry.id = id },
-            "title" => entry.title = child.child_as_text().map(|title| Text::new(title)),
+            "title" => entry.title = handle_text(child),
             "updated" => if let Some(text) = child.child_as_text() { if let Some(ts) = timestamp_from_rfc3339(&text) { entry.updated = ts } },
 
             "author" => if let Some(person) = handle_person(child) { entry.authors.push(person) },
             "content" => entry.content = handle_text(child),
             "link" => if let Some(link) = handle_link(child) { entry.links.push(link) },
-            "summary" => entry.summary = child.child_as_text().map(|summary| Text::new(summary)),
+            "summary" => entry.summary = handle_text(child),
 
             "category" => if let Some(category) = handle_category(child) { entry.categories.push(category) },
             "contributor" => if let Some(person) = handle_person(child) { entry.contributors.push(person) },
