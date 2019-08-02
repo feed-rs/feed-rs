@@ -1,7 +1,6 @@
 use chrono::{NaiveDateTime, Utc};
 
 use crate::util;
-use crate::util::timestamp_from_rfc3339;
 
 #[derive(Debug)]
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
@@ -15,7 +14,7 @@ use crate::util::timestamp_from_rfc3339;
 /// Atom spec: http://www.atomenabled.org/developers/syndication/
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html
 /// RSS 1 spec: https://validator.w3.org/feed/docs/rss1.html
-/// 
+///
 /// Certain elements are not mapped given their limited utility:
 ///   * RSS 2:
 ///     * channel - docs (pointer to the spec), cloud (for callbacks), textInput (text box e.g. for search)
@@ -27,7 +26,7 @@ pub struct Feed {
     pub id: String,
     /// Atom (required): Contains a human readable title for the feed. Often the same as the title of the associated website. This value should not be blank.
     /// RSS 1 + 2 (required) "title": The name of the channel. It's how people refer to your service.
-    pub title: String,
+    pub title: Option<Text>,
     /// Atom (required): Indicates the last time the feed was modified in a significant way.
     /// RSS 2 (optional) "lastBuildDate": The last time the content of the channel changed.
     pub updated: NaiveDateTime,
@@ -35,11 +34,13 @@ pub struct Feed {
     /// Atom (recommended): Collection of authors defined at the feed level.
     /// RSS 2 (optional) "managingEditor": Email address for person responsible for editorial content.
     pub authors: Vec<Person>,
+    /// Atom (optional): Contains a human-readable description or subtitle for the feed (from <subtitle>).
     /// RSS 1 + 2 (required): Phrase or sentence describing the channel.
-    pub description: Option<String>,
+    pub description: Option<Text>,
     /// Atom (recommended): Identifies a related Web page.
+    /// TODO Atom supports multiple links (double check the validator for other elements with N)
     /// RSS 1 + 2 (required): The URL to the HTML website corresponding to the channel.
-    pub link: Option<Link>,
+    pub links: Vec<Link>,
 
     /// Atom (optional): Specifies a category that the feed belongs to. A feed may have multiple category elements.
     /// RSS 2 (optional) "category": Specify one or more categories that the channel belongs to.
@@ -51,7 +52,7 @@ pub struct Feed {
     /// RSS 2 (optional): A string indicating the program used to generate the channel.
     pub generator: Option<Generator>,
     /// Atom (optional): Identifies a small image which provides iconic visual identification for the feed.
-    pub icon: Option<String>,
+    pub icon: Option<Image>,
     /// RSS 2 (optional): The language the channel is written in.
     pub language: Option<String>,
     /// Atom (optional): Identifies a larger image which provides visual identification for the feed.
@@ -61,9 +62,7 @@ pub struct Feed {
     pub pub_date: Option<NaiveDateTime>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
     /// RSS 2 (optional) "copyright": Copyright notice for content in the channel.
-    pub rights: Option<String>,
-    /// Atom (optional): Contains a human-readable description or subtitle for the feed.
-    pub subtitle: Option<String>,
+    pub rights: Option<Text>,
     /// RSS 2 (optional): It's a number of minutes that indicates how long a channel can be cached before refreshing from the source.
     pub ttl: Option<u32>,
 
@@ -75,15 +74,14 @@ pub struct Feed {
 impl Feed {
     pub fn new() -> Self {
         let id = util::uuid_gen();
-        let title = format!("feed: {}", id);
 
         Feed {
             id,
-            title,
+            title: None,
             updated: Utc::now().naive_utc(),
             authors: Vec::new(),
             description: None,
-            link: None,
+            links: Vec::new(),
             categories: Vec::new(),
             contributors: Vec::new(),
             generator: None,
@@ -92,7 +90,6 @@ impl Feed {
             logo: None,
             pub_date: None,
             rights: None,
-            subtitle: None,
             ttl: None,
             entries: Vec::new(),
         }
@@ -107,7 +104,7 @@ pub struct Entry {
     pub id: String,
     /// Atom, RSS 1(required): Contains a human readable title for the entry.
     /// RSS 2 (optional): The title of the item.
-    pub title: String,
+    pub title: Option<Text>,
     /// Atom (required): Indicates the last time the entry was modified in a significant way.
     pub updated: NaiveDateTime,
 
@@ -116,14 +113,14 @@ pub struct Entry {
     pub authors: Vec<Person>,
     /// Atom (recommended): Contains or links to the complete content of the entry.
     /// RSS 2 (optional) "enclosure": Describes a media object that is attached to the item.
-    pub content: Option<Content>,
+    pub content: Option<Text>,
     /// Atom (recommended): Identifies a related Web page.
     /// RSS 2 (optional): The URL of the item.
     /// RSS 1 (required): The item's URL.
-    pub link: Option<Link>,
+    pub links: Vec<Link>,
     /// Atom (recommended): Conveys a short summary, abstract, or excerpt of the entry.
     /// RSS 1+2 (optional): The item synopsis.
-    pub summary: Option<String>,
+    pub summary: Option<Text>,
 
     /// Atom (optional): Specifies a category that the entry belongs to. A feed may have multiple category elements.
     /// RSS 2 (optional): Includes the item in one or more categories.
@@ -136,21 +133,20 @@ pub struct Entry {
     /// Atom (optional): If an entry is copied from one feed into another feed, then this contains the source feed metadata.
     pub source: Option<String>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
-    pub rights: Option<String>,
+    pub rights: Option<Text>,
 }
 
 impl Entry {
     pub fn new() -> Self {
         let id = util::uuid_gen();
-        let title = format!("entry: {}", id);
 
         Entry {
             id,
-            title,
+            title: None,
             updated: Utc::now().naive_utc(),
             authors: Vec::new(),
             content: None,
-            link: None,
+            links: Vec::new(),
             summary: None,
             categories: Vec::new(),
             contributors: Vec::new(),
@@ -162,24 +158,41 @@ impl Entry {
 }
 
 #[cfg(test)]
+use crate::util::timestamp_from_rfc3339;
+#[cfg(test)]
 impl Entry {
+    pub fn author(mut self, person: Person) -> Self {
+        self.authors.push(person);
+        self
+    }
+
+    pub fn contributor(mut self, person: Person) -> Self {
+        self.contributors.push(person);
+        self
+    }
+
     pub fn id(mut self, id: &str) -> Self {
         self.id = id.to_string();
         self
     }
 
-    pub fn link(mut self, href: &str) -> Self {
-        self.link = Some(Link::new(href.to_string()));
+    pub fn link(mut self, link: Link) -> Self {
+        self.links.push(link);
+        self
+    }
+
+    pub fn published(mut self, published: &str) -> Self {
+        self.published = timestamp_from_rfc3339(published);
         self
     }
 
     pub fn summary(mut self, summary: &str) -> Self {
-        self.summary = Some(summary.to_string());
+        self.summary = Some(Text::new(summary.to_string()));
         self
     }
 
     pub fn title(mut self, title: &str) -> Self {
-        self.title = title.to_string();
+        self.title = Some(Text::new(title.to_string()));
         self
     }
 
@@ -208,71 +221,48 @@ impl Category {
     }
 }
 
-/// The content, or link to the content, for a given entry.
-/// Atom spec: http://www.atomenabled.org/developers/syndication/#contentElement
-/// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
-#[derive(Debug, PartialEq)]
-pub struct Content {
-    /// Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
-   /// TODO enum
-    pub content_type: Option<String>,
-    /// Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
-    pub src: Option<String>,
-    /// Atom:
-    ///     If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
-    ///     If the type attribute starts with text, then an escaped document of this type is contained inline.
-    ///     Otherwise a base64 encoded document of the indicated media type is contained inline.
-    // TODO enum
-    pub inline: Option<String>,
-}
-
-impl Content {
-    pub fn new() -> Content {
-        Content { content_type: None, src: None, inline: None }
-    }
-}
-
 /// Information on the tools used to generate the feed
 /// Atom: Identifies the software used to generate the feed, for debugging and other purposes.
 #[derive(Debug, PartialEq)]
 pub struct Generator {
+    /// Atom: Additional data
+    pub content: String,
     /// Atom: Link to the tool
     pub uri: Option<String>,
     /// Atom: Tool version
     pub version: Option<String>,
-    /// Atom: Additional data
-    pub inline: Option<String>,
 }
 
 impl Generator {
-    pub fn new() -> Generator {
-        Generator { uri: None, version: None, inline: None }
+    pub fn new(content: String) -> Generator {
+        Generator { uri: None, version: None, content }
     }
 }
 
 /// Represents a a link to an image.
+/// Atom spec: item + logo in http://www.atomenabled.org/developers/syndication/#optionalFeedElements
 /// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
 /// RSS 1 spec: https://validator.w3.org/feed/docs/rss1.html#s5.4
 #[derive(Debug, PartialEq)]
 pub struct Image {
     /// RSS 1 + 2: the URL of a GIF, JPEG or PNG image that represents the channel.
-    pub url: String,
+    pub uri: String,
     /// RSS 1 + 2: describes the image, it's used in the ALT attribute of the HTML <img> tag when the channel is rendered in HTML.
-    pub title: String,
+    pub title: Option<String>,
     /// RSS 1 + 2: the URL of the site, when the channel is rendered, the image is a link to the site.
-    pub link: Link,
+    pub link: Option<Link>,
 
-    /// RSS 2 (optional): width of the image, defaults to 88, max 144
-    pub width: u32,
-    /// RSS 2 (optional): height of the image, defaults to 31, max 400
-    pub height: u32,
+    /// RSS 2 (optional): width of the image
+    pub width: Option<u32>,
+    /// RSS 2 (optional): height of the image
+    pub height: Option<u32>,
     /// RSS 2 (optional): contains text that is included in the TITLE attribute of the link formed around the image in the HTML rendering.
     pub description: Option<String>,
 }
 
 impl Image {
-    pub fn new(url: String, title: String, link: Link) -> Image {
-        Image { url, title, link, width: 88, height: 31, description: None}
+    pub fn new(uri: String) -> Image {
+        Image { uri, title: None, link: None, width: None, height: None, description: None}
     }
 }
 
@@ -307,6 +297,24 @@ impl Link {
     }
 }
 
+#[cfg(test)]
+impl Link {
+    pub fn length(mut self, length: u64) -> Self {
+        self.length = Some(length);
+        self
+    }
+
+    pub fn media_type(mut self, media_type: &str) -> Self {
+        self.media_type = Some(media_type.to_owned());
+        self
+    }
+
+    pub fn rel(mut self, rel: &str) -> Self {
+        self.rel = Some(rel.to_owned());
+        self
+    }
+}
+
 /// Represents an author, contributor etc.
 /// Atom spec: http://www.atomenabled.org/developers/syndication/#person
 #[derive(Debug, PartialEq)]
@@ -322,5 +330,42 @@ pub struct Person {
 impl Person {
     pub fn new(name: String) -> Person {
         Person { name, uri: None, email: None }
+    }
+}
+
+#[cfg(test)]
+impl Person {
+    pub fn email(mut self, email: &str) -> Self {
+        self.email = Some(email.to_owned());
+        self
+    }
+
+    pub fn uri(mut self, uri: &str) -> Self {
+        self.uri = Some(uri.to_owned());
+        self
+    }
+}
+
+/// Textual content, or link to the content, for a given entry.
+/// Atom spec: http://www.atomenabled.org/developers/syndication/#contentElement
+/// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
+#[derive(Debug, PartialEq)]
+pub struct Text {
+    /// Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
+   /// TODO enum
+    pub content_type: String,
+    /// Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
+    pub src: Option<String>,
+    /// Atom:
+    ///     If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
+    ///     If the type attribute starts with text, then an escaped document of this type is contained inline.
+    ///     Otherwise a base64 encoded document of the indicated media type is contained inline.
+    // TODO review after enum above
+    pub content: String,
+}
+
+impl Text {
+    pub fn new(content: String) -> Text {
+        Text { content_type: "text".to_owned(), src: None, content }
     }
 }
