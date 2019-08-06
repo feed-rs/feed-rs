@@ -11,6 +11,13 @@ pub fn attr_value<'a>(attributes: &'a Vec<OwnedAttribute>, name: &str) -> Option
         .map(|attr| attr.value.as_str())
 }
 
+/// Parses an RFC-2822 formatted timestamp
+pub fn timestamp_from_rfc2822(text: &str) -> Option<NaiveDateTime> {
+    DateTime::parse_from_rfc2822(text.trim())
+        .ok()
+        .map(|t| t.naive_utc())
+}
+
 /// Parses an RFC-3339 formatted timestamp
 pub fn timestamp_from_rfc3339(text: &str) -> Option<NaiveDateTime> {
     DateTime::parse_from_rfc3339(text.trim())

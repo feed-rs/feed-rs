@@ -4,6 +4,7 @@ use crate::util;
 
 #[cfg(test)]
 use crate::util::timestamp_from_rfc3339;
+use crate::util::timestamp_from_rfc2822;
 
 #[derive(Debug, PartialEq)]
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
@@ -35,7 +36,6 @@ pub struct Feed {
     pub updated: NaiveDateTime,
 
     /// Atom (recommended): Collection of authors defined at the feed level.
-    /// RSS 2 (optional) "managingEditor": Email address for person responsible for editorial content.
     pub authors: Vec<Person>,
     /// Atom (optional): Contains a human-readable description or subtitle for the feed (from <subtitle>).
     /// RSS 1 + 2 (required): Phrase or sentence describing the channel.
@@ -49,6 +49,7 @@ pub struct Feed {
     /// RSS 2 (optional) "category": Specify one or more categories that the channel belongs to.
     pub categories: Vec<Category>,
     /// Atom (optional): Names one contributor to the feed. A feed may have multiple contributor elements.
+    /// RSS 2 (optional) "managingEditor": Email address for person responsible for editorial content.
     /// RSS 2 (optional) "webMaster": Email address for person responsible for technical issues relating to channel.
     pub contributors: Vec<Person>,
     /// Atom (optional): Identifies the software used to generate the feed, for debugging and other purposes.
@@ -76,10 +77,8 @@ pub struct Feed {
 
 impl Feed {
     pub fn new() -> Self {
-        let id = util::uuid_gen();
-
         Feed {
-            id,
+            id: util::uuid_gen(),
             title: None,
             updated: Utc::now().naive_utc(),
             authors: Vec::new(),
@@ -103,6 +102,11 @@ impl Feed {
 impl Feed {
     pub fn author(mut self, person: Person) -> Self {
         self.authors.push(person);
+        self
+    }
+
+    pub fn category(mut self, category: Category) -> Self {
+        self.categories.push(category);
         self
     }
 
@@ -136,6 +140,11 @@ impl Feed {
         self
     }
 
+    pub fn language(mut self, language: &str) -> Self {
+        self.language = Some(language.to_owned());
+        self
+    }
+
     pub fn link(mut self, link: Link) -> Self {
         self.links.push(link);
         self
@@ -156,7 +165,17 @@ impl Feed {
         self
     }
 
-    pub fn updated(mut self, updated: &str) -> Self {
+    pub fn ttl(mut self, ttl: u32) -> Self {
+        self.ttl = Some(ttl);
+        self
+    }
+
+    pub fn updated_rfc2822(mut self, updated: &str) -> Self {
+        self.updated = timestamp_from_rfc2822(updated).unwrap();
+        self
+    }
+
+    pub fn updated_rfc3339(mut self, updated: &str) -> Self {
         self.updated = timestamp_from_rfc3339(updated).unwrap();
         self
     }
@@ -255,7 +274,12 @@ impl Entry {
         self
     }
 
-    pub fn published(mut self, published: &str) -> Self {
+    pub fn published_rfc2822(mut self, published: &str) -> Self {
+        self.published = timestamp_from_rfc2822(published);
+        self
+    }
+
+    pub fn published_rfc3339(mut self, published: &str) -> Self {
         self.published = timestamp_from_rfc3339(published);
         self
     }
@@ -270,7 +294,12 @@ impl Entry {
         self
     }
 
-    pub fn updated(mut self, updated: &str) -> Self {
+    pub fn updated_rfc2822(mut self, updated: &str) -> Self {
+        self.updated = timestamp_from_rfc2822(updated).unwrap();
+        self
+    }
+
+    pub fn updated_rfc3339(mut self, updated: &str) -> Self {
         self.updated = timestamp_from_rfc3339(updated).unwrap();
         self
     }
