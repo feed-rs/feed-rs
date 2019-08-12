@@ -1,4 +1,4 @@
-use crate::model::{Entry, Person, Link, Feed, Text, Generator, Image, Category};
+use crate::model::{Entry, Person, Link, Feed, Text, Generator, Image, Category, Content};
 use crate::parser;
 use crate::util::test;
 
@@ -142,7 +142,7 @@ fn test_example_3() {
             .category(Category::new("zerotrust".to_owned())
                 .label("Zero Trust")
                 .scheme("http://www.sixapart.com/ns/types#tag"))
-            .content(Text::new(r#"<p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
+            .content(Content::new(r#"<p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
         <img src="http://feeds.feedburner.com/~r/TheAkamaiBlog/~4/NnQEuqRSyug" height="1" width="1" alt=""/>"#.to_owned())
                 .content_type("html")));
 

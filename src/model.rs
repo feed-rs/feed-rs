@@ -3,8 +3,9 @@ use chrono::{NaiveDateTime, Utc};
 use crate::util;
 
 #[cfg(test)]
-use crate::util::timestamp_from_rfc3339;
 use crate::util::timestamp_from_rfc2822;
+#[cfg(test)]
+use crate::util::timestamp_from_rfc3339;
 
 #[derive(Debug, PartialEq)]
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
@@ -63,7 +64,7 @@ pub struct Feed {
     /// RSS 1 + 2 (optional) "image": Specifies a GIF, JPEG or PNG image that can be displayed with the channel.
     pub logo: Option<Image>,
     /// RSS 2 (optional): The publication date for the content in the channel.
-    pub pub_date: Option<NaiveDateTime>,
+    pub published: Option<NaiveDateTime>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
     /// RSS 2 (optional) "copyright": Copyright notice for content in the channel.
     pub rights: Option<Text>,
@@ -90,7 +91,7 @@ impl Feed {
             icon: None,
             language: None,
             logo: None,
-            pub_date: None,
+            published: None,
             rights: None,
             ttl: None,
             entries: Vec::new(),
@@ -155,6 +156,11 @@ impl Feed {
         self
     }
 
+    pub fn published_rfc2822(mut self, pub_date: &str) -> Self {
+        self.published = timestamp_from_rfc2822(pub_date);
+        self
+    }
+
     pub fn rights(mut self, rights: Text) -> Self {
         self.rights = Some(rights);
         self
@@ -167,6 +173,11 @@ impl Feed {
 
     pub fn ttl(mut self, ttl: u32) -> Self {
         self.ttl = Some(ttl);
+        self
+    }
+
+    pub fn updated(mut self, updated: NaiveDateTime) -> Self {
+        self.updated = updated;
         self
     }
 
@@ -198,7 +209,7 @@ pub struct Entry {
     pub authors: Vec<Person>,
     /// Atom (recommended): Contains or links to the complete content of the entry.
     /// RSS 2 (optional) "enclosure": Describes a media object that is attached to the item.
-    pub content: Option<Text>,
+    pub content: Option<Content>,
     /// Atom (recommended): Identifies a related Web page.
     /// RSS 2 (optional): The URL of the item.
     /// RSS 1 (required): The item's URL.
@@ -254,7 +265,7 @@ impl Entry {
         self
     }
 
-    pub fn content(mut self, content: Text) -> Self {
+    pub fn content(mut self, content: Content) -> Self {
         self.content = Some(content);
         self
     }
@@ -291,6 +302,11 @@ impl Entry {
 
     pub fn title(mut self, title: Text) -> Self {
         self.title = Some(title);
+        self
+    }
+
+    pub fn updated(mut self, updated: NaiveDateTime) -> Self {
+        self.updated = updated;
         self
     }
 
@@ -333,6 +349,41 @@ impl Category {
 
     pub fn scheme(mut self, scheme: &str) -> Self {
         self.scheme = Some(scheme.to_owned());
+        self
+    }
+}
+
+/// Content, or link to the content, for a given entry.
+/// Atom spec: http://www.atomenabled.org/developers/syndication/#contentElement
+/// RSS 2.0: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
+#[derive(Debug, PartialEq)]
+pub struct Content {
+    /// Atom:
+    ///     If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
+    ///     If the type attribute starts with text, then an escaped document of this type is contained inline.
+    ///     Otherwise a base64 encoded document of the indicated media type is contained inline.
+    // TODO review after enum above
+    pub content: Option<String>,
+    /// Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
+    /// TODO enum
+    pub content_type: Option<String>,
+    /// RSS 2.0: Length of the content in bytes
+    pub length: Option<u64>,
+    /// Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
+    /// RSS 2.0: where the enclosure is located
+    pub src: Option<String>,
+}
+
+impl Content {
+    pub fn new(content: String) -> Content {
+        Content { content: Some(content), content_type: None, length: None, src: None }
+    }
+}
+
+#[cfg(test)]
+impl Content {
+    pub fn content_type(mut self, content_type: &str) -> Self {
+        self.content_type = Some(content_type.to_owned());
         self
     }
 }
@@ -391,7 +442,35 @@ pub struct Image {
 
 impl Image {
     pub fn new(uri: String) -> Image {
-        Image { uri, title: None, link: None, width: None, height: None, description: None}
+        Image { uri, title: None, link: None, width: None, height: None, description: None }
+    }
+}
+
+#[cfg(test)]
+impl Image {
+    pub fn description(mut self, description: &str) -> Self {
+        self.description = Some(description.to_owned());
+        self
+    }
+
+    pub fn height(mut self, height: u32) -> Self {
+        self.height = Some(height);
+        self
+    }
+
+    pub fn link(mut self, link: &str) -> Self {
+        self.link = Some(Link::new(link.to_owned()));
+        self
+    }
+
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_owned());
+        self
+    }
+
+    pub fn width(mut self, width: u32) -> Self {
+        self.width = Some(width);
+        self
     }
 }
 
@@ -481,19 +560,11 @@ impl Person {
 }
 
 /// Textual content, or link to the content, for a given entry.
-/// Atom spec: http://www.atomenabled.org/developers/syndication/#contentElement
-/// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
 #[derive(Debug, PartialEq)]
 pub struct Text {
-    /// Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
-   /// TODO enum
+    /// TODO enum
     pub content_type: String,
-    /// Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
     pub src: Option<String>,
-    /// Atom:
-    ///     If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
-    ///     If the type attribute starts with text, then an escaped document of this type is contained inline.
-    ///     Otherwise a base64 encoded document of the indicated media type is contained inline.
     // TODO review after enum above
     pub content: String,
 }

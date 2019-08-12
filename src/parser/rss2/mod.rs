@@ -2,7 +2,7 @@ use std::io::Read;
 
 use chrono::NaiveDateTime;
 
-use crate::model::{Category, Feed, Generator, Link, Person, Text, Entry};
+use crate::model::{Category, Feed, Generator, Link, Person, Text, Entry, Image, Content};
 use crate::util::{attr_value, timestamp_from_rfc2822};
 use crate::util::element_source::Element;
 
@@ -40,11 +40,12 @@ fn handle_channel<R: Read>(channel: Element<R>) -> Feed {
             "copyright" => feed.rights = handle_text(child),
             "managingEditor" => if let Some(person) = handle_contact("managingEditor", child) { feed.contributors.push(person) },
             "webMaster" => if let Some(person) = handle_contact("webMaster", child) { feed.contributors.push(person) },
-            "pubDate" => feed.pub_date = handle_date_rfc2822(child),
+            "pubDate" => feed.published = handle_date_rfc2822(child),
             "lastBuildDate" => if let Some(ts) = handle_date_rfc2822(child) { feed.updated = ts },
             "category" => if let Some(category) = handle_category(child) { feed.categories.push(category) },
             "generator" => feed.generator = child.child_as_text().map(|content| Generator::new(content)),
             "ttl" => if let Some(text) = child.child_as_text() { feed.ttl = text.parse::<u32>().ok() },
+            "image" => feed.logo = handle_image(child),
             "item" => feed.entries.push(handle_item(child)),
 
             // Nothing required for unknown elements
@@ -52,7 +53,7 @@ fn handle_channel<R: Read>(channel: Element<R>) -> Feed {
         }
     }
 
-    // RSS 2.0 doesn't define an updated date field for entries, so for completeness we set them to the updated date of the feed
+    // RSS 2.0 defines <lastBuildDate> on an item as optional so for completeness we set them to the updated date of the feed
     for entry in feed.entries.iter_mut() {
         entry.updated = feed.updated;
     }
@@ -84,6 +85,57 @@ fn handle_date_rfc2822<R: Read>(element: Element<R>) -> Option<NaiveDateTime> {
         .map_or(None, |text| timestamp_from_rfc2822(&text))
 }
 
+// Handles <enclosure>
+fn handle_enclosure<R: Read>(element: Element<R>) -> Option<Content> {
+    let mut content = Content::new("".to_owned());
+
+    for child in element.children() {
+        let tag_name = child.name.local_name.as_str();
+        match tag_name {
+            "url" => content.src = child.child_as_text(),
+            "length" => if let Some(length) = child.child_as_text() { content.length = length.parse::<u64>().ok() },
+            "type" => content.content_type = child.child_as_text(),
+
+            // Nothing required for unknown elements
+            _ => {}
+        }
+    }
+
+    // No point returning the enclosure if we don't have a URL
+    if content.src.is_none() {
+        None
+    } else {
+        Some(content)
+    }
+}
+
+// Handles <image>
+fn handle_image<R: Read>(element: Element<R>) -> Option<Image> {
+    let mut image = Image::new("".to_owned());
+
+    for child in element.children() {
+        let tag_name = child.name.local_name.as_str();
+        match tag_name {
+            "url" => if let Some(url) = child.child_as_text() { image.uri = url },
+            "title" => image.title = child.child_as_text(),
+            "link" => if let Some(uri) = child.child_as_text() { image.link = Some(Link::new(uri)) },
+            "width" => if let Some(width) = child.child_as_text() { if let Ok(width) = width.parse::<u32>() { if width > 0 && width <= 144 { image.width = Some(width) } } },
+            "height" => if let Some(height) = child.child_as_text() { if let Ok(height) = height.parse::<u32>() { if height > 0 && height <= 400 { image.height = Some(height) } } },
+            "description" => image.description = child.child_as_text(),
+
+            // Nothing required for unknown elements
+            _ => {}
+        }
+    }
+
+    // If we don't have a URI there is no point returning an image
+    if image.uri.is_empty() {
+        None
+    } else {
+        Some(image)
+    }
+}
+
 // Handles <item>
 fn handle_item<R: Read>(item: Element<R>) -> Entry {
     let mut entry = Entry::new();
@@ -97,6 +149,8 @@ fn handle_item<R: Read>(item: Element<R>) -> Entry {
             "author" => if let Some(person) = handle_contact("author", child) { entry.authors.push(person) },
             "category" => if let Some(category) = handle_category(child) { entry.categories.push(category) },
             "guid" => if let Some(guid) = child.child_as_text() { entry.id = guid },
+            "enclosure" => entry.content = handle_enclosure(child),
+            "pubDate" => entry.published = handle_date_rfc2822(child),
 
             // Nothing required for unknown elements
             _ => {}

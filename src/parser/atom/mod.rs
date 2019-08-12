@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use crate::model::{Category, Entry, Feed, Generator, Link, Person, Image, Text};
+use crate::model::{Category, Entry, Feed, Generator, Link, Person, Image, Text, Content};
 use crate::util::{attr_value, timestamp_from_rfc3339};
 use crate::util::element_source::Element;
 
@@ -63,6 +63,19 @@ fn handle_category<R: Read>(element: Element<R>) -> Option<Category> {
     }
 }
 
+// Handles an Atom <content> element
+fn handle_content<R: Read>(element: Element<R>) -> Option<Content> {
+    element.child_as_text().map(|content| {
+        let mut content = Content::new(content);
+
+        if let Some(content_type) = attr_value(&element.attributes, "type") {
+            content.content_type = Some(content_type.to_owned());
+        }
+
+        content
+    })
+}
+
 // Handles an Atom <entry>
 fn handle_entry<R: Read>(element: Element<R>) -> Entry {
     let mut entry = Entry::new();
@@ -76,7 +89,7 @@ fn handle_entry<R: Read>(element: Element<R>) -> Entry {
             "updated" => if let Some(text) = child.child_as_text() { if let Some(ts) = timestamp_from_rfc3339(&text) { entry.updated = ts } },
 
             "author" => if let Some(person) = handle_person(child) { entry.authors.push(person) },
-            "content" => entry.content = handle_text(child),
+            "content" => entry.content = handle_content(child),
             "link" => if let Some(link) = handle_link(child) { entry.links.push(link) },
             "summary" => entry.summary = handle_text(child),
 
@@ -170,7 +183,7 @@ fn handle_person<R: Read>(element: Element<R>) -> Option<Person> {
     Some(person)
 }
 
-// Handles an Atom <title>, <summary>, <content>, <rights> or <subtitle> element
+// Handles an Atom <title>, <summary>, <rights> or <subtitle> element
 fn handle_text<R: Read>(element: Element<R>) -> Option<Text> {
     element.child_as_text().map(|content| {
         let mut text = Text::new(content);
