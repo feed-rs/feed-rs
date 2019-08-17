@@ -1,7 +1,7 @@
 use chrono::{NaiveDateTime, Utc};
+use mime::Mime;
 
 use crate::util;
-
 #[cfg(test)]
 use crate::util::timestamp_from_rfc2822;
 #[cfg(test)]
@@ -363,10 +363,9 @@ pub struct Content {
     ///     If the type attribute starts with text, then an escaped document of this type is contained inline.
     ///     Otherwise a base64 encoded document of the indicated media type is contained inline.
     // TODO review after enum above
-    pub content: Option<String>,
+    pub body: Option<String>,
     /// Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
-    /// TODO enum
-    pub content_type: Option<String>,
+    pub content_type: Mime,
     /// RSS 2.0: Length of the content in bytes
     pub length: Option<u64>,
     /// Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
@@ -375,15 +374,30 @@ pub struct Content {
 }
 
 impl Content {
-    pub fn new(content: String) -> Content {
-        Content { content: Some(content), content_type: None, length: None, src: None }
+    pub fn new() -> Content {
+        Content { body: None, content_type: mime::TEXT_PLAIN, length: None, src: None }
     }
 }
 
 #[cfg(test)]
 impl Content {
+    pub fn body(mut self, body: &str) -> Self {
+        self.body = Some(body.to_owned());
+        self
+    }
+
     pub fn content_type(mut self, content_type: &str) -> Self {
-        self.content_type = Some(content_type.to_owned());
+        self.content_type = content_type.parse::<Mime>().unwrap();
+        self
+    }
+
+    pub fn length(mut self, length: u64) -> Self {
+        self.length = Some(length);
+        self
+    }
+
+    pub fn src(mut self, url: &str) -> Self {
+        self.src = Some(url.to_owned());
         self
     }
 }
@@ -562,8 +576,7 @@ impl Person {
 /// Textual content, or link to the content, for a given entry.
 #[derive(Debug, PartialEq)]
 pub struct Text {
-    /// TODO enum
-    pub content_type: String,
+    pub content_type: Mime,
     pub src: Option<String>,
     // TODO review after enum above
     pub content: String,
@@ -571,14 +584,14 @@ pub struct Text {
 
 impl Text {
     pub fn new(content: String) -> Text {
-        Text { content_type: "text".to_owned(), src: None, content }
+        Text { content_type: mime::TEXT_PLAIN, src: None, content }
     }
 }
 
 #[cfg(test)]
 impl Text {
     pub fn content_type(mut self, content_type: &str) -> Self {
-        self.content_type = content_type.to_owned();
+        self.content_type = content_type.parse::<Mime>().unwrap();
         self
     }
 }

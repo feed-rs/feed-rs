@@ -3,6 +3,7 @@ use std::io::Read;
 use crate::model::{Category, Entry, Feed, Generator, Link, Person, Image, Text, Content};
 use crate::util::{attr_value, timestamp_from_rfc3339};
 use crate::util::element_source::Element;
+use mime::Mime;
 
 #[cfg(test)]
 mod tests;
@@ -64,16 +65,54 @@ fn handle_category<R: Read>(element: Element<R>) -> Option<Category> {
 }
 
 // Handles an Atom <content> element
+// TODO test other branches below
 fn handle_content<R: Read>(element: Element<R>) -> Option<Content> {
-    element.child_as_text().map(|content| {
-        let mut content = Content::new(content);
+    // Handle according to the type attribute
+    let content_type = element.attributes.iter()
+        .find(|a| a.name.local_name == "type")
+        .map(|oa| oa.value.as_str());
 
-        if let Some(content_type) = attr_value(&element.attributes, "type") {
-            content.content_type = Some(content_type.to_owned());
+    if let Some(content_type) = content_type {
+        // from http://www.atomenabled.org/developers/syndication/#contentElement
+        match content_type {
+            // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
+            "text" | "html" | "xhtml" => {
+                return handle_text(element).map(|text| {
+                    let mut content = Content::new();
+                    content.body = Some(text.content);
+                    content.content_type = text.content_type;
+                    content
+                });
+            }
+
+            // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
+            ct if ct.ends_with(" +xml") || ct.ends_with("/xml") => {
+                return element.child_as_text().map(|body| {
+                    let mut content = Content::new();
+                    content.body = Some(body);
+                    content.content_type = mime::TEXT_XML;
+                    content
+                });
+            }
+
+            // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline."
+            ct if ct.starts_with("text") => {
+                if let Ok(mime) = ct.parse::<Mime>() {
+                    return element.child_as_text().map(|body| {
+                        let mut content = Content::new();
+                        content.body = Some(body);
+                        content.content_type = mime;
+                        content
+                    });
+                }
+            }
+
+            // Unknown content type
+            _ => { }
         }
+    }
 
-        content
-    })
+    None
 }
 
 // Handles an Atom <entry>
@@ -185,13 +224,22 @@ fn handle_person<R: Read>(element: Element<R>) -> Option<Person> {
 
 // Handles an Atom <title>, <summary>, <rights> or <subtitle> element
 fn handle_text<R: Read>(element: Element<R>) -> Option<Text> {
+    // Find type, defaulting to "text" if not present
+    let type_attr = element.attributes.iter()
+        .find(|a| a.name.local_name == "type")
+        .map_or("text", |a| a.value.as_str());
+
+    let mime = match type_attr {
+        "text" => mime::TEXT_PLAIN,
+        "html" | "xhtml" => mime::TEXT_HTML,
+
+        // Unknown content type
+        _ => return None
+    };
+
     element.child_as_text().map(|content| {
         let mut text = Text::new(content);
-
-        if let Some(content_type) = attr_value(&element.attributes, "type") {
-            text.content_type = content_type.to_owned();
-        }
-
+        text.content_type = mime;
         text
     })
 }

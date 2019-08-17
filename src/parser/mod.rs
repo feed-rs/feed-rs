@@ -7,7 +7,10 @@ use crate::util::attr_value;
 mod atom;
 mod rss2;
 
+// TODO improve tests with Coverage analysis e.g. https://github.com/mozilla/grcov
+
 /// Parse the XML input (Atom or a flavour of RSS) into our model
+// TODO change this to Result (and the downstream parsers too) to allow error checking upstream
 pub fn parse<R: Read>(input: R) -> Option<Feed> {
     // Set up the source of XML elements from the input
     let source = ElementSource::new(input);

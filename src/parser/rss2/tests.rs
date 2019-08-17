@@ -1,4 +1,4 @@
-use crate::model::{Feed, Text, Link, Person, Entry, Generator, Category, Image};
+use crate::model::{Feed, Text, Link, Person, Entry, Generator, Category, Image, Content};
 use crate::parser;
 use crate::util::test;
 
@@ -55,6 +55,10 @@ fn test_example_2() {
             .summary(Text::new(r#"More than three months after delivering several tons of supplies and scientific experiments to
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
                 depart the orbiting laboratory Tuesday, Aug. 6."#.to_owned()))
+            .content(Content::new()
+                .src("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
+                .length(892854)
+                .content_type("image/jpeg"))
             .id("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship")
             .published_rfc2822("Thu, 01 Aug 2019 16:15 EDT")
             .updated(actual.updated));

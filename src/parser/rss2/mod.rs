@@ -5,6 +5,7 @@ use chrono::NaiveDateTime;
 use crate::model::{Category, Feed, Generator, Link, Person, Text, Entry, Image, Content};
 use crate::util::{attr_value, timestamp_from_rfc2822};
 use crate::util::element_source::Element;
+use mime::Mime;
 
 #[cfg(test)]
 mod tests;
@@ -87,14 +88,15 @@ fn handle_date_rfc2822<R: Read>(element: Element<R>) -> Option<NaiveDateTime> {
 
 // Handles <enclosure>
 fn handle_enclosure<R: Read>(element: Element<R>) -> Option<Content> {
-    let mut content = Content::new("".to_owned());
+    let mut content = Content::new();
 
-    for child in element.children() {
-        let tag_name = child.name.local_name.as_str();
+    for attr in &element.attributes {
+        let tag_name = attr.name.local_name.as_str();
         match tag_name {
-            "url" => content.src = child.child_as_text(),
-            "length" => if let Some(length) = child.child_as_text() { content.length = length.parse::<u64>().ok() },
-            "type" => content.content_type = child.child_as_text(),
+            // TODO can we avoid the clone
+            "url" => content.src = Some(attr.value.clone()),
+            "length" => content.length = attr.value.parse::<u64>().ok(),
+            "type" => if let Ok(mime) = attr.value.parse::<Mime>() { content.content_type = mime },
 
             // Nothing required for unknown elements
             _ => {}
@@ -148,6 +150,7 @@ fn handle_item<R: Read>(item: Element<R>) -> Entry {
             "description" => entry.summary = handle_text(child),
             "author" => if let Some(person) = handle_contact("author", child) { entry.authors.push(person) },
             "category" => if let Some(category) = handle_category(child) { entry.categories.push(category) },
+            // TODO add isPermaLink to link - https://validator.w3.org/feed/docs/rss2.html#ltguidgtSubelementOfLtitemgt
             "guid" => if let Some(guid) = child.child_as_text() { entry.id = guid },
             "enclosure" => entry.content = handle_enclosure(child),
             "pubDate" => entry.published = handle_date_rfc2822(child),

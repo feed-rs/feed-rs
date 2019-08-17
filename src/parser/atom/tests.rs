@@ -13,7 +13,7 @@ fn test_example_1() {
     let expected = Feed::new()
         .title(Text::new("dive into mark".to_owned()))
         .description(Text::new("A <em>lot</em> of effort\n        went into making this effortless".to_owned())
-            .content_type("html"))
+            .content_type("text/html"))
         .updated_rfc3339("2005-07-31T12:29:29Z")
         .id("tag:example.org,2003:3")
         .link(Link::new("http://example.org/".to_owned())
@@ -82,9 +82,9 @@ fn test_example_2() {
                 .rel("alternate")
                 .media_type("text/html"))
             .title(Text::new("Will someone plz dump our shizz on the Moon, NASA begs as one of the space biz vendors drops out".to_owned())
-                .content_type("html"))
+                .content_type("text/html"))
             .summary(Text::new("<h4>OrbitBeyond begone: Getting to the Moon is <i>hard</i></h4> <p>NASA made a slew of announcements yesterday aimed at bigging up the agency's efforts to get commercial companies involved with its deep space ambitions – despite one vendor dumping plans for a 2020 lunar landing.…</p>".to_owned())
-                .content_type("html")))
+                .content_type("text/html")))
         .entry(Entry::new()
             .id("tag:theregister.co.uk,2005:story204131")
             .updated_rfc3339("2019-07-30T05:41:09Z")
@@ -94,9 +94,9 @@ fn test_example_2() {
                 .rel("alternate")
                 .media_type("text/html"))
             .title(Text::new("Satellites with lasers and machine guns coming! China's new plans? Trump's Space Force? Nope, the French".to_owned())
-                .content_type("html"))
+                .content_type("text/html"))
             .summary(Text::new(r#"<h4>After all, what could possibly go wrong, apart from everything?</h4> <p>France is threatening to stick submachine guns on its next generation of satellites as part of an "active space defense" strategy that would enable it to shoot down other space hardware.…</p>"#.to_owned())
-                .content_type("html")));
+                .content_type("text/html")));
 
     // Check
     assert_eq!(actual, expected);
@@ -142,9 +142,10 @@ fn test_example_3() {
             .category(Category::new("zerotrust".to_owned())
                 .label("Zero Trust")
                 .scheme("http://www.sixapart.com/ns/types#tag"))
-            .content(Content::new(r#"<p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
-        <img src="http://feeds.feedburner.com/~r/TheAkamaiBlog/~4/NnQEuqRSyug" height="1" width="1" alt=""/>"#.to_owned())
-                .content_type("html")));
+            .content(Content::new()
+                .body(r#"<p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
+        <img src="http://feeds.feedburner.com/~r/TheAkamaiBlog/~4/NnQEuqRSyug" height="1" width="1" alt=""/>"#)
+                .content_type("text/html")));
 
     // Check
     assert_eq!(actual, expected);
@@ -172,7 +173,7 @@ fn test_example_4() {
             .id("tag:ebmpapst.com,2019-07-17:0310161724098")
             .updated_rfc3339("2019-07-17T03:10:16Z")
             .summary(Text::new(r#"<a href="https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html"><img src="http://www.ebmpapst.com//media/content/homepage/currenttopic/ads_cd2013/FF_ep_keyvisual_100px.jpg" border="0" align="right"></a> Working in perfect harmony: the ebm-papst drive solutions for SIMATIC MICRO-DRIVE drive regulators from Siemens."#.to_owned())
-                .content_type("html")));
+                .content_type("text/html")));
 
     // Check
     assert_eq!(actual, expected);
@@ -202,7 +203,7 @@ fn test_example_5() {
                 .rel("alternate")
                 .media_type("text/html"))
             .summary(Text::new(r#"<p class="quicksummary"><a href="https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366#shakemap" title="ShakeMap maximum estimated intensity" class="mmi-II">ShakeMap - <strong class="roman">II</strong></a> <a href="https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366#dyfi" class="mmi-IV" title="Did You Feel It? maximum reported intensity (4 reports)">DYFI? - <strong class="roman">IV</strong></a></p><dl><dt>Time</dt><dd>2019-07-31 12:26:15 UTC</dd><dd>2019-07-31 04:26:15 -08:00 at epicenter</dd><dt>Location</dt><dd>40.347&deg;N 124.460&deg;W</dd><dt>Depth</dt><dd>29.35 km (18.24 mi)</dd></dl>"#.to_owned())
-                .content_type("html"))
+                .content_type("text/html"))
             .category(Category::new("Past Hour".to_owned())
                 .label("Age"))
             .category(Category::new("Magnitude 3".to_owned())
