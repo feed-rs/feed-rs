@@ -13,22 +13,14 @@ mod tests;
 /// Parses an RSS 2.0 feed into our model
 pub fn parse<R: Read>(root: Element<R>) -> Option<Feed> {
     // Only expecting a channel element
-    for child in root.children() {
-        let tag_name = child.name.local_name.as_str();
-        match tag_name {
-            "channel" => return Some(handle_channel(child)),
-
-            // Nothing required for unknown elements
-            _ => {}
-        }
-    }
-
-    None
+    root.children()
+        .find(|e| e.name.local_name == "channel")
+        .map(handle_channel)
 }
 
 // Handles the <channel> element
 fn handle_channel<R: Read>(channel: Element<R>) -> Feed {
-    let mut feed = Feed::new();
+    let mut feed = Feed::default();
 
     for child in channel.children() {
         let tag_name = child.name.local_name.as_str();
@@ -44,7 +36,7 @@ fn handle_channel<R: Read>(channel: Element<R>) -> Feed {
             "pubDate" => feed.published = handle_date_rfc2822(child),
             "lastBuildDate" => if let Some(ts) = handle_date_rfc2822(child) { feed.updated = ts },
             "category" => if let Some(category) = handle_category(child) { feed.categories.push(category) },
-            "generator" => feed.generator = child.child_as_text().map(|content| Generator::new(content)),
+            "generator" => feed.generator = child.child_as_text().map(Generator::new),
             "ttl" => if let Some(text) = child.child_as_text() { feed.ttl = text.parse::<u32>().ok() },
             "image" => feed.logo = handle_image(child),
             "item" => feed.entries.push(handle_item(child)),
@@ -83,12 +75,12 @@ fn handle_contact<R: Read>(role: &str, element: Element<R>) -> Option<Person> {
 // Handles an RFC 2822 (822) date
 fn handle_date_rfc2822<R: Read>(element: Element<R>) -> Option<NaiveDateTime> {
     element.child_as_text()
-        .map_or(None, |text| timestamp_from_rfc2822(&text))
+        .and_then(|text| timestamp_from_rfc2822(&text))
 }
 
 // Handles <enclosure>
 fn handle_enclosure<R: Read>(element: Element<R>) -> Option<Content> {
-    let mut content = Content::new();
+    let mut content = Content::default();
 
     for attr in &element.attributes {
         let tag_name = attr.name.local_name.as_str();
@@ -140,7 +132,7 @@ fn handle_image<R: Read>(element: Element<R>) -> Option<Image> {
 
 // Handles <item>
 fn handle_item<R: Read>(item: Element<R>) -> Entry {
-    let mut entry = Entry::new();
+    let mut entry = Entry::default();
 
     for child in item.children() {
         let tag_name = child.name.local_name.as_str();
@@ -165,10 +157,10 @@ fn handle_item<R: Read>(item: Element<R>) -> Entry {
 
 // Handles <link>
 fn handle_link<R: Read>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(|uri| Link::new(uri))
+    element.child_as_text().map(Link::new)
 }
 
 // Handles <title>, <description>
 fn handle_text<R: Read>(element: Element<R>) -> Option<Text> {
-    element.child_as_text().map(|content| Text::new(content))
+    element.child_as_text().map(Text::new)
 }

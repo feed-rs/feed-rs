@@ -10,7 +10,7 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new()
+    let expected = Feed::default()
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("RSS Title".to_owned()))
         .description(Text::new("This is an example of an RSS feed".to_owned()))
@@ -18,7 +18,7 @@ fn test_example_1() {
         .updated_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000")
         .published_rfc2822("Sun, 06 Sep 2009 16:20:00 +0000")
         .ttl(1800)
-        .entry(Entry::new()
+        .entry(Entry::default()
             .title(Text::new("Example entry".to_owned()))
             .summary(Text::new("Here is some text containing an interesting description.".to_owned()))
             .link(Link::new("http://www.example.com/blog/post/1".to_owned()))
@@ -38,7 +38,7 @@ fn test_example_2() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected: Feed = Feed::new()
+    let expected: Feed = Feed::default()
         .id(actual.id.as_ref())     // not present in the test data
         .updated(actual.updated)    // not present in the test data
         .title(Text::new("NASA Breaking News".to_owned()))
@@ -49,13 +49,13 @@ fn test_example_2() {
             .email("jim.wilson@nasa.gov"))
         .contributor(Person::new("webMaster".to_owned())
             .email("brian.dunbar@nasa.gov"))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".to_owned()))
             .link(Link::new("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship".to_owned()))
             .summary(Text::new(r#"More than three months after delivering several tons of supplies and scientific experiments to
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
                 depart the orbiting laboratory Tuesday, Aug. 6."#.to_owned()))
-            .content(Content::new()
+            .content(Content::default()
                 .src("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
                 .length(892854)
                 .content_type("image/jpeg"))
@@ -75,7 +75,7 @@ fn test_example_3() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new()
+    let expected = Feed::default()
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("News, Politics, Opinion, Commentary, and Analysis".to_owned()))
         .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.".to_owned()))
@@ -83,7 +83,7 @@ fn test_example_3() {
         .rights(Text::new("© Condé Nast 2019".to_owned()))
         .language("en")
         .updated_rfc2822("Tue, 06 Aug 2019 10:46:05 +0000")
-        .entry(Entry::new()
+        .entry(Entry::default()
             .title(Text::new("How a Historian Uncovered Ronald Reagan’s Racist Remarks to Richard Nixon".to_owned()))
             .link(Link::new("https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon".to_owned()))
             .id("5d420f3abfe6c20008d5eaad")
@@ -104,7 +104,7 @@ fn test_example_4() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new()
+    let expected = Feed::default()
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Earthquakes today".to_owned()))
         .link(Link::new("http://www.earthquakenewstoday.com".to_owned()))
@@ -112,7 +112,7 @@ fn test_example_4() {
         .updated_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
         .language("en-US")
         .generator(Generator::new("https://wordpress.org/?v=5.1.1".to_owned()))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".to_owned()))
             .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/".to_owned()))
             .published_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
@@ -136,7 +136,7 @@ fn test_example_5() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new()
+    let expected = Feed::default()
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Ars Technica".to_owned()))
         .link(Link::new("https://arstechnica.com".to_owned()))
@@ -149,7 +149,7 @@ fn test_example_5() {
             .link("https://arstechnica.com")
             .width(32)
             .height(32))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .title(Text::new("Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter".to_owned()))
             .link(Link::new("https://arstechnica.com/?p=1546121".to_owned()))
             .published_rfc2822("Mon, 05 Aug 2019 23:11:09 +0000")
@@ -173,7 +173,7 @@ fn test_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new()
+    let expected = Feed::default()
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Scripting News".to_owned()))
         .link(Link::new("http://www.scripting.com/".to_owned()))
@@ -189,13 +189,13 @@ fn test_spec_1() {
         .contributor(Person::new("webMaster".to_owned())
             .email("dave@userland.com"))
         .ttl(40)
-        .entry(Entry::new()
+        .entry(Entry::default()
             .summary(Text::new(r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>"#.to_owned()))
             .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
             .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
             .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT"))       // copy from feed
-        .entry(Entry::new()
+        .entry(Entry::default()
             .summary(Text::new(r#"<a href="http://www.docuverse.com/blog/donpark/2002/09/29.html#a68">Don Park</a>:
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation.""#.to_owned()))

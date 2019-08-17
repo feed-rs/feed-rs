@@ -89,9 +89,9 @@ impl<R: Read> ElementSource<R> {
 
         // Grab the next event - we know its a Characters event from the above
         if let Some(XmlEvent::Characters(text)) = state.next() {
-            return Some(text);
+            Some(text)
         } else {
-            panic!();
+            panic!()
         }
     }
 }

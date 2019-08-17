@@ -10,7 +10,7 @@ static ATOM_NS: &'static str = "http://www.w3.org/2005/Atom";
 
 pub fn handle_rss2(handle: Handle) -> Option<Feed> {
     let node = handle;
-    let mut feed = Feed::new();
+    let mut feed = Feed::default();
     handle_channel(node.clone(), &mut feed);
     for child in node.children.borrow().iter() {
         match child.data {
@@ -98,7 +98,7 @@ pub fn image_url(handle: Handle) -> Option<String> {
 }
 
 pub fn handle_item(handle: Handle) -> Option<Entry> {
-    let mut entry = Entry::new();
+    let mut entry = Entry::default();
     let mut published: Option<NaiveDateTime> = None;
     let node = handle;
     for child in node.children.borrow().iter() {

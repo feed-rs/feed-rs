@@ -12,7 +12,7 @@ mod tests;
 
 /// Parses an Atom feed into our model
 pub fn parse<R: Read>(root: Element<R>) -> Option<Feed> {
-    let mut feed = Feed::new();
+    let mut feed = Feed::default();
     for child in root.children() {
         let tag_name = child.name.local_name.as_str();
         match tag_name {
@@ -78,7 +78,7 @@ fn handle_content<R: Read>(element: Element<R>) -> Option<Content> {
             // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
             "text" | "html" | "xhtml" => {
                 return handle_text(element).map(|text| {
-                    let mut content = Content::new();
+                    let mut content = Content::default();
                     content.body = Some(text.content);
                     content.content_type = text.content_type;
                     content
@@ -88,7 +88,7 @@ fn handle_content<R: Read>(element: Element<R>) -> Option<Content> {
             // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
             ct if ct.ends_with(" +xml") || ct.ends_with("/xml") => {
                 return element.child_as_text().map(|body| {
-                    let mut content = Content::new();
+                    let mut content = Content::default();
                     content.body = Some(body);
                     content.content_type = mime::TEXT_XML;
                     content
@@ -99,7 +99,7 @@ fn handle_content<R: Read>(element: Element<R>) -> Option<Content> {
             ct if ct.starts_with("text") => {
                 if let Ok(mime) = ct.parse::<Mime>() {
                     return element.child_as_text().map(|body| {
-                        let mut content = Content::new();
+                        let mut content = Content::default();
                         content.body = Some(body);
                         content.content_type = mime;
                         content
@@ -117,7 +117,7 @@ fn handle_content<R: Read>(element: Element<R>) -> Option<Content> {
 
 // Handles an Atom <entry>
 fn handle_entry<R: Read>(element: Element<R>) -> Entry {
-    let mut entry = Entry::new();
+    let mut entry = Entry::default();
 
     for child in element.children() {
         let tag_name = child.name.local_name.as_str();
@@ -168,7 +168,7 @@ fn handle_generator<R: Read>(element: Element<R>) -> Option<Generator> {
 
 // Handles an Atom <icon> or <logo>
 fn handle_image<R: Read>(element: Element<R>) -> Option<Image> {
-    element.child_as_text().map(|uri| Image::new(uri))
+    element.child_as_text().map(Image::new)
 }
 
 // Handles an Atom <link>

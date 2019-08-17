@@ -76,8 +76,8 @@ pub struct Feed {
     pub entries: Vec<Entry>,
 }
 
-impl Feed {
-    pub fn new() -> Self {
+impl Default for Feed {
+    fn default() -> Self {
         Feed {
             id: util::uuid_gen(),
             title: None,
@@ -232,8 +232,8 @@ pub struct Entry {
     pub rights: Option<Text>,
 }
 
-impl Entry {
-    pub fn new() -> Self {
+impl Default for Entry {
+    fn default() -> Self {
         let id = util::uuid_gen();
 
         Entry {
@@ -373,8 +373,8 @@ pub struct Content {
     pub src: Option<String>,
 }
 
-impl Content {
-    pub fn new() -> Content {
+impl Default for Content {
+    fn default() -> Content {
         Content { body: None, content_type: mime::TEXT_PLAIN, length: None, src: None }
     }
 }

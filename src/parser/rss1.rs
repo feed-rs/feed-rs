@@ -39,7 +39,7 @@ pub fn handle_rss1(handle: Handle) -> Option<Feed> {
 }
 
 pub fn handle_channel(handle: Handle) -> Option<Feed> {
-    let mut feed = Feed::new();
+    let mut feed = Feed::default();
     let node = handle;
     match node.data {
         NodeData::Element { ref attrs, .. } => {
@@ -96,7 +96,7 @@ pub fn handle_items(handle: Handle, feed: &mut Feed) {
                 match tag_name {
                     "li" => {
                         if let Some(resource) = attr("resource", &attrs.borrow()) {
-                            let mut entry = Entry::new();
+                            let mut entry = Entry::default();
                             entry.id      = resource;
                             feed.entries.push(entry);
                         }
@@ -110,7 +110,7 @@ pub fn handle_items(handle: Handle, feed: &mut Feed) {
 }
 
 pub fn handle_item(handle: Handle, id: String) -> Entry {
-    let mut entry: Entry = Entry::new();
+    let mut entry: Entry = Entry::default();
     entry.id = id;
     let node = handle;
     for child in node.children.borrow().iter() {

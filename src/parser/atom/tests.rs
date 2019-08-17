@@ -10,7 +10,7 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new()
+    let expected = Feed::default()
         .title(Text::new("dive into mark".to_owned()))
         .description(Text::new("A <em>lot</em> of effort\n        went into making this effortless".to_owned())
             .content_type("text/html"))
@@ -27,7 +27,7 @@ fn test_example_1() {
         .generator(Generator::new("Example Toolkit".to_owned())
             .uri("http://www.example.com/")
             .version("1.0"))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .id("tag:example.org,2003:3.2397")
             .title(Text::new("Atom draft-07 snapshot".to_owned()))
             .updated_rfc3339("2005-07-31T12:29:29Z")
@@ -56,7 +56,7 @@ fn test_example_2() {
     let test_data = test::fixture_as_string("atom_example_2.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new()
+    let expected = Feed::default()
         .id("tag:theregister.co.uk,2005:feed/theregister.co.uk/science/")
         .title(Text::new("The Register - Science".to_owned()))
         .link(Link::new("https://www.theregister.co.uk/science/headlines.atom".to_owned())
@@ -73,7 +73,7 @@ fn test_example_2() {
         .description(Text::new("Biting the hand that feeds IT — sci/tech news and views for the world".to_owned()))
         .logo(Image::new("https://www.theregister.co.uk/Design/graphics/Reg_default/The_Register_r.png".to_owned()))
         .updated_rfc3339("2019-07-31T11:54:28Z")
-        .entry(Entry::new()
+        .entry(Entry::default()
             .id("tag:theregister.co.uk,2005:story204156")
             .updated_rfc3339("2019-07-31T11:54:28Z")
             .author(Person::new("Richard Speed".to_owned())
@@ -85,7 +85,7 @@ fn test_example_2() {
                 .content_type("text/html"))
             .summary(Text::new("<h4>OrbitBeyond begone: Getting to the Moon is <i>hard</i></h4> <p>NASA made a slew of announcements yesterday aimed at bigging up the agency's efforts to get commercial companies involved with its deep space ambitions – despite one vendor dumping plans for a 2020 lunar landing.…</p>".to_owned())
                 .content_type("text/html")))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .id("tag:theregister.co.uk,2005:story204131")
             .updated_rfc3339("2019-07-30T05:41:09Z")
             .author(Person::new("Kieren McCarthy".to_owned())
@@ -110,7 +110,7 @@ fn test_example_3() {
     let test_data = test::fixture_as_string("atom_example_3.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new()
+    let expected = Feed::default()
         .title(Text::new("The Akamai Blog".to_owned()))
         .link(Link::new("https://blogs.akamai.com/".to_owned())
             .rel("alternate")
@@ -124,7 +124,7 @@ fn test_example_3() {
             .media_type("application/atom+xml"))
         .link(Link::new("http://pubsubhubbub.appspot.com/".to_owned())
             .rel("hub"))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .title(Text::new("Time to Transfer Risk: Why Security Complexity & VPNs Are No Longer Sustainable".to_owned()))
             .link(Link::new("http://feedproxy.google.com/~r/TheAkamaiBlog/~3/NnQEuqRSyug/time-to-transfer-risk-why-security-complexity-vpns-are-no-longer-sustainable.html".to_owned())
                 .rel("alternate")
@@ -142,7 +142,7 @@ fn test_example_3() {
             .category(Category::new("zerotrust".to_owned())
                 .label("Zero Trust")
                 .scheme("http://www.sixapart.com/ns/types#tag"))
-            .content(Content::new()
+            .content(Content::default()
                 .body(r#"<p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
         <img src="http://feeds.feedburner.com/~r/TheAkamaiBlog/~4/NnQEuqRSyug" height="1" width="1" alt=""/>"#)
                 .content_type("text/html")));
@@ -158,7 +158,7 @@ fn test_example_4() {
     let test_data = test::fixture_as_string("atom_example_4.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new()
+    let expected = Feed::default()
         .author(Person::new("ebm-papst".to_owned()))
         .link(Link::new("http://www.ebmpapst.com/en/ebmpapst_productnews_atom_feed.xml".to_owned())
             .rel("self")
@@ -166,7 +166,7 @@ fn test_example_4() {
         .title(Text::new("ebm-papst product news".to_owned()))
         .id("tag:ebmpapst.com,2011-06-30:1309426729931")
         .updated_rfc3339("2019-07-29T09:41:09Z")
-        .entry(Entry::new()
+        .entry(Entry::default()
             .title(Text::new("Connection with future".to_owned()))
             .link(Link::new("https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html".to_owned())
                 .rel("alternate"))
@@ -186,7 +186,7 @@ fn test_example_5() {
     let test_data = test::fixture_as_string("atom_example_5.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new()
+    let expected = Feed::default()
         .title(Text::new("USGS Magnitude 2.5+ Earthquakes, Past Hour".to_owned()))
         .updated_rfc3339("2019-07-31T13:17:27Z")
         .author(Person::new("U.S. Geological Survey".to_owned())
@@ -195,7 +195,7 @@ fn test_example_5() {
         .link(Link::new("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_hour.atom".to_owned())
             .rel("self"))
         .icon(Image::new("https://earthquake.usgs.gov/favicon.ico".to_owned()))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .id("urn:earthquake-usgs-gov:nc:73239366")
             .title(Text::new("M 3.6 - 15km W of Petrolia, CA".to_owned()))
             .updated_rfc3339("2019-07-31T13:07:31.364Z")
@@ -225,14 +225,14 @@ fn test_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new()
+    let expected = Feed::default()
         .id("urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6")
         .title(Text::new("Example Feed".to_owned()))
         .link(Link::new("http://example.org/".to_owned())
             .rel("alternate"))
         .updated_rfc3339("2003-12-13T18:30:02Z")
         .author(Person::new("John Doe".to_owned()))
-        .entry(Entry::new()
+        .entry(Entry::default()
             .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
             .title(Text::new("Atom-Powered Robots Run Amok".to_owned()))
             .updated_rfc3339("2003-12-13T18:30:02Z")
