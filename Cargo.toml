@@ -15,7 +15,7 @@ description = "A simple RSS feed parser (RSS 2.0, ATOM, RSS 1.0)"
 keywords = ["feed", "rss", "atom"]
 
 [dependencies]
-xml-rs = "0.8.0"
-chrono = { version = "0.4.7" }
-mime = "0.3.13"
-uuid = { version = "0.7.4", features = ["v4"] }
+xml-rs = "0.8"
+chrono = { version = "0.4" }
+mime = "0.3"
+uuid = { version = "0.7", features = ["v4"] }
