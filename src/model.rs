@@ -540,6 +540,11 @@ impl Link {
         self.rel = Some(rel.to_owned());
         self
     }
+
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_owned());
+        self
+    }
 }
 
 /// Represents an author, contributor etc.

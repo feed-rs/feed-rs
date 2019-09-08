@@ -5,6 +5,7 @@ use crate::util::attr_value;
 use crate::util::element_source::ElementSource;
 
 mod atom;
+mod rss0;
 mod rss1;
 mod rss2;
 
@@ -22,6 +23,7 @@ pub fn parse<R: Read>(input: R) -> Option<Feed> {
     match (root.name.local_name.as_str(), version) {
         ("feed", _) => atom::parse(root),
         ("rss", Some("2.0")) => rss2::parse(root),
+        ("rss", Some("0.91")) | ("rss", Some("0.92")) => rss0::parse(root),
         ("RDF", _) => rss1::parse(root),
         _ => None
     }
