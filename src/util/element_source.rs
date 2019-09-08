@@ -93,22 +93,19 @@ impl<R: Read> ElementSource<R> {
 // Wraps the XML source and current depth of iteration
 struct SourceState<R: Read> {
     reader: EventReader<R>,
-    peeked_event: Option<XmlEvent>,
+    next_event: Option<XmlEvent>,
     current_depth: u32,
 }
 
 impl<R: Read> SourceState<R> {
     fn new(reader: EventReader<R>) -> SourceState<R> {
-        SourceState { reader, peeked_event: None, current_depth: 0 }
+        let mut state = SourceState { reader, next_event: None, current_depth: 0 };
+        state.next_event = state.fetch_next();
+        state
     }
 
-    // Returns the next interesting event (skips XmlEvent::StartDocument etc) or None if no more events are found
-    fn next(&mut self) -> Option<XmlEvent> {
-        // Return the peeked value if present
-        if let Some(event) = self.peeked_event.take() {
-            return Some(event);
-        }
-
+    // Returns the next event
+    fn fetch_next(&mut self) -> Option<XmlEvent> {
         let reader = &mut self.reader;
         loop {
             if let Ok(event) = reader.next() {
@@ -129,16 +126,18 @@ impl<R: Read> SourceState<R> {
         }
     }
 
+    // Returns the next interesting event (skips XmlEvent::StartDocument etc) or None if no more events are found
+    fn next(&mut self) -> Option<XmlEvent> {
+        self.next_event.take().and_then(|event| {
+            self.next_event = self.fetch_next();
+            Some(event)
+        })
+    }
+
     // Peeks the next event (does not advance)
     // Callers should call next() to consume the event to move on
-    // TODO remember None so we don't call next() again
     fn peek(&mut self) -> &Option<XmlEvent> {
-        // If we haven't peeked, load the next value
-        if self.peeked_event.is_none() {
-            self.peeked_event = self.next();
-        }
-
-        &self.peeked_event
+        &self.next_event
     }
 }
 
