@@ -135,8 +135,6 @@ fn handle_entry<R: Read>(element: Element<R>) -> Entry {
             "category" => if let Some(category) = handle_category(child) { entry.categories.push(category) },
             "contributor" => if let Some(person) = handle_person(child) { entry.contributors.push(person) },
             "published" => if let Some(text) = child.child_as_text() { entry.published = timestamp_from_rfc3339(&text) },
-            // TODO source (need to roll up the raw XML)
-            // "source" => feed.rights = handle_text(child),
             "rights" => entry.rights = handle_text(child),
 
             // Nothing required for unknown elements

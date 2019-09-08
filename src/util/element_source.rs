@@ -74,24 +74,18 @@ impl<R: Read> ElementSource<R> {
     }
 
     // Extracts a text element
-    // TODO idiomatic
     fn text_node(&self) -> Option<String> {
         let mut state = self.state.borrow_mut();
 
         // If the next event is characters, we have found our text
-        match state.peek() {
-            Some(XmlEvent::Characters(_text)) => {
-                // nothing required at this point
-            },
-
-            _ => return None
-        }
-
-        // Grab the next event - we know its a Characters event from the above
-        if let Some(XmlEvent::Characters(text)) = state.next() {
-            Some(text)
+        if let Some(XmlEvent::Characters(_text)) = state.peek() {
+            // Grab the next event - we know its a Characters event from the above
+            match state.next() {
+                Some(XmlEvent::Characters(text)) => Some(text),
+                _ => unreachable!("state.next() did not return expected XmlEvent::Characters")
+            }
         } else {
-            panic!()
+            None
         }
     }
 }
@@ -111,7 +105,6 @@ impl<R: Read> SourceState<R> {
     // Returns the next interesting event (skips XmlEvent::StartDocument etc) or None if no more events are found
     fn next(&mut self) -> Option<XmlEvent> {
         // Return the peeked value if present
-        // TODO is this unwrap and rewrap idiomatic?
         if let Some(event) = self.peeked_event.take() {
             return Some(event);
         }
@@ -156,7 +149,7 @@ pub struct Element<'a, R: Read> {
 
     /// A list of attributes associated with the element.
     ///
-    /// Currently attributes are not checked for duplicates (TODO)
+    /// TODO check attributes for duplicates
     pub attributes: Vec<OwnedAttribute>,
 
     /// Contents of the namespace mapping at this point of the document.
