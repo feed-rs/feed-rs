@@ -1,10 +1,11 @@
 use std::io::Read;
 
 use crate::model::Feed;
-use crate::util::element_source::ElementSource;
 use crate::util::attr_value;
+use crate::util::element_source::ElementSource;
 
 mod atom;
+mod rss1;
 mod rss2;
 
 // TODO improve tests with Coverage analysis e.g. https://github.com/mozilla/grcov
@@ -21,6 +22,7 @@ pub fn parse<R: Read>(input: R) -> Option<Feed> {
     match (root.name.local_name.as_str(), version) {
         ("feed", _) => atom::parse(root),
         ("rss", Some("2.0")) => rss2::parse(root),
+        ("RDF", _) => rss1::parse(root),
         _ => None
     }
 }
