@@ -90,7 +90,7 @@ fn handle_item<R: Read>(element: Element<R>) -> Option<Entry> {
 
 // Handles <link>
 fn handle_link<R: Read>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(|url| Link::new(url))
+    element.child_as_text().map(Link::new)
 }
 
 // Handles <title>, <description>

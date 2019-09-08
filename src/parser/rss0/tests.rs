@@ -1,4 +1,4 @@
-use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
+use crate::model::{Content, Entry, Feed, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
 
