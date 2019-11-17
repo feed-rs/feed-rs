@@ -1,9 +1,11 @@
 use std::io::Read;
 
-use crate::model::{Category, Entry, Feed, Generator, Link, Person, Image, Text, Content};
+use mime::Mime;
+
+use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
+use crate::parser;
 use crate::util::{attr_value, timestamp_from_rfc3339};
 use crate::util::element_source::Element;
-use mime::Mime;
 
 #[cfg(test)]
 mod tests;
@@ -11,38 +13,39 @@ mod tests;
 // TODO expand test coverage to verify all elements + attributes are parsed
 
 /// Parses an Atom feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> Option<Feed> {
+// TODO idiomatic nested "if let Some()"?
+pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
     let mut feed = Feed::default();
     for child in root.children() {
         let tag_name = child.name.local_name.as_str();
         match tag_name {
-            "id" => if let Some(id) = child.child_as_text() { feed.id = id },
-            "title" => feed.title = handle_text(child),
-            "updated" => if let Some(text) = child.child_as_text() { if let Some(ts) = timestamp_from_rfc3339(&text) { feed.updated = ts } },
+            "id" => if let Some(id) = child.child_as_text()? { feed.id = id },
+            "title" => feed.title = handle_text(child)?,
+            "updated" => if let Some(text) = child.child_as_text()? { if let Some(ts) = timestamp_from_rfc3339(&text) { feed.updated = ts } },
 
-            "author" => if let Some(person) = handle_person(child) { feed.authors.push(person) },
-            "link" => if let Some(link) = handle_link(child) { feed.links.push(link) },
+            "author" => if let Some(person) = handle_person(child)? { feed.authors.push(person) }
+            "link" => if let Some(link) = handle_link(child)? { feed.links.push(link) },
 
-            "category" => if let Some(category) = handle_category(child) { feed.categories.push(category) },
-            "contributor" => if let Some(person) = handle_person(child) { feed.contributors.push(person) },
-            "generator" => feed.generator = handle_generator(child),
-            "icon" => feed.icon = handle_image(child),
-            "logo" => feed.logo = handle_image(child),
-            "rights" => feed.rights = handle_text(child),
-            "subtitle" => feed.description = handle_text(child),
+            "category" => if let Some(category) = handle_category(child)? { feed.categories.push(category) },
+            "contributor" => if let Some(person) = handle_person(child)? { feed.contributors.push(person) },
+            "generator" => feed.generator = handle_generator(child)?,
+            "icon" => feed.icon = handle_image(child)?,
+            "logo" => feed.logo = handle_image(child)?,
+            "rights" => feed.rights = handle_text(child)?,
+            "subtitle" => feed.description = handle_text(child)?,
 
-            "entry" => feed.entries.push(handle_entry(child)),
+            "entry" => if let Some(entry) = handle_entry(child)? { feed.entries.push(entry) },
 
             // Nothing required for unknown elements
             _ => {}
         }
     }
 
-    Some(feed)
+    Ok(feed)
 }
 
 // Handles an Atom <category>
-fn handle_category<R: Read>(element: Element<R>) -> Option<Category> {
+fn handle_category<R: Read>(element: Element<R>) -> parser::Result<Option<Category>> {
     // Always need a term
     if let Some(term) = attr_value(&element.attributes, "term") {
         let mut category = Category::new(term.to_owned());
@@ -58,96 +61,107 @@ fn handle_category<R: Read>(element: Element<R>) -> Option<Category> {
             }
         }
 
-        Some(category)
+        Ok(Some(category))
     } else {
-        None
+        // A missing category isn't fatal
+        Ok(None)
     }
 }
 
 // Handles an Atom <content> element
 // TODO test other branches below
-fn handle_content<R: Read>(element: Element<R>) -> Option<Content> {
-    // Handle according to the type attribute
+// TODO idiomatic treatment of options, errors etc
+fn handle_content<R: Read>(element: Element<R>) -> parser::Result<Option<Content>> {
+    // Extract the content type so we can parse the body
     let content_type = element.attributes.iter()
-        .find(|a| a.name.local_name == "type")
+        .find(|a| &a.name.local_name == "type")
         .map(|oa| oa.value.as_str());
 
-    if let Some(content_type) = content_type {
+    if let Some(ct) = content_type {
         // from http://www.atomenabled.org/developers/syndication/#contentElement
-        match content_type {
+        match ct {
             // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
             "text" | "html" | "xhtml" => {
-                return handle_text(element).map(|text| {
+                handle_text(element)?.map(|text| {
                     let mut content = Content::default();
                     content.body = Some(text.content);
                     content.content_type = text.content_type;
-                    content
-                });
+                    Some(content)
+                })
+                    // The text is required for a text or HTML element
+                    .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.text")))
             }
 
             // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
             ct if ct.ends_with(" +xml") || ct.ends_with("/xml") => {
-                return element.child_as_text().map(|body| {
+                element.child_as_text()?.map(|body| {
                     let mut content = Content::default();
                     content.body = Some(body);
                     content.content_type = mime::TEXT_XML;
-                    content
-                });
+                    Some(content)
+                })
+                    // The XML is required for an XML content element
+                    .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.xml")))
             }
 
             // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline."
             ct if ct.starts_with("text") => {
                 if let Ok(mime) = ct.parse::<Mime>() {
-                    return element.child_as_text().map(|body| {
+                    element.child_as_text()?.map(|body| {
                         let mut content = Content::default();
                         content.body = Some(body);
                         content.content_type = mime;
-                        content
-                    });
+                        Some(content)
+                    })
+                        // The text is required for an inline text element
+                        .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.inline")))
+                } else {
+                    Err(parser::Error::ParseError(parser::ParseErrorKind::UnknownMimeType(ct.into())))
                 }
             }
 
             // Unknown content type
-            _ => { }
+            _ => Err(parser::Error::ParseError(parser::ParseErrorKind::UnknownMimeType(ct.into())))
         }
+    } else {
+        // We can't parse without a content type
+        Err(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.type")))
     }
-
-    None
 }
 
 // Handles an Atom <entry>
-fn handle_entry<R: Read>(element: Element<R>) -> Entry {
+fn handle_entry<R: Read>(element: Element<R>) -> parser::Result<Option<Entry>> {
     let mut entry = Entry::default();
 
     for child in element.children() {
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             // Extract the fields from the spec
-            "id" => if let Some(id) = child.child_as_text() { entry.id = id },
-            "title" => entry.title = handle_text(child),
-            "updated" => if let Some(text) = child.child_as_text() { if let Some(ts) = timestamp_from_rfc3339(&text) { entry.updated = ts } },
+            "id" => if let Some(id) = child.child_as_text()? { entry.id = id },
+            "title" => entry.title = handle_text(child)?,
+            "updated" => if let Some(text) = child.child_as_text()? { if let Some(ts) = timestamp_from_rfc3339(&text) { entry.updated = ts } },
 
-            "author" => if let Some(person) = handle_person(child) { entry.authors.push(person) },
-            "content" => entry.content = handle_content(child),
-            "link" => if let Some(link) = handle_link(child) { entry.links.push(link) },
-            "summary" => entry.summary = handle_text(child),
+            "author" => if let Some(person) = handle_person(child)? { entry.authors.push(person) },
+            "content" => entry.content = handle_content(child)?,
+            "link" => if let Some(link) = handle_link(child)? { entry.links.push(link) },
+            "summary" => entry.summary = handle_text(child)?,
 
-            "category" => if let Some(category) = handle_category(child) { entry.categories.push(category) },
-            "contributor" => if let Some(person) = handle_person(child) { entry.contributors.push(person) },
-            "published" => if let Some(text) = child.child_as_text() { entry.published = timestamp_from_rfc3339(&text) },
-            "rights" => entry.rights = handle_text(child),
+            "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
+            "contributor" => if let Some(person) = handle_person(child)? { entry.contributors.push(person) },
+            "published" => if let Some(text) = child.child_as_text()? { entry.published = timestamp_from_rfc3339(&text) },
+            "rights" => entry.rights = handle_text(child)?,
 
             // Nothing required for unknown elements
             _ => {}
         }
     }
 
-    entry
+    Ok(Some(entry))
 }
 
 // Handles an Atom <generator>
-fn handle_generator<R: Read>(element: Element<R>) -> Option<Generator> {
-    element.child_as_text().map(|content| {
+fn handle_generator<R: Read>(element: Element<R>) -> parser::Result<Option<Generator>> {
+    let generator = element.child_as_text()?.map(|content| {
         let mut generator = Generator::new(content);
 
         for attr in &element.attributes {
@@ -161,18 +175,20 @@ fn handle_generator<R: Read>(element: Element<R>) -> Option<Generator> {
         }
 
         generator
-    })
+    });
+
+    Ok(generator)
 }
 
 // Handles an Atom <icon> or <logo>
-fn handle_image<R: Read>(element: Element<R>) -> Option<Image> {
-    element.child_as_text().map(Image::new)
+fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
+    Ok(element.child_as_text()?.map(|uri| Image::new(uri)))
 }
 
 // Handles an Atom <link>
-fn handle_link<R: Read>(element: Element<R>) -> Option<Link> {
+fn handle_link<R: Read>(element: Element<R>) -> parser::Result<Option<Link>> {
     // Always need an href
-    if let Some(href) = attr_value(&element.attributes, "href") {
+    let link = attr_value(&element.attributes, "href").and_then(|href| {
         let mut link = Link::new(href.to_owned());
 
         for attr in &element.attributes {
@@ -194,18 +210,18 @@ fn handle_link<R: Read>(element: Element<R>) -> Option<Link> {
         }
 
         Some(link)
-    } else {
-        None
-    }
+    });
+
+    Ok(link)
 }
 
 // Handles an Atom <author> or <contributor>
-fn handle_person<R: Read>(element: Element<R>) -> Option<Person> {
+fn handle_person<R: Read>(element: Element<R>) -> parser::Result<Option<Person>> {
     let mut person = Person::new(String::from("unknown"));
 
     for child in element.children() {
         let tag_name = child.name.local_name.as_str();
-        let child_text = child.child_as_text();
+        let child_text = child.child_as_text()?;
         match (tag_name, child_text) {
             // Extract the fields from the spec
             ("name", Some(name)) => person.name = name,
@@ -217,27 +233,29 @@ fn handle_person<R: Read>(element: Element<R>) -> Option<Person> {
         }
     }
 
-    Some(person)
+    Ok(Some(person))
 }
 
-// Handles an Atom <title>, <summary>, <rights> or <subtitle> element
-fn handle_text<R: Read>(element: Element<R>) -> Option<Text> {
+// Directly handles an Atom <title>, <summary>, <rights> or <subtitle> element
+fn handle_text<R: Read>(element: Element<R>) -> parser::Result<Option<Text>> {
     // Find type, defaulting to "text" if not present
     let type_attr = element.attributes.iter()
-        .find(|a| a.name.local_name == "type")
+        .find(|a| &a.name.local_name == "type")
         .map_or("text", |a| a.value.as_str());
 
     let mime = match type_attr {
-        "text" => mime::TEXT_PLAIN,
-        "html" | "xhtml" => mime::TEXT_HTML,
+        "text" => Ok(mime::TEXT_PLAIN),
+        "html" | "xhtml" => Ok(mime::TEXT_HTML),
 
         // Unknown content type
-        _ => return None
-    };
+        _ => Err(parser::Error::ParseError(parser::ParseErrorKind::UnknownMimeType(type_attr.into())))
+    }?;
 
-    element.child_as_text().map(|content| {
+    element.child_as_text()?.map(|content| {
         let mut text = Text::new(content);
         text.content_type = mime;
-        text
+        Some(text)
     })
+        // Need the text for a text element
+        .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("text")))
 }

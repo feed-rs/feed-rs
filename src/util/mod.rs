@@ -12,6 +12,7 @@ pub fn attr_value<'a>(attributes: &'a [OwnedAttribute], name: &str) -> Option<&'
 }
 
 /// Parses an RFC-2822 formatted timestamp
+// TODO return an error
 pub fn timestamp_from_rfc2822(text: &str) -> Option<NaiveDateTime> {
     DateTime::parse_from_rfc2822(text.trim())
         .ok()
@@ -19,6 +20,7 @@ pub fn timestamp_from_rfc2822(text: &str) -> Option<NaiveDateTime> {
 }
 
 /// Parses an RFC-3339 formatted timestamp
+// TODO return an error
 pub fn timestamp_from_rfc3339(text: &str) -> Option<NaiveDateTime> {
     DateTime::parse_from_rfc3339(text.trim())
         .ok()
