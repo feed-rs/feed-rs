@@ -182,7 +182,7 @@ fn handle_generator<R: Read>(element: Element<R>) -> parser::Result<Option<Gener
 
 // Handles an Atom <icon> or <logo>
 fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
-    Ok(element.child_as_text()?.map(|uri| Image::new(uri)))
+    Ok(element.child_as_text()?.map(Image::new))
 }
 
 // Handles an Atom <link>

@@ -57,5 +57,5 @@ pub fn parse<R: Read>(input: R) -> Result<model::Feed> {
     }
 
     // Couldn't find a recognised feed within the provided XML stream
-    return Err(Error::ParseError(ParseErrorKind::NoFeedRoot));
+    Err(Error::ParseError(ParseErrorKind::NoFeedRoot))
 }
