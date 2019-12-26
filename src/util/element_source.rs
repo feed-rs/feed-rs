@@ -24,7 +24,6 @@ impl<R: Read> ElementSource<R> {
     /// # Arguments
     ///
     /// * `xml_data` - the data you wish to parse
-    // TODO refactor to remove the generic trait bound so users of the API don't need to propagate it around
     pub fn new(xml_data: R) -> ElementSource<R> {
         // Create the XML parser
         let config = ParserConfig::new()
@@ -147,8 +146,6 @@ pub struct Element<'a, R: Read> {
     pub name: OwnedName,
 
     /// A list of attributes associated with the element.
-    ///
-    /// TODO check attributes for duplicates
     pub attributes: Vec<OwnedAttribute>,
 
     /// Contents of the namespace mapping at this point of the document.

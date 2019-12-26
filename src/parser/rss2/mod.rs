@@ -1,12 +1,12 @@
 use std::io::Read;
 
 use chrono::NaiveDateTime;
+use mime::Mime;
 
-use crate::model::{Category, Feed, Generator, Link, Person, Text, Entry, Image, Content};
+use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::{attr_value, timestamp_from_rfc2822};
 use crate::util::element_source::Element;
-use mime::Mime;
 
 #[cfg(test)]
 mod tests;
@@ -77,8 +77,9 @@ fn handle_contact<R: Read>(role: &str, element: Element<R>) -> parser::Result<Op
 
 // Handles an RFC 2822 (822) date
 fn handle_date_rfc2822<R: Read>(element: Element<R>) -> parser::Result<Option<NaiveDateTime>> {
-    Ok(element.child_as_text()?
-        .and_then(|text| timestamp_from_rfc2822(&text)))
+    element.child_as_text()?
+        .map(|text| timestamp_from_rfc2822(&text))
+        .transpose()
 }
 
 // Handles <enclosure>
@@ -88,7 +89,6 @@ fn handle_enclosure<R: Read>(element: Element<R>) -> parser::Result<Option<Conte
     for attr in &element.attributes {
         let tag_name = attr.name.local_name.as_str();
         match tag_name {
-            // TODO can we avoid the clone
             "url" => content.src = Some(attr.value.clone()),
             "length" => content.length = attr.value.parse::<u64>().ok(),
             "type" => if let Ok(mime) = attr.value.parse::<Mime>() { content.content_type = mime },
@@ -99,11 +99,10 @@ fn handle_enclosure<R: Read>(element: Element<R>) -> parser::Result<Option<Conte
     }
 
     // No point returning the enclosure if we don't have a URL
-    // TODO this is ugly - what is the idiomatic way of handling it?
-    Ok(if content.src.is_none() {
-        None
-    } else {
+    Ok(if content.src.is_some() {
         Some(content)
+    } else {
+        None
     })
 }
 
@@ -127,10 +126,10 @@ fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
     }
 
     // If we don't have a URI there is no point returning an image
-    Ok(if image.uri.is_empty() {
-        None
-    } else {
+    Ok(if !image.uri.is_empty() {
         Some(image)
+    } else {
+        None
     })
 }
 

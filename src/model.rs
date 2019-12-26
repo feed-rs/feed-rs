@@ -157,7 +157,7 @@ impl Feed {
     }
 
     pub fn published_rfc2822(mut self, pub_date: &str) -> Self {
-        self.published = timestamp_from_rfc2822(pub_date);
+        self.published = timestamp_from_rfc2822(pub_date).ok();
         self
     }
 
@@ -286,12 +286,12 @@ impl Entry {
     }
 
     pub fn published_rfc2822(mut self, published: &str) -> Self {
-        self.published = timestamp_from_rfc2822(published);
+        self.published = timestamp_from_rfc2822(published).ok();
         self
     }
 
     pub fn published_rfc3339(mut self, published: &str) -> Self {
-        self.published = timestamp_from_rfc3339(published);
+        self.published = timestamp_from_rfc3339(published).ok();
         self
     }
 

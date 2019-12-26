@@ -1,6 +1,7 @@
 use uuid::Uuid;
 use xml::attribute::OwnedAttribute;
 use chrono::{NaiveDateTime, DateTime};
+use crate::parser;
 
 pub mod element_source;
 
@@ -12,19 +13,17 @@ pub fn attr_value<'a>(attributes: &'a [OwnedAttribute], name: &str) -> Option<&'
 }
 
 /// Parses an RFC-2822 formatted timestamp
-// TODO return an error
-pub fn timestamp_from_rfc2822(text: &str) -> Option<NaiveDateTime> {
+pub fn timestamp_from_rfc2822(text: &str) -> parser::Result<NaiveDateTime> {
     DateTime::parse_from_rfc2822(text.trim())
-        .ok()
         .map(|t| t.naive_utc())
+        .map_err(|pe| parser::Error::ParseError(parser::ParseErrorKind::InvalidDateTime(Box::new(pe))))
 }
 
 /// Parses an RFC-3339 formatted timestamp
-// TODO return an error
-pub fn timestamp_from_rfc3339(text: &str) -> Option<NaiveDateTime> {
+pub fn timestamp_from_rfc3339(text: &str) -> parser::Result<NaiveDateTime> {
     DateTime::parse_from_rfc3339(text.trim())
-        .ok()
         .map(|t| t.naive_utc())
+        .map_err(|pe| parser::Error::ParseError(parser::ParseErrorKind::InvalidDateTime(Box::new(pe))))
 }
 
 /// Generates a new UUID.

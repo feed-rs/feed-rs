@@ -13,7 +13,6 @@ mod tests;
 // TODO expand test coverage to verify all elements + attributes are parsed
 
 /// Parses an Atom feed into our model
-// TODO idiomatic nested "if let Some()"?
 pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
     let mut feed = Feed::default();
     for child in root.children() {
@@ -21,7 +20,7 @@ pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
         match tag_name {
             "id" => if let Some(id) = child.child_as_text()? { feed.id = id },
             "title" => feed.title = handle_text(child)?,
-            "updated" => if let Some(text) = child.child_as_text()? { if let Some(ts) = timestamp_from_rfc3339(&text) { feed.updated = ts } },
+            "updated" => if let Some(text) = child.child_as_text()? { if let Ok(ts) = timestamp_from_rfc3339(&text) { feed.updated = ts } },
 
             "author" => if let Some(person) = handle_person(child)? { feed.authors.push(person) }
             "link" => if let Some(link) = handle_link(child)? { feed.links.push(link) },
@@ -52,7 +51,6 @@ fn handle_category<R: Read>(element: Element<R>) -> parser::Result<Option<Catego
 
         for attr in &element.attributes {
             match attr.name.local_name.as_str() {
-                // TODO can we avoid the clone() with a mutable/moved vec iterator?
                 "scheme" => category.scheme = Some(attr.value.clone()),
                 "label" => category.label = Some(attr.value.clone()),
 
@@ -139,7 +137,7 @@ fn handle_entry<R: Read>(element: Element<R>) -> parser::Result<Option<Entry>> {
             // Extract the fields from the spec
             "id" => if let Some(id) = child.child_as_text()? { entry.id = id },
             "title" => entry.title = handle_text(child)?,
-            "updated" => if let Some(text) = child.child_as_text()? { if let Some(ts) = timestamp_from_rfc3339(&text) { entry.updated = ts } },
+            "updated" => if let Some(text) = child.child_as_text()? { if let Ok(ts) = timestamp_from_rfc3339(&text) { entry.updated = ts } },
 
             "author" => if let Some(person) = handle_person(child)? { entry.authors.push(person) },
             "content" => entry.content = handle_content(child)?,
@@ -148,7 +146,7 @@ fn handle_entry<R: Read>(element: Element<R>) -> parser::Result<Option<Entry>> {
 
             "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
             "contributor" => if let Some(person) = handle_person(child)? { entry.contributors.push(person) },
-            "published" => if let Some(text) = child.child_as_text()? { entry.published = timestamp_from_rfc3339(&text) },
+            "published" => if let Some(text) = child.child_as_text()? { entry.published = timestamp_from_rfc3339(&text).ok() },
             "rights" => entry.rights = handle_text(child)?,
 
             // Nothing required for unknown elements
@@ -166,7 +164,6 @@ fn handle_generator<R: Read>(element: Element<R>) -> parser::Result<Option<Gener
 
         for attr in &element.attributes {
             match attr.name.local_name.as_str() {
-                // TODO can we avoid the clone
                 "uri" => generator.uri = Some(attr.value.clone()),
                 "version" => generator.version = Some(attr.value.clone()),
                 // Nothing required for unknown attributes
@@ -193,7 +190,6 @@ fn handle_link<R: Read>(element: Element<R>) -> parser::Result<Option<Link>> {
 
         for attr in &element.attributes {
             match attr.name.local_name.as_str() {
-                // TODO can we avoid the clone
                 "rel" => link.rel = Some(attr.value.clone()),
                 "type" => link.media_type = Some(attr.value.clone()),
                 "hreflang" => link.href_lang = Some(attr.value.clone()),

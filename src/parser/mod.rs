@@ -26,7 +26,6 @@ pub enum Error {
 }
 
 impl From<xml_reader::Error> for Error {
-    // std::convert::From<xml::reader::error::Error>` is not implemented for `util::element_source::Error`
     fn from(err: xml_reader::Error) -> Self {
         Error::XmlReader(err)
     }
@@ -36,7 +35,8 @@ impl From<xml_reader::Error> for Error {
 pub enum ParseErrorKind {
     NoFeedRoot,
     UnknownMimeType(String),
-    MissingContent(&'static str)
+    MissingContent(&'static str),
+    InvalidDateTime(Box<dyn std::error::Error>),
 }
 
 /// Parse the XML input (Atom or a flavour of RSS) into our model

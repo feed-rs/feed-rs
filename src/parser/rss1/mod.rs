@@ -60,10 +60,10 @@ fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
     }
 
     // If we don't have a URI there is no point returning an image
-    Ok(if image.uri.is_empty() {
-        None
-    } else {
+    Ok(if !image.uri.is_empty() {
         Some(image)
+    } else {
+        None
     })
 }
 
