@@ -4,7 +4,7 @@ use chrono::NaiveDateTime;
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
-use crate::parser;
+use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 use crate::util::{attr_value, timestamp_from_rfc2822};
 use crate::util::element_source::Element;
 
@@ -12,17 +12,17 @@ use crate::util::element_source::Element;
 mod tests;
 
 /// Parses an RSS 2.0 feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
+pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     // Only expecting a channel element
     if let Some(channel) = root.children().find(|e| &e.name.local_name == "channel") {
         handle_channel(channel)
     } else {
-        Err(parser::Error::ParseError(parser::ParseErrorKind::NoFeedRoot))
+        Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
     }
 }
 
 // Handles the <channel> element
-fn handle_channel<R: Read>(channel: Element<R>) -> parser::Result<Feed> {
+fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::default();
 
     for child in channel.children() {
@@ -58,7 +58,7 @@ fn handle_channel<R: Read>(channel: Element<R>) -> parser::Result<Feed> {
 }
 
 // Handles <category>
-fn handle_category<R: Read>(element: Element<R>) -> parser::Result<Option<Category>> {
+fn handle_category<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
     Ok(element.child_as_text()?.map(|text| {
         let mut category = Category::new(text);
         category.scheme = attr_value(&element.attributes, "domain").map(|s| s.to_owned());
@@ -67,7 +67,7 @@ fn handle_category<R: Read>(element: Element<R>) -> parser::Result<Option<Catego
 }
 
 // Handles <managingEditor> and <webMaster>
-fn handle_contact<R: Read>(role: &str, element: Element<R>) -> parser::Result<Option<Person>> {
+fn handle_contact<R: Read>(role: &str, element: Element<R>) -> ParseFeedResult<Option<Person>> {
     Ok(element.child_as_text()?.map(|email| {
         let mut person = Person::new(role.to_owned());
         person.email = Some(email);
@@ -76,14 +76,14 @@ fn handle_contact<R: Read>(role: &str, element: Element<R>) -> parser::Result<Op
 }
 
 // Handles an RFC 2822 (822) date
-fn handle_date_rfc2822<R: Read>(element: Element<R>) -> parser::Result<Option<NaiveDateTime>> {
+fn handle_date_rfc2822<R: Read>(element: Element<R>) -> ParseFeedResult<Option<NaiveDateTime>> {
     element.child_as_text()?
         .map(|text| timestamp_from_rfc2822(&text))
         .transpose()
 }
 
 // Handles <enclosure>
-fn handle_enclosure<R: Read>(element: Element<R>) -> parser::Result<Option<Content>> {
+fn handle_enclosure<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     let mut content = Content::default();
 
     for attr in &element.attributes {
@@ -107,7 +107,7 @@ fn handle_enclosure<R: Read>(element: Element<R>) -> parser::Result<Option<Conte
 }
 
 // Handles <image>
-fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
+fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
     let mut image = Image::new("".to_owned());
 
     for child in element.children() {
@@ -134,7 +134,7 @@ fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
 }
 
 // Handles <item>
-fn handle_item<R: Read>(item: Element<R>) -> parser::Result<Option<Entry>> {
+fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     for child in item.children() {
@@ -159,11 +159,11 @@ fn handle_item<R: Read>(item: Element<R>) -> parser::Result<Option<Entry>> {
 }
 
 // Handles <link>
-fn handle_link<R: Read>(element: Element<R>) -> parser::Result<Option<Link>> {
+fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
     Ok(element.child_as_text()?.map(Link::new))
 }
 
 // Handles <title>, <description>
-fn handle_text<R: Read>(element: Element<R>) -> parser::Result<Option<Text>> {
+fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.child_as_text()?.map(Text::new))
 }

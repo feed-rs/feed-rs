@@ -15,32 +15,37 @@ mod rss2;
 // TODO rationalise the internal comments, pulling them up to dispatch
 // TODO improve tests with Coverage analysis e.g. https://github.com/mozilla/grcov
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;
 
-/// Error we hit during streaming the elements
+/// An error returned when parsing a feed from a source fails
 #[derive(Debug)]
-pub enum Error {
+pub enum ParseFeedError {
     ParseError(ParseErrorKind),
     // Underlying issue with XML (poorly formatted etc)
     XmlReader(xml_reader::Error),
 }
 
-impl From<xml_reader::Error> for Error {
+impl From<xml_reader::Error> for ParseFeedError {
     fn from(err: xml_reader::Error) -> Self {
-        Error::XmlReader(err)
+        ParseFeedError::XmlReader(err)
     }
 }
 
+/// Underlying cause of the parse failure
 #[derive(Debug)]
 pub enum ParseErrorKind {
+    /// Could not find the expected root element (e.g. "channel" for RSS 2)
     NoFeedRoot,
+    /// The content type is unsupported and we cannot parse the value into a known representation
     UnknownMimeType(String),
+    /// Required content within the source was not found e.g. the XML child text element for a "content" element
     MissingContent(&'static str),
+    /// The date/time string was not valid
     InvalidDateTime(Box<dyn std::error::Error>),
 }
 
 /// Parse the XML input (Atom or a flavour of RSS) into our model
-pub fn parse<R: Read>(input: R) -> Result<model::Feed> {
+pub fn parse<R: Read>(input: R) -> ParseFeedResult<model::Feed> {
     // Set up the source of XML elements from the input
     let source = ElementSource::new(input);
 
@@ -57,5 +62,5 @@ pub fn parse<R: Read>(input: R) -> Result<model::Feed> {
     }
 
     // Couldn't find a recognised feed within the provided XML stream
-    Err(Error::ParseError(ParseErrorKind::NoFeedRoot))
+    Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
 }

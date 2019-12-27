@@ -1,14 +1,14 @@
 use std::io::Read;
 
-use crate::model::{Feed, Image, Link, Text, Entry};
-use crate::parser;
+use crate::model::{Entry, Feed, Image, Link, Text};
+use crate::parser::ParseFeedResult;
 use crate::util::element_source::Element;
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an RSS 1.0 feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
+pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::default();
 
     for child in root.children() {
@@ -27,7 +27,7 @@ pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
 }
 
 // Handles the <channel> element
-fn handle_channel<R: Read>(feed: &mut Feed, channel: Element<R>) -> parser::Result<()> {
+fn handle_channel<R: Read>(feed: &mut Feed, channel: Element<R>) -> ParseFeedResult<()> {
     for child in channel.children() {
         let tag_name = child.name.local_name.as_str();
         match tag_name {
@@ -44,7 +44,7 @@ fn handle_channel<R: Read>(feed: &mut Feed, channel: Element<R>) -> parser::Resu
 }
 
 // Handles <image>
-fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
+fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
     let mut image = Image::new("".to_owned());
 
     for child in element.children() {
@@ -68,7 +68,7 @@ fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
 }
 
 // Handles <item>
-fn handle_item<R: Read>(element: Element<R>) -> parser::Result<Option<Entry>> {
+fn handle_item<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     for child in element.children() {
@@ -92,11 +92,11 @@ fn handle_item<R: Read>(element: Element<R>) -> parser::Result<Option<Entry>> {
 }
 
 // Handles <link>
-fn handle_link<R: Read>(element: Element<R>) -> parser::Result<Option<Link>> {
+fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
     Ok(element.child_as_text()?.map(Link::new))
 }
 
 // Handles <title>, <description>
-fn handle_text<R: Read>(element: Element<R>) -> parser::Result<Option<Text>> {
+fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.child_as_text()?.map(Text::new))
 }

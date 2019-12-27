@@ -3,9 +3,9 @@ use std::io::Read;
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
-use crate::parser;
 use crate::util::{attr_value, timestamp_from_rfc3339};
 use crate::util::element_source::Element;
+use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 
 #[cfg(test)]
 mod tests;
@@ -13,7 +13,7 @@ mod tests;
 // TODO expand test coverage to verify all elements + attributes are parsed
 
 /// Parses an Atom feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
+pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::default();
     for child in root.children() {
         let tag_name = child.name.local_name.as_str();
@@ -44,7 +44,7 @@ pub fn parse<R: Read>(root: Element<R>) -> parser::Result<Feed> {
 }
 
 // Handles an Atom <category>
-fn handle_category<R: Read>(element: Element<R>) -> parser::Result<Option<Category>> {
+fn handle_category<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
     // Always need a term
     if let Some(term) = attr_value(&element.attributes, "term") {
         let mut category = Category::new(term.to_owned());
@@ -69,7 +69,7 @@ fn handle_category<R: Read>(element: Element<R>) -> parser::Result<Option<Catego
 // Handles an Atom <content> element
 // TODO test other branches below
 // TODO idiomatic treatment of options, errors etc
-fn handle_content<R: Read>(element: Element<R>) -> parser::Result<Option<Content>> {
+fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     // Extract the content type so we can parse the body
     let content_type = element.attributes.iter()
         .find(|a| &a.name.local_name == "type")
@@ -87,7 +87,7 @@ fn handle_content<R: Read>(element: Element<R>) -> parser::Result<Option<Content
                     Some(content)
                 })
                     // The text is required for a text or HTML element
-                    .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.text")))
+                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.text")))
             }
 
             // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
@@ -99,7 +99,7 @@ fn handle_content<R: Read>(element: Element<R>) -> parser::Result<Option<Content
                     Some(content)
                 })
                     // The XML is required for an XML content element
-                    .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.xml")))
+                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.xml")))
             }
 
             // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline."
@@ -112,23 +112,23 @@ fn handle_content<R: Read>(element: Element<R>) -> parser::Result<Option<Content
                         Some(content)
                     })
                         // The text is required for an inline text element
-                        .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.inline")))
+                        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
                 } else {
-                    Err(parser::Error::ParseError(parser::ParseErrorKind::UnknownMimeType(ct.into())))
+                    Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
                 }
             }
 
             // Unknown content type
-            _ => Err(parser::Error::ParseError(parser::ParseErrorKind::UnknownMimeType(ct.into())))
+            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
         }
     } else {
         // We can't parse without a content type
-        Err(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("content.type")))
+        Err(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.type")))
     }
 }
 
 // Handles an Atom <entry>
-fn handle_entry<R: Read>(element: Element<R>) -> parser::Result<Option<Entry>> {
+fn handle_entry<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     for child in element.children() {
@@ -158,7 +158,7 @@ fn handle_entry<R: Read>(element: Element<R>) -> parser::Result<Option<Entry>> {
 }
 
 // Handles an Atom <generator>
-fn handle_generator<R: Read>(element: Element<R>) -> parser::Result<Option<Generator>> {
+fn handle_generator<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Generator>> {
     let generator = element.child_as_text()?.map(|content| {
         let mut generator = Generator::new(content);
 
@@ -178,12 +178,12 @@ fn handle_generator<R: Read>(element: Element<R>) -> parser::Result<Option<Gener
 }
 
 // Handles an Atom <icon> or <logo>
-fn handle_image<R: Read>(element: Element<R>) -> parser::Result<Option<Image>> {
+fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
     Ok(element.child_as_text()?.map(Image::new))
 }
 
 // Handles an Atom <link>
-fn handle_link<R: Read>(element: Element<R>) -> parser::Result<Option<Link>> {
+fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
     // Always need an href
     let link = attr_value(&element.attributes, "href").and_then(|href| {
         let mut link = Link::new(href.to_owned());
@@ -212,7 +212,7 @@ fn handle_link<R: Read>(element: Element<R>) -> parser::Result<Option<Link>> {
 }
 
 // Handles an Atom <author> or <contributor>
-fn handle_person<R: Read>(element: Element<R>) -> parser::Result<Option<Person>> {
+fn handle_person<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Person>> {
     let mut person = Person::new(String::from("unknown"));
 
     for child in element.children() {
@@ -233,7 +233,7 @@ fn handle_person<R: Read>(element: Element<R>) -> parser::Result<Option<Person>>
 }
 
 // Directly handles an Atom <title>, <summary>, <rights> or <subtitle> element
-fn handle_text<R: Read>(element: Element<R>) -> parser::Result<Option<Text>> {
+fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     // Find type, defaulting to "text" if not present
     let type_attr = element.attributes.iter()
         .find(|a| &a.name.local_name == "type")
@@ -244,7 +244,7 @@ fn handle_text<R: Read>(element: Element<R>) -> parser::Result<Option<Text>> {
         "html" | "xhtml" => Ok(mime::TEXT_HTML),
 
         // Unknown content type
-        _ => Err(parser::Error::ParseError(parser::ParseErrorKind::UnknownMimeType(type_attr.into())))
+        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into())))
     }?;
 
     element.child_as_text()?.map(|content| {
@@ -253,5 +253,5 @@ fn handle_text<R: Read>(element: Element<R>) -> parser::Result<Option<Text>> {
         Some(text)
     })
         // Need the text for a text element
-        .ok_or(parser::Error::ParseError(parser::ParseErrorKind::MissingContent("text")))
+        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))
 }
