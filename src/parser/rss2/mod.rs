@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
@@ -76,7 +76,7 @@ fn handle_contact<R: Read>(role: &str, element: Element<R>) -> ParseFeedResult<O
 }
 
 // Handles an RFC 2822 (822) date
-fn handle_date_rfc2822<R: Read>(element: Element<R>) -> ParseFeedResult<Option<NaiveDateTime>> {
+fn handle_date_rfc2822<R: Read>(element: Element<R>) -> ParseFeedResult<Option<DateTime<Utc>>> {
     element.child_as_text()?
         .map(|text| timestamp_from_rfc2822(&text))
         .transpose()

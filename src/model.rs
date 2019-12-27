@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::util;
@@ -34,7 +34,7 @@ pub struct Feed {
     pub title: Option<Text>,
     /// Atom (required): Indicates the last time the feed was modified in a significant way.
     /// RSS 2 (optional) "lastBuildDate": The last time the content of the channel changed.
-    pub updated: NaiveDateTime,
+    pub updated: DateTime<Utc>,
 
     /// Atom (recommended): Collection of authors defined at the feed level.
     pub authors: Vec<Person>,
@@ -64,7 +64,7 @@ pub struct Feed {
     /// RSS 1 + 2 (optional) "image": Specifies a GIF, JPEG or PNG image that can be displayed with the channel.
     pub logo: Option<Image>,
     /// RSS 2 (optional): The publication date for the content in the channel.
-    pub published: Option<NaiveDateTime>,
+    pub published: Option<DateTime<Utc>>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
     /// RSS 2 (optional) "copyright": Copyright notice for content in the channel.
     pub rights: Option<Text>,
@@ -81,7 +81,7 @@ impl Default for Feed {
         Feed {
             id: util::uuid_gen(),
             title: None,
-            updated: Utc::now().naive_utc(),
+            updated: Utc::now(),
             authors: Vec::new(),
             description: None,
             links: Vec::new(),
@@ -176,7 +176,7 @@ impl Feed {
         self
     }
 
-    pub fn updated(mut self, updated: NaiveDateTime) -> Self {
+    pub fn updated(mut self, updated: DateTime<Utc>) -> Self {
         self.updated = updated;
         self
     }
@@ -202,7 +202,7 @@ pub struct Entry {
     /// RSS 2 (optional): The title of the item.
     pub title: Option<Text>,
     /// Atom (required): Indicates the last time the entry was modified in a significant way.
-    pub updated: NaiveDateTime,
+    pub updated: DateTime<Utc>,
 
     /// Atom (recommended): Collection of authors defined at the entry level.
     /// RSS 2 (optional): Email address of the author of the item.
@@ -225,7 +225,7 @@ pub struct Entry {
     pub contributors: Vec<Person>,
     /// Atom (optional): Contains the time of the initial creation or first availability of the entry.
     /// RSS 2 (optional) "pubDate": Indicates when the item was published.
-    pub published: Option<NaiveDateTime>,
+    pub published: Option<DateTime<Utc>>,
     /// Atom (optional): If an entry is copied from one feed into another feed, then this contains the source feed metadata.
     pub source: Option<String>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
@@ -239,7 +239,7 @@ impl Default for Entry {
         Entry {
             id,
             title: None,
-            updated: Utc::now().naive_utc(),
+            updated: Utc::now(),
             authors: Vec::new(),
             content: None,
             links: Vec::new(),
@@ -305,7 +305,7 @@ impl Entry {
         self
     }
 
-    pub fn updated(mut self, updated: NaiveDateTime) -> Self {
+    pub fn updated(mut self, updated: DateTime<Utc>) -> Self {
         self.updated = updated;
         self
     }
