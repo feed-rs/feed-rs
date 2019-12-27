@@ -15,6 +15,10 @@
 
 // TODO review the Rust doc guidelines and fix up links
 
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde;
+
 mod util;
 
 pub mod model;

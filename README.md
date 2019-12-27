@@ -16,6 +16,13 @@ Add the dependency to your `Cargo.toml`.
 feed-rs = "0.2.0"
 ```
 
+Or, if you want Serde include the feature like this:
+
+```toml
+[dependencies]
+feed-rs = { version = "0.2.0", features = ["serde"] }
+```
+
 ## Reading
 
 A feed can be parsed from any object that implements the `Read` trait.

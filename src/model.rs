@@ -28,6 +28,7 @@ use crate::util::timestamp_from_rfc3339;
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Feed {
     /// A unique identifier for this feed
     /// * Atom (required): Identifies the feed using a universally unique and permanent URI.
@@ -208,6 +209,7 @@ impl Feed {
 
 /// An item within a feed
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Entry {
     /// A unique identifier for this item with a feed. If not supplied it is initialised to a UUID.
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
@@ -350,6 +352,7 @@ impl Entry {
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#category
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltcategorygtSubelementOfLtitemgt
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Category {
     /// The category as a human readable string
     /// * Atom (required): Identifies the category.
@@ -385,6 +388,7 @@ impl Category {
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#contentElement
 /// [RSS 2.0]: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Content {
     /// Atom
     /// * If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
@@ -438,6 +442,7 @@ impl Content {
 ///
 /// Atom: Identifies the software used to generate the feed, for debugging and other purposes.
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Generator {
     /// Atom: Additional data
     /// RSS 2: A string indicating the program used to generate the channel.
@@ -473,6 +478,7 @@ impl Generator {
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
 /// [RSS 1 spec]: https://validator.w3.org/feed/docs/rss1.html#s5.4
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Image {
     /// Link to the image
     /// * Atom: The URL to an image or logo
@@ -529,6 +535,7 @@ impl Image {
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#link
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Link {
     /// Atom: The URI of the referenced resource (typically a Web page).
     /// RSS 2: The URL to the HTML website corresponding to the channel or item.
@@ -590,6 +597,7 @@ impl Link {
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#person
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Person {
     /// Atom: human-readable name for the person.
     pub name: String,
@@ -620,6 +628,7 @@ impl Person {
 
 /// Textual content, or link to the content, for a given entry.
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Text {
     pub content_type: Mime,
     pub src: Option<String>,
