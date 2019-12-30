@@ -7,18 +7,19 @@ use crate::util::timestamp_from_rfc2822;
 #[cfg(test)]
 use crate::util::timestamp_from_rfc3339;
 
-#[derive(Debug, PartialEq)]
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
 ///
-/// The model is based on the Atom standard as a start with RSS1+2 mapped on to it
-/// Atom:
-///     Feed -> Feed, Entry -> Entry
-/// RSS 1 + 2:
-///     Channel -> Feed, Item -> Entry
+/// The model is based on the Atom standard as a start with RSS1+2 mapped on to it e.g.
+/// * Atom
+///     * Feed -> Feed
+///     * Entry -> Entry
+/// * RSS 1 + 2
+///     * Channel -> Feed
+///     * Item -> Entry
 ///
-/// Atom spec: http://www.atomenabled.org/developers/syndication/
-/// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html
-/// RSS 1 spec: https://validator.w3.org/feed/docs/rss1.html
+/// [Atom spec]: http://www.atomenabled.org/developers/syndication/
+/// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html
+/// [RSS 1 spec]: https://validator.w3.org/feed/docs/rss1.html
 ///
 /// Certain elements are not mapped given their limited utility:
 ///   * RSS 2:
@@ -26,53 +27,66 @@ use crate::util::timestamp_from_rfc3339;
 ///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
+#[derive(Debug, PartialEq)]
 pub struct Feed {
-    /// Atom (required): Identifies the feed using a universally unique and permanent URI.
+    /// A unique identifier for this feed
+    /// * Atom (required): Identifies the feed using a universally unique and permanent URI.
+    /// * RSS doesn't require an ID so it is initialised to a UUID
     pub id: String,
-    /// Atom (required): Contains a human readable title for the feed. Often the same as the title of the associated website. This value should not be blank.
-    /// RSS 1 + 2 (required) "title": The name of the channel. It's how people refer to your service.
+    /// The title of the feed
+    /// * Atom (required): Contains a human readable title for the feed. Often the same as the title of the associated website. This value should not be blank.
+    /// * RSS 1 + 2 (required) "title": The name of the channel. It's how people refer to your service.
     pub title: Option<Text>,
-    /// Atom (required): Indicates the last time the feed was modified in a significant way.
-    /// RSS 2 (optional) "lastBuildDate": The last time the content of the channel changed.
+    /// The time at which the feed was last modified. If not provided in the source, it is set to the current time.
+    /// * Atom (required): Indicates the last time the feed was modified in a significant way.
+    /// * RSS 2 (optional) "lastBuildDate": The last time the content of the channel changed.
     pub updated: DateTime<Utc>,
 
     /// Atom (recommended): Collection of authors defined at the feed level.
     pub authors: Vec<Person>,
-    /// Atom (optional): Contains a human-readable description or subtitle for the feed (from <subtitle>).
-    /// RSS 1 + 2 (required): Phrase or sentence describing the channel.
+    /// Description of the feed
+    /// * Atom (optional): Contains a human-readable description or subtitle for the feed (from <subtitle>).
+    /// * RSS 1 + 2 (required): Phrase or sentence describing the channel.
     pub description: Option<Text>,
-    /// Atom (recommended): Identifies a related Web page.
+    /// Links to related pages
+    /// * Atom (recommended): Identifies a related Web page.
+    /// * RSS 1 + 2 (required): The URL to the HTML website corresponding to the channel.
     /// TODO Atom supports multiple links (double check the validator for other elements with N)
-    /// RSS 1 + 2 (required): The URL to the HTML website corresponding to the channel.
     pub links: Vec<Link>,
 
-    /// Atom (optional): Specifies a category that the feed belongs to. A feed may have multiple category elements.
-    /// RSS 2 (optional) "category": Specify one or more categories that the channel belongs to.
+    /// Structured classification of the feed
+    /// * Atom (optional): Specifies a category that the feed belongs to. A feed may have multiple category elements.
+    /// * RSS 2 (optional) "category": Specify one or more categories that the channel belongs to.
     pub categories: Vec<Category>,
-    /// Atom (optional): Names one contributor to the feed. A feed may have multiple contributor elements.
-    /// RSS 2 (optional) "managingEditor": Email address for person responsible for editorial content.
-    /// RSS 2 (optional) "webMaster": Email address for person responsible for technical issues relating to channel.
+    /// People who have contributed to the feed
+    /// * Atom (optional): Names one contributor to the feed. A feed may have multiple contributor elements.
+    /// * RSS 2 (optional) "managingEditor": Email address for person responsible for editorial content.
+    /// * RSS 2 (optional) "webMaster": Email address for person responsible for technical issues relating to channel.
     pub contributors: Vec<Person>,
-    /// Atom (optional): Identifies the software used to generate the feed, for debugging and other purposes.
-    /// RSS 2 (optional): A string indicating the program used to generate the channel.
+    /// Information on the software used to build the feed
+    /// * Atom (optional): Identifies the software used to generate the feed, for debugging and other purposes.
+    /// * RSS 2 (optional): A string indicating the program used to generate the channel.
     pub generator: Option<Generator>,
     /// Atom (optional): Identifies a small image which provides iconic visual identification for the feed.
     pub icon: Option<Image>,
     /// RSS 2 (optional): The language the channel is written in.
     pub language: Option<String>,
-    /// Atom (optional): Identifies a larger image which provides visual identification for the feed.
-    /// RSS 1 + 2 (optional) "image": Specifies a GIF, JPEG or PNG image that can be displayed with the channel.
+    /// An image used to visually identify the feed
+    /// * Atom (optional): Identifies a larger image which provides visual identification for the feed.
+    /// * RSS 1 + 2 (optional) "image": Specifies a GIF, JPEG or PNG image that can be displayed with the channel.
     pub logo: Option<Image>,
     /// RSS 2 (optional): The publication date for the content in the channel.
     pub published: Option<DateTime<Utc>>,
-    /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
-    /// RSS 2 (optional) "copyright": Copyright notice for content in the channel.
+    /// Rights restricting content within the feed
+    /// * Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
+    /// * RSS 2 (optional) "copyright": Copyright notice for content in the channel.
     pub rights: Option<Text>,
     /// RSS 2 (optional): It's a number of minutes that indicates how long a channel can be cached before refreshing from the source.
     pub ttl: Option<u32>,
 
-    /// Atom (optional): Individual entries within the feed (e.g. a blog post)
-    /// RSS 1+2 (optional): Individual items within the channel.
+    /// The individual items within the feed
+    /// * Atom (optional): Individual entries within the feed (e.g. a blog post)
+    /// * RSS 1+2 (optional): Individual items within the channel.
     pub entries: Vec<Entry>,
 }
 
@@ -195,36 +209,46 @@ impl Feed {
 /// An item within a feed
 #[derive(Debug, PartialEq)]
 pub struct Entry {
-    /// Atom (required): Identifies the entry using a universally unique and permanent URI.
-    /// RSS 2 (optional) "guid": A string that uniquely identifies the item.
+    /// A unique identifier for this item with a feed. If not supplied it is initialised to a UUID.
+    /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
+    /// * RSS 2 (optional) "guid": A string that uniquely identifies the item.
     pub id: String,
-    /// Atom, RSS 1(required): Contains a human readable title for the entry.
-    /// RSS 2 (optional): The title of the item.
+    /// Title of this item within the feed
+    /// * Atom, RSS 1(required): Contains a human readable title for the entry.
+    /// * RSS 2 (optional): The title of the item.
     pub title: Option<Text>,
-    /// Atom (required): Indicates the last time the entry was modified in a significant way.
+    /// Time at which this item was last modified. It is initialised to the current time if missing.
+    /// * Atom (required): Indicates the last time the entry was modified in a significant way.
+    /// * RSS doesn't specify this field.
     pub updated: DateTime<Utc>,
 
-    /// Atom (recommended): Collection of authors defined at the entry level.
-    /// RSS 2 (optional): Email address of the author of the item.
+    /// Authors of this item
+    /// * Atom (recommended): Collection of authors defined at the entry level.
+    /// * RSS 2 (optional): Email address of the author of the item.
     pub authors: Vec<Person>,
-    /// Atom (recommended): Contains or links to the complete content of the entry.
-    /// RSS 2 (optional) "enclosure": Describes a media object that is attached to the item.
+    /// The content of the item
+    /// * Atom (recommended): Contains or links to the complete content of the entry.
+    /// * RSS 2 (optional) "enclosure": Describes a media object that is attached to the item.
     pub content: Option<Content>,
-    /// Atom (recommended): Identifies a related Web page.
-    /// RSS 2 (optional): The URL of the item.
-    /// RSS 1 (required): The item's URL.
+    /// Links associated with this item
+    /// * Atom (recommended): Identifies a related Web page.
+    /// * RSS 2 (optional): The URL of the item.
+    /// * RSS 1 (required): The item's URL.
     pub links: Vec<Link>,
-    /// Atom (recommended): Conveys a short summary, abstract, or excerpt of the entry.
-    /// RSS 1+2 (optional): The item synopsis.
+    /// A short summary of the item
+    /// * Atom (recommended): Conveys a short summary, abstract, or excerpt of the entry.
+    /// * RSS 1+2 (optional): The item synopsis.
     pub summary: Option<Text>,
 
-    /// Atom (optional): Specifies a category that the entry belongs to. A feed may have multiple category elements.
-    /// RSS 2 (optional): Includes the item in one or more categories.
+    /// Structured classification of the item
+    /// * Atom (optional): Specifies a category that the entry belongs to. A feed may have multiple category elements.
+    /// * RSS 2 (optional): Includes the item in one or more categories.
     pub categories: Vec<Category>,
     /// Atom (optional): Names one contributor to the entry. A feed may have multiple contributor elements.
     pub contributors: Vec<Person>,
-    /// Atom (optional): Contains the time of the initial creation or first availability of the entry.
-    /// RSS 2 (optional) "pubDate": Indicates when the item was published.
+    /// Time at which this item was first published
+    /// * Atom (optional): Contains the time of the initial creation or first availability of the entry.
+    /// * RSS 2 (optional) "pubDate": Indicates when the item was published.
     pub published: Option<DateTime<Utc>>,
     /// Atom (optional): If an entry is copied from one feed into another feed, then this contains the source feed metadata.
     pub source: Option<String>,
@@ -322,11 +346,14 @@ impl Entry {
 }
 
 /// Represents the category of a feed or entry
-/// Atom spec: http://www.atomenabled.org/developers/syndication/#category
-/// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltcategorygtSubelementOfLtitemgt
+///
+/// [Atom spec]: http://www.atomenabled.org/developers/syndication/#category
+/// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltcategorygtSubelementOfLtitemgt
 #[derive(Debug, PartialEq)]
 pub struct Category {
-    /// Atom (required): Identifies the category.
+    /// The category as a human readable string
+    /// * Atom (required): Identifies the category.
+    /// * RSS 2: The value of the element is a forward-slash-separated string that identifies a hierarchic location in the indicated taxonomy. Processors may establish conventions for the interpretation of categories.
     pub term: String,
     /// Atom (optional): Identifies the categorization scheme via a URI.
     pub scheme: Option<String>,
@@ -354,22 +381,27 @@ impl Category {
 }
 
 /// Content, or link to the content, for a given entry.
-/// Atom spec: http://www.atomenabled.org/developers/syndication/#contentElement
-/// RSS 2.0: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
+///
+/// [Atom spec]: http://www.atomenabled.org/developers/syndication/#contentElement
+/// [RSS 2.0]: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
 #[derive(Debug, PartialEq)]
 pub struct Content {
-    /// Atom:
-    ///     If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
-    ///     If the type attribute starts with text, then an escaped document of this type is contained inline.
-    ///     Otherwise a base64 encoded document of the indicated media type is contained inline.
+    /// Atom
+    /// * If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
+    /// * If the type attribute starts with text, then an escaped document of this type is contained inline.
+    /// * Otherwise a base64 encoded document of the indicated media type is contained inline.
     // TODO review after enum above
     pub body: Option<String>,
-    /// Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
+    /// Type of content
+    /// * Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
+    /// * RSS 2: Type says what its type is, a standard MIME type
     pub content_type: Mime,
     /// RSS 2.0: Length of the content in bytes
     pub length: Option<u64>,
-    /// Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
-    /// RSS 2.0: where the enclosure is located
+    /// Source of the content
+    /// * Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
+    /// * RSS 2.0: where the enclosure is located
+    // TODO change this to Link
     pub src: Option<String>,
 }
 
@@ -403,10 +435,12 @@ impl Content {
 }
 
 /// Information on the tools used to generate the feed
+///
 /// Atom: Identifies the software used to generate the feed, for debugging and other purposes.
 #[derive(Debug, PartialEq)]
 pub struct Generator {
     /// Atom: Additional data
+    /// RSS 2: A string indicating the program used to generate the channel.
     pub content: String,
     /// Atom: Link to the tool
     pub uri: Option<String>,
@@ -434,12 +468,15 @@ impl Generator {
 }
 
 /// Represents a a link to an image.
-/// Atom spec: item + logo in http://www.atomenabled.org/developers/syndication/#optionalFeedElements
-/// RSS 2 spec: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
-/// RSS 1 spec: https://validator.w3.org/feed/docs/rss1.html#s5.4
+///
+/// [Atom spec]:  http://www.atomenabled.org/developers/syndication/#optionalFeedElements
+/// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
+/// [RSS 1 spec]: https://validator.w3.org/feed/docs/rss1.html#s5.4
 #[derive(Debug, PartialEq)]
 pub struct Image {
-    /// RSS 1 + 2: the URL of a GIF, JPEG or PNG image that represents the channel.
+    /// Link to the image
+    /// * Atom: The URL to an image or logo
+    /// * RSS 1 + 2: the URL of a GIF, JPEG or PNG image that represents the channel.
     pub uri: String,
     /// RSS 1 + 2: describes the image, it's used in the ALT attribute of the HTML <img> tag when the channel is rendered in HTML.
     pub title: Option<String>,
@@ -489,10 +526,12 @@ impl Image {
 }
 
 /// Represents a link to an associated resource for the feed or entry.
-/// Atom spec: http://www.atomenabled.org/developers/syndication/#link
+///
+/// [Atom spec]: http://www.atomenabled.org/developers/syndication/#link
 #[derive(Debug, PartialEq)]
 pub struct Link {
-    /// The URI of the referenced resource (typically a Web page).
+    /// Atom: The URI of the referenced resource (typically a Web page).
+    /// RSS 2: The URL to the HTML website corresponding to the channel or item.
     pub href: String,
     /// A single link relationship type.
     pub rel: Option<String>,
@@ -548,7 +587,8 @@ impl Link {
 }
 
 /// Represents an author, contributor etc.
-/// Atom spec: http://www.atomenabled.org/developers/syndication/#person
+///
+/// [Atom spec]: http://www.atomenabled.org/developers/syndication/#person
 #[derive(Debug, PartialEq)]
 pub struct Person {
     /// Atom: human-readable name for the person.

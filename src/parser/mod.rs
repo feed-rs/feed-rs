@@ -45,6 +45,28 @@ pub enum ParseErrorKind {
 }
 
 /// Parse the XML input (Atom or a flavour of RSS) into our model
+///
+/// # Arguments
+///
+/// * `input` - A source of XML content such as a string, file etc.
+///
+/// # Examples
+///
+/// ```
+/// use feed_rs::parser;
+/// let xml = r#"
+/// <feed>
+///    <title type="text">sample feed</title>
+///    <updated>2005-07-31T12:29:29Z</updated>
+///    <id>feed1</id>
+///    <entry>
+///        <title>sample entry</title>
+///        <id>entry1</id>
+///    </entry>
+/// </feed>
+/// "#;
+/// let feed = parser::parse(xml.as_bytes()).unwrap();
+/// ```
 pub fn parse<R: Read>(input: R) -> ParseFeedResult<model::Feed> {
     // Set up the source of XML elements from the input
     let source = ElementSource::new(input);
@@ -54,9 +76,9 @@ pub fn parse<R: Read>(input: R) -> ParseFeedResult<model::Feed> {
         let version = attr_value(&root.attributes, "version");
         match (root.name.local_name.as_str(), version) {
             ("feed", _) => return atom::parse(root),
-                ("rss", Some("2.0")) => return rss2::parse(root),
-                ("rss", Some("0.91")) | ("rss", Some("0.92")) => return rss0::parse(root),
-                ("RDF", _) => return rss1::parse(root),
+            ("rss", Some("2.0")) => return rss2::parse(root),
+            ("rss", Some("0.91")) | ("rss", Some("0.92")) => return rss0::parse(root),
+            ("RDF", _) => return rss1::parse(root),
             _ => {}
         };
     }
