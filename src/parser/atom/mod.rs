@@ -10,8 +10,6 @@ use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 #[cfg(test)]
 mod tests;
 
-// TODO expand test coverage to verify all elements + attributes are parsed
-
 /// Parses an Atom feed into our model
 pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::default();
@@ -67,7 +65,6 @@ fn handle_category<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Categ
 }
 
 // Handles an Atom <content> element
-// TODO test other branches below
 // TODO idiomatic treatment of options, errors etc
 fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     // Extract the content type so we can parse the body

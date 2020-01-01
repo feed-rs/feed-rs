@@ -11,10 +11,6 @@ mod rss0;
 mod rss1;
 mod rss2;
 
-// TODO review API comments to detail all mappings
-// TODO rationalise the internal comments, pulling them up to dispatch
-// TODO improve tests with Coverage analysis e.g. https://github.com/mozilla/grcov
-
 pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;
 
 /// An error returned when parsing a feed from a source fails

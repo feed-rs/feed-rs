@@ -14,6 +14,7 @@
 //! The parser consists of a single method (parser::parse) which accepts an stream representing an XML document and returns a Feed.
 
 // TODO review the Rust doc guidelines and fix up links
+// TODO improve tests with Coverage analysis e.g. https://github.com/mozilla/grcov
 
 #[cfg(feature = "serde")]
 #[macro_use]
