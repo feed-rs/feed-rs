@@ -7,16 +7,22 @@ include = [
     "**/*.rs",
     "Cargo.toml",
     "LICENSE",
+    "README.md"
 ]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 homepage = "https://github.com/feed-rs/feed-rs"
 repository = "https://github.com/feed-rs/feed-rs.git"
-description = "A simple RSS feed parser (RSS 2.0, ATOM, RSS 1.0)"
+description = "A simple feed parser (RSS 2.0, ATOM, RSS 1.0)"
 keywords = ["feed", "rss", "atom"]
+categories = ["parser-implementations"]
+readme = "README.md"
+
+[badges]
+travis-ci = { repository = "https://travis-ci.org/feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
-xml-rs = "0.8"
 chrono = { version = "0.4" }
 mime = "0.3"
 serde = { version = "1.0", optional = true, features = ["derive"] }
 uuid = { version = "0.8", features = ["v4"] }
+xml-rs = "0.8"
