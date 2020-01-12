@@ -52,7 +52,6 @@ pub struct Feed {
     /// Links to related pages
     /// * Atom (recommended): Identifies a related Web page.
     /// * RSS 1 + 2 (required): The URL to the HTML website corresponding to the channel.
-    /// TODO Atom supports multiple links (double check the validator for other elements with N)
     pub links: Vec<Link>,
 
     /// Structured classification of the feed
