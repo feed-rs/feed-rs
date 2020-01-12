@@ -99,24 +99,20 @@ fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Conten
                     .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.xml")))
             }
 
-            // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline."
-            ct if ct.starts_with("text") => {
-                if let Ok(mime) = ct.parse::<Mime>() {
+            // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline." and
+            // also handles base64 encoded document of the indicated mime type per "Otherwise, a base64 encoded document of the indicated media type is contained inline."
+            _ => if let Ok(mime) = ct.parse::<Mime>() {
                     element.child_as_text()?.map(|body| {
                         let mut content = Content::default();
                         content.body = Some(body);
                         content.content_type = mime;
                         Some(content)
                     })
-                        // The text is required for an inline text element
+                        // The text is required for an inline text or base64 element
                         .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
                 } else {
                     Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
                 }
-            }
-
-            // Unknown content type
-            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
         }
     } else {
         // We can't parse without a content type

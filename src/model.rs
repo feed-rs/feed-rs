@@ -393,7 +393,6 @@ pub struct Content {
     /// * If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
     /// * If the type attribute starts with text, then an escaped document of this type is contained inline.
     /// * Otherwise a base64 encoded document of the indicated media type is contained inline.
-    // TODO switch to enum based on content type
     pub body: Option<String>,
     /// Type of content
     /// * Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
@@ -630,7 +629,6 @@ impl Person {
 pub struct Text {
     pub content_type: Mime,
     pub src: Option<String>,
-    // TODO switch to enum based on content type
     pub content: String,
 }
 
