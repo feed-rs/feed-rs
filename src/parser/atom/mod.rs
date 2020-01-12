@@ -65,7 +65,6 @@ fn handle_category<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Categ
 }
 
 // Handles an Atom <content> element
-// TODO idiomatic treatment of options, errors etc
 fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     // Extract the content type so we can parse the body
     let content_type = element.attributes.iter()
