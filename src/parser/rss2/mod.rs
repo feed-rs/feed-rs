@@ -89,7 +89,7 @@ fn handle_enclosure<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Cont
     for attr in &element.attributes {
         let tag_name = attr.name.local_name.as_str();
         match tag_name {
-            "url" => content.src = Some(attr.value.clone()),
+            "url" => content.src = Some(Link::new(attr.value.clone())),
             "length" => content.length = attr.value.parse::<u64>().ok(),
             "type" => if let Ok(mime) = attr.value.parse::<Mime>() { content.content_type = mime },
 

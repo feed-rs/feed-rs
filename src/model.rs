@@ -405,8 +405,7 @@ pub struct Content {
     /// Source of the content
     /// * Atom: If the src attribute is present, it represents the URI of where the content can be found. The type attribute, if present, is the media type of the content.
     /// * RSS 2.0: where the enclosure is located
-    // TODO change this to Link
-    pub src: Option<String>,
+    pub src: Option<Link>,
 }
 
 impl Default for Content {
@@ -433,7 +432,7 @@ impl Content {
     }
 
     pub fn src(mut self, url: &str) -> Self {
-        self.src = Some(url.to_owned());
+        self.src = Some(Link::new(url.to_owned()));
         self
     }
 }
