@@ -145,7 +145,6 @@ fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
             "description" => entry.summary = handle_text(child)?,
             "author" => if let Some(person) = handle_contact("author", child)? { entry.authors.push(person) },
             "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
-            // TODO add isPermaLink to link - https://validator.w3.org/feed/docs/rss2.html#ltguidgtSubelementOfLtitemgt
             "guid" => if let Some(guid) = child.child_as_text()? { entry.id = guid },
             "enclosure" => entry.content = handle_enclosure(child)?,
             "pubDate" => entry.published = handle_date_rfc2822(child)?,
