@@ -16,6 +16,8 @@
 // TODO review the Rust doc guidelines and fix up links
 // TODO improve tests with Coverage analysis e.g. https://github.com/mozilla/grcov
 
+#![forbid(unsafe_code)]
+
 #[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
