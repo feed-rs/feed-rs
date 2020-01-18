@@ -88,9 +88,9 @@ fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Conten
 
             // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
             ct if ct.ends_with(" +xml") || ct.ends_with("/xml") => {
-                element.child_as_text()?.map(|body| {
+                handle_text(element)?.map(|body| {
                     let mut content = Content::default();
-                    content.body = Some(body);
+                    content.body = Some(body.content);
                     content.content_type = mime::TEXT_XML;
                     Some(content)
                 })
@@ -239,7 +239,7 @@ fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
         _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into())))
     }?;
 
-    element.child_as_text()?.map(|content| {
+    element.children_as_string()?.map(|content| {
         let mut text = Text::new(content);
         text.content_type = mime;
         Some(text)

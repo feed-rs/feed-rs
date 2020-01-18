@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::io::Read;
 use std::mem;
 
+use xml::ParserConfig;
 use xml::attribute::OwnedAttribute;
 use xml::name::OwnedName;
 use xml::namespace::Namespace;
-use xml::ParserConfig;
 use xml::reader as xml_reader;
 use xml::reader::XmlEvent;
 
@@ -40,6 +40,62 @@ impl<R: Read> ElementSource<R> {
     /// Returns the first element in the source
     pub fn root(&self) -> Result<Option<Element<R>>> {
         self.next_element_at_depth(1)
+    }
+
+    // Return the raw XML of all children at or below the nominated depth
+    fn children_as_string(&self, depth: u32, buffer: &mut String) -> Result<()> {
+        // Read nodes at the current depth or greater
+        let mut state = self.state.borrow_mut();
+        let mut current_depth = depth;
+
+        loop {
+            // A strange construction, but we need to throw an error if we cannot consume all the children (e.g. malformed XML)
+            // TODO idiomatic
+            let peeked = state.peek().as_ref();
+            if let Some(_err) = peeked.err() {
+                return Err(state.next().unwrap_err());
+            }
+
+            // Fetch the next event
+            if let Some(event) = peeked.as_ref().unwrap() {
+                match event {
+                    XmlEvent::StartElement { name, attributes, .. } => {
+                        // Note that we have descended into an element
+                        current_depth += 1;
+
+                        // Append element start to the buffer
+                        append_element_start(buffer, name, attributes);
+                    }
+
+                    XmlEvent::Characters(text) => {
+                        // Append text to the buffer
+                        append_element_text(buffer, text);
+                    }
+
+                    XmlEvent::EndElement { name } => {
+                        // Break out of the iteration if we would move above our iteration depth
+                        current_depth -= 1;
+                        if current_depth < depth {
+                            break;
+                        }
+
+                        // Append this terminating element
+                        append_element_end(buffer, name);
+                    }
+
+                    // Not interested in other events
+                    _ => {}
+                }
+
+                // Consume this node
+                state.next()?;
+            } else {
+                // In the case where we have no more nodes, we hit the end of the document so we can just break out of this loop
+                break;
+            }
+        }
+
+        Ok(())
     }
 
     // Returns the next element at the nominated depth
@@ -164,7 +220,18 @@ impl<'a, R: Read> Element<'a, R> {
         ElementIter { source: &self.source, depth: self.depth + 1 }
     }
 
-    /// Returns the child of this element as a String
+    /// Concatenates the children of this node into a string
+    ///
+    /// NOTE: the input stream is parsed then re-serialised so the output will not be identical as the input
+    pub fn children_as_string(&self) -> Result<Option<String>> {
+        // Fill the buffer with the XML content below this element
+        let mut buffer = String::new();
+        self.source.children_as_string(self.depth + 1, &mut buffer)?;
+
+        Ok(Some(buffer))
+    }
+
+    /// If the first child of the current node is XML characters, then it is returned as a `String` otherwise `None`.
     pub fn child_as_text(&self) -> Result<Option<String>> {
         self.source.text_node()
     }
@@ -182,6 +249,33 @@ impl<'a, R: Read> Iterator for ElementIter<'a, R> {
     fn next(&mut self) -> Option<Self::Item> {
         self.source.next_element_at_depth(self.depth).unwrap()
     }
+}
+
+// Appends an element-end to the buffer
+// TODO find example XML that has namespaces and use a separate function to serialise the owned name
+fn append_element_end(buffer: &mut String, name: &OwnedName) {
+    buffer.push_str("</");
+    buffer.push_str(name.local_name.as_str());
+    buffer.push('>');
+}
+
+// Appends an element-start to the buffer
+fn append_element_start(buffer: &mut String, name: &OwnedName, attributes: &[OwnedAttribute]) {
+    buffer.push('<');
+    buffer.push_str(name.local_name.as_str());
+    for attr in attributes {
+        buffer.push(' ');
+        buffer.push_str(attr.name.local_name.as_str());
+        buffer.push_str("=\"");
+        buffer.push_str(attr.value.as_str());
+        buffer.push('"');
+    }
+    buffer.push('>');
+}
+
+// Appends a text element
+fn append_element_text(buffer: &mut String, text: &str) {
+    buffer.push_str(text);
 }
 
 #[cfg(test)]
@@ -262,13 +356,34 @@ mod tests {
 
     #[test]
     fn test_iterate_stream() -> Result {
-        let test_data = test::fixture_as_string("xml_sample.xml");
+        let test_data = test::fixture_as_string("xml_sample_1.xml");
 
         // Root element should be "catalog"
         let source = ElementSource::new(test_data.as_bytes());
         let catalog = source.root()?.unwrap();
         assert_eq!(catalog.name.local_name, "catalog");
         handle_catalog(catalog)?;
+
+        Ok(())
+    }
+
+    // TODO expand test coverage (zero children, empty elements etc)
+    #[test]
+    fn test_children_as_string() -> Result {
+        let test_data = test::fixture_as_string("xml_sample_2.xml");
+
+        // Root element should be "catalog"
+        let source = ElementSource::new(test_data.as_bytes());
+        let catalog = source.root()?.unwrap();
+        assert_eq!(catalog.name.local_name, "catalog");
+
+        // Next element should be "book"
+        let book: Element<_> = catalog.children().next().unwrap();
+        assert_eq!(book.name.local_name, "book");
+
+        // Contents should be as we expect
+        let expected = "<author>Gambardella, Matthew</author><title>XML Developer's Guide</title>";
+        assert_eq!(book.children_as_string()?.unwrap(), expected);
 
         Ok(())
     }

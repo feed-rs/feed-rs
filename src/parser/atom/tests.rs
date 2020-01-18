@@ -3,8 +3,7 @@ use crate::parser;
 use crate::util::test;
 
 // Verify we can parse a more complete example than the one provided in the standard
-// TODO fix the XML test (need to read raw content)
-//#[test]
+#[test]
 fn test_example_1() {
     // Parse the feed
     let test_data = test::fixture_as_string("atom_example_1.xml");
@@ -44,6 +43,9 @@ fn test_example_1() {
                 .length(1337))
             .contributor(Person::new("Sam Ruby".to_owned()))
             .contributor(Person::new("Joe Gregorio".to_string()))
+            .content(Content::default()
+                .content_type("text/html")
+                .body("<div><p><i>[Update: The Atom draft is finished.]</i></p></div>"))
             .published_rfc3339("2003-12-13T08:29:29-04:00"));
 
     // Check

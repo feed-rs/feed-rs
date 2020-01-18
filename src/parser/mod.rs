@@ -16,6 +16,7 @@ pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;
 /// An error returned when parsing a feed from a source fails
 #[derive(Debug)]
 pub enum ParseFeedError {
+    // TODO add line number/position
     ParseError(ParseErrorKind),
     // Underlying issue with XML (poorly formatted etc)
     XmlReader(xml_reader::Error),
