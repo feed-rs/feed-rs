@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" media="screen" href="/~d/styles/rss2full.xsl"?><?xml-stylesheet type="text/css" media="screen" href="http://feeds.arstechnica.com/~d/styles/itemcontent.css"?>
+<rss xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+     version="2.0">
+
+    <channel>
+        <title>Ars Technica</title>
+
+        <link>https://arstechnica.com</link>
+        <description>Serving the Technologist for more than a decade. IT news, reviews, and analysis.</description>
+        <lastBuildDate>Tue, 06 Aug 2019 00:03:56 +0000</lastBuildDate>
+        <language>en-US</language>
+        <sy:updatePeriod>hourly</sy:updatePeriod>
+        <sy:updateFrequency>1</sy:updateFrequency>
+        <generator>https://wordpress.org/?v=4.8.3</generator>
+
+        <image>
+            <url>https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-32x32.png</url>
+            <title>Ars Technica</title>
+            <link>https://arstechnica.com</link>
+            <width>32</width>
+            <height>32</height>
+        </image>
+        <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/rss+xml"
+                     href="http://feeds.arstechnica.com/arstechnica/index"/>
+        <feedburner:info xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" uri="arstechnica/index"/>
+        <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/"/>
+        <item>
+            <title>Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter</title>
+            <link>https://arstechnica.com/?p=1546121</link>
+            <pubDate>Mon, 05 Aug 2019 23:11:09 +0000</pubDate>
+            <dc:creator><![CDATA[Samuel Axon]]></dc:creator>
+            <category><![CDATA[Tech]]></category>
+            <category><![CDATA[alphabet]]></category>
+            <category><![CDATA[apple]]></category>
+            <category><![CDATA[google]]></category>
+
+            <guid isPermaLink="false">https://arstechnica.com/?p=1546121</guid>
+            <description><![CDATA[Alphabet has $117 billion in cash on hand.]]></description>
+            <content:encoded><![CDATA[<div id="rss-wrap">
+<figure class="intro-image intro-left"><img src="https://cdn.arstechnica.net/wp-content/uploads/2016/05/page.google.1-640x438.jpg" alt="Google co-founder Larry Page is now CEO of Alphabet."><p class="caption" style="font-size:0.8em">Google co-founder Larry Page is now CEO of Alphabet. (credit: <a rel="nofollow" class="caption-link" href="https://www.gettyimages.com/search/photographer?photographer=justin%20sullivan&amp;family=editorial&amp;phrase=justin%20sullivan&amp;recency=anydate&amp;sort=mostpopular&amp;page=1&amp;suppressfamilycorrection=true">Justin Sullivan / Getty Images</a>)</p>  </figure><div><a name="page-1"></a></div>
+<p>You've probably heard it before: Apple has more money in the bank than any other corporation on Earth, thanks to huge profit margins on its products and a run over nearly two decades leading in the consumer technology industry. It has been called the richest, most successful company in the history of the world. But one part of that narrative isn't true anymore: Apple no longer has the biggest financial reserves of any company on Earth.</p>
+<p>According to a report in <a href="https://www.ft.com/content/332dd974-b349-11e9-8cb2-799a3a8cf37b">Financial Times</a>, that label may now be applied to a different tech giant: Alphabet, Google's parent company. As of this year's second financial quarter, Alphabet now has $117 billion in reserve, compared to $102 billion for Apple. However, Apple had $163 billion in 2017, so this is just as much a story of Apple reducing its reserves as it is one of Google growing its own.</p>
+<p>Since then, Apple has worked to reduce its liquidity in response to criticisms from investors that the company was hoarding cash. While there is some room for nuance, investors generally want to discourage companies from hoarding cash. Instead, they prefer that the money either be returned to investors in some way or invested in something that may produce a return later.</p>
+</div><p><a href="https://arstechnica.com/?p=1546121#p3">Read 5 remaining paragraphs</a> | <a href="https://arstechnica.com/?p=1546121&comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/index?a=NFO8xDyU1zs:iaBhKqB3TDA:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/index?i=NFO8xDyU1zs:iaBhKqB3TDA:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/index?a=NFO8xDyU1zs:iaBhKqB3TDA:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/index?i=NFO8xDyU1zs:iaBhKqB3TDA:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/index?a=NFO8xDyU1zs:iaBhKqB3TDA:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/index?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/index?a=NFO8xDyU1zs:iaBhKqB3TDA:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/index?d=yIl2AUoC8zA" border="0"></img></a>
+</div>]]></content:encoded>
+        </item>
+    </channel>
+</rss>

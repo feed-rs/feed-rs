@@ -1,90 +1,85 @@
-use chrono::{DateTime, NaiveDateTime};
 use std::io::Read;
-use xml5ever::rcdom::{RcDom, NodeData, Handle};
-use xml5ever::{Attribute};
-use xml5ever::tendril::{TendrilSink};
-use xml5ever::driver::{parse_document};
-use uuid::Uuid;
-use feed::Feed;
 
+use xml::reader as xml_reader;
+
+use crate::model;
+use crate::util::attr_value;
+use crate::util::element_source::ElementSource;
+
+mod atom;
+mod rss0;
 mod rss1;
 mod rss2;
-mod atom;
 
-pub fn parse<R>(input: &mut R) -> Option<Feed> where R: Read {
-    let mut buf = String::new();
-    let _ = input.read_to_string(&mut buf);
-    let dom = parse_document(RcDom::default(), Default::default())
-        .from_utf8()
-        .read_from(&mut buf.replace(" rdf:", " ").as_bytes()) // FIXME
-        .unwrap();
-    walk(dom.document)
+pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;
+
+/// An error returned when parsing a feed from a source fails
+#[derive(Debug)]
+pub enum ParseFeedError {
+    // TODO add line number/position
+    ParseError(ParseErrorKind),
+    // Underlying issue with XML (poorly formatted etc)
+    XmlReader(xml_reader::Error),
 }
 
-fn walk(handle: Handle) -> Option<Feed> {
-    let node = handle;
-    match node.data {
-        NodeData::Document => (),
-        NodeData::Element { ref name, ref attrs, .. } => {
-            let tag_name = name.local.as_ref();
-            let version  = attr("version", &attrs.borrow()).unwrap_or("".to_string());
-            match (tag_name, version.as_ref()) {
-                ("feed", _)    => return atom::handle_atom(node.clone()),
-                ("rss", "2.0") => return rss2::handle_rss2(node.clone()),
-                ("RDF", _)     => return rss1::handle_rss1(node.clone()),
-                _ => (),
-            }
-        },
-        _ => {},
+impl From<xml_reader::Error> for ParseFeedError {
+    fn from(err: xml_reader::Error) -> Self {
+        ParseFeedError::XmlReader(err)
     }
-    for child in node.children.borrow().iter() {
-        if let Some(feed) = walk(child.clone()) {
-            return Some(feed)
-        }
+}
+
+/// Underlying cause of the parse failure
+#[derive(Debug)]
+pub enum ParseErrorKind {
+    /// Could not find the expected root element (e.g. "channel" for RSS 2)
+    NoFeedRoot,
+    /// The content type is unsupported and we cannot parse the value into a known representation
+    UnknownMimeType(String),
+    /// Required content within the source was not found e.g. the XML child text element for a "content" element
+    MissingContent(&'static str),
+    /// The date/time string was not valid
+    InvalidDateTime(Box<dyn std::error::Error>),
+}
+
+/// Parse the XML input (Atom or a flavour of RSS) into our model
+///
+/// # Arguments
+///
+/// * `input` - A source of XML content such as a string, file etc.
+///
+/// # Examples
+///
+/// ```
+/// use feed_rs::parser;
+/// let xml = r#"
+/// <feed>
+///    <title type="text">sample feed</title>
+///    <updated>2005-07-31T12:29:29Z</updated>
+///    <id>feed1</id>
+///    <entry>
+///        <title>sample entry</title>
+///        <id>entry1</id>
+///    </entry>
+/// </feed>
+/// "#;
+/// let feed = parser::parse(xml.as_bytes()).unwrap();
+/// ```
+pub fn parse<R: Read>(input: R) -> ParseFeedResult<model::Feed> {
+    // Set up the source of XML elements from the input
+    let source = ElementSource::new(input);
+
+    if let Ok(Some(root)) = source.root() {
+        // Dispatch to the correct parser
+        let version = attr_value(&root.attributes, "version");
+        match (root.name.local_name.as_str(), version) {
+            ("feed", _) => return atom::parse(root),
+            ("rss", Some("2.0")) => return rss2::parse(root),
+            ("rss", Some("0.91")) | ("rss", Some("0.92")) => return rss0::parse(root),
+            ("RDF", _) => return rss1::parse(root),
+            _ => {}
+        };
     }
-    None
-}
 
-pub fn uuid_gen() -> String {
-    Uuid::new_v4().to_string()
-}
-
-pub fn attr(attr_name: &str, attrs: &Vec<Attribute>) -> Option<String> {
-    for attr in attrs.iter() {
-        if attr.name.local.as_ref() == attr_name {
-            return Some(attr.value.to_string())
-        }
-    }
-    None
-}
-
-pub fn text(handle: Handle) -> Option<String> {
-    let node = handle;
-    for child in node.children.borrow().iter() {
-        match child.data {
-            NodeData::Text { ref contents } =>
-                return Some(contents.borrow().to_string()),
-            _ => (),
-        }
-    }
-    return None
-}
-
-pub fn timestamp_from_rfc3339(handle: Handle) -> Option<NaiveDateTime> {
-    text(handle)
-        .and_then(|s| DateTime::parse_from_rfc3339(&s.trim()).ok())
-        .map(|n| n.naive_utc())
-}
-
-pub fn timestamp_from_rfc2822(handle: Handle) -> Option<NaiveDateTime> {
-    text(handle)
-        .and_then(|s| DateTime::parse_from_rfc2822(&s.trim()).ok())
-        .map(|n| n.naive_utc())
-}
-
-pub fn timestamp(handle: Handle) -> Option<NaiveDateTime> {
-    text(handle)
-        .and_then(|s| DateTime::parse_from_rfc2822(&s.trim()).ok().or(
-            DateTime::parse_from_rfc3339(&s.trim()).ok()
-        )).map(|n| n.naive_utc())
+    // Couldn't find a recognised feed within the provided XML stream
+    Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
 }
