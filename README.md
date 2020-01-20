@@ -5,7 +5,7 @@
 
 Library for parsing Atom and RSS.
 
-[Documentation](https://docs.rs/atom_syndication/)
+[Documentation](https://docs.rs/feed-rs/)
 
 ## Usage
 
