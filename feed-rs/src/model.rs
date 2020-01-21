@@ -3,9 +3,9 @@ use mime::Mime;
 
 use crate::util;
 #[cfg(test)]
-use crate::util::timestamp_from_rfc2822;
+use crate::parser::util::timestamp_rss2;
 #[cfg(test)]
-use crate::util::timestamp_from_rfc3339;
+use crate::parser::util::timestamp_atom;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
 ///
@@ -171,7 +171,7 @@ impl Feed {
     }
 
     pub fn published_rfc2822(mut self, pub_date: &str) -> Self {
-        self.published = timestamp_from_rfc2822(pub_date).ok();
+        self.published = timestamp_rss2(pub_date).ok();
         self
     }
 
@@ -196,12 +196,12 @@ impl Feed {
     }
 
     pub fn updated_rfc2822(mut self, updated: &str) -> Self {
-        self.updated = timestamp_from_rfc2822(updated).unwrap();
+        self.updated = timestamp_rss2(updated).unwrap();
         self
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_from_rfc3339(updated).unwrap();
+        self.updated = timestamp_atom(updated).unwrap();
         self
     }
 }
@@ -311,12 +311,12 @@ impl Entry {
     }
 
     pub fn published_rfc2822(mut self, published: &str) -> Self {
-        self.published = timestamp_from_rfc2822(published).ok();
+        self.published = timestamp_rss2(published).ok();
         self
     }
 
     pub fn published_rfc3339(mut self, published: &str) -> Self {
-        self.published = timestamp_from_rfc3339(published).ok();
+        self.published = timestamp_atom(published).ok();
         self
     }
 
@@ -336,12 +336,12 @@ impl Entry {
     }
 
     pub fn updated_rfc2822(mut self, updated: &str) -> Self {
-        self.updated = timestamp_from_rfc2822(updated).unwrap();
+        self.updated = timestamp_rss2(updated).unwrap();
         self
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_from_rfc3339(updated).unwrap();
+        self.updated = timestamp_atom(updated).unwrap();
         self
     }
 }
