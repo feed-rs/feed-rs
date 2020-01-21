@@ -220,6 +220,80 @@ fn test_example_5() {
     assert_eq!(actual, expected);
 }
 
+
+// GitHub Atom feed for feed-rs (https://github.com/feed-rs/feed-rs/issues/6)
+#[test]
+fn test_example_6() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("atom_example_6.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let expected = Feed::default()
+        .id("tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases")
+        .link(Link::new("https://github.com/feed-rs/feed-rs/releases".to_owned())
+            .rel("alternate")
+            .media_type("text/html"))
+        .link(Link::new("https://github.com/feed-rs/feed-rs/releases.atom".to_owned())
+            .rel("self")
+            .media_type("application/atom+xml"))
+        .title(Text::new("Release notes from feed-rs".to_owned()))
+        .updated_rfc3339("2020-01-19T16:01:56+11:00")
+        .entry(Entry::default()
+            .id("tag:github.com,2008:Repository/90976281/v0.2.0")
+            .updated_rfc3339("2020-01-19T16:08:59+11:00")
+            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/v0.2.0".to_owned())
+                .rel("alternate")
+                .media_type("text/html"))
+            .title(Text::new("0.2.0".to_owned()))
+            .content(Content::default()
+                .body(r#"<p>A range of maintenance work, including:</p>
+            <ul>
+            <li>migrate to Rust 2018 edition</li>
+            <li>Align domain model around Atom spec as it is more modern+complete</li>
+            <li>Switch to event-based parser (xml-rs) to reduce peak memory usage and use of clone()</li>
+            <li>Expanded test coverage</li>
+            <li>Documentation improvements</li>
+            </ul>"#)
+                .content_type("text/html"))
+            .author(Person::new("markpritchard".to_owned())))
+        .entry(Entry::default()
+            .id("tag:github.com,2008:Repository/90976281/0.1.3")
+            .updated_rfc3339("2017-07-07T21:47:46+10:00")
+            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.3".to_owned())
+                .rel("alternate")
+                .media_type("text/html"))
+            .title(Text::new("0.1.3".to_owned()))
+            .content(Content::default()
+                .body(r#"<p>Update version to 0.1.3</p>"#)
+                .content_type("text/html"))
+            .author(Person::new("kumabook".to_owned())))
+        .entry(Entry::default()
+            .id("tag:github.com,2008:Repository/90976281/0.1.1")
+            .updated_rfc3339("2017-06-16T18:49:36+10:00")
+            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1".to_owned())
+                .rel("alternate")
+                .media_type("text/html"))
+            .title(Text::new("0.1.1".to_owned()))
+            .content(Content::default()
+                .body(r#"<p>Handle rel attribute of link element of entry of atom</p>"#)
+                .content_type("text/html"))
+            .author(Person::new("kumabook".to_owned())))
+        .entry(Entry::default()
+            .id("tag:github.com,2008:Repository/90976281/0.1.0")
+            .updated_rfc3339("2017-06-15T16:44:26+10:00")
+            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0".to_owned())
+                .rel("alternate")
+                .media_type("text/html"))
+            .title(Text::new("0.1.0".to_owned()))
+            .content(Content::default()
+                .body(r#"<p>Update crate info to Cargo.toml</p>"#)
+                .content_type("text/html"))
+            .author(Person::new("kumabook".to_owned())));
+
+    // Check
+    assert_eq!(actual, expected);
+}
+
 // Verify we can parse the example contained in the Atom specification
 #[test]
 fn test_spec_1() {
