@@ -213,6 +213,7 @@ pub struct Entry {
     /// A unique identifier for this item with a feed. If not supplied it is initialised to a UUID.
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
     /// * RSS 2 (optional) "guid": A string that uniquely identifies the item.
+    /// * RSS 1: does not specify a unique ID as a separate item, but does suggest the URI should be "the same as the link" so we use a hash of the link if found
     pub id: String,
     /// Title of this item within the feed
     /// * Atom, RSS 1(required): Contains a human readable title for the entry.
