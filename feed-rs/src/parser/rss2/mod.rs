@@ -5,8 +5,9 @@ use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
 use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
-use crate::util::{attr_value, timestamp_from_rfc2822};
+use crate::util::{attr_value};
 use crate::util::element_source::Element;
+use crate::parser::util::timestamp_rss2;
 
 #[cfg(test)]
 mod tests;
@@ -32,14 +33,17 @@ fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
             "link" => if let Some(link) = handle_link(child)? { feed.links.push(link) },
             "description" => feed.description = handle_text(child)?,
 
-            "language" => feed.language = child.child_as_text()?,
+            "language" => feed.language = child.child_as_text()?.map(|text| text.to_lowercase()),
             "copyright" => feed.rights = handle_text(child)?,
             "managingEditor" => if let Some(person) = handle_contact("managingEditor", child)? { feed.contributors.push(person) },
             "webMaster" => if let Some(person) = handle_contact("webMaster", child)? { feed.contributors.push(person) },
-            "pubDate" => feed.published = handle_date_rfc2822(child)?,
-            "lastBuildDate" => if let Some(ts) = handle_date_rfc2822(child)? { feed.updated = ts },
+            "pubDate" => feed.published = handle_timestamp(child)?,
+
+            // Some feeds have "updated" instead of "lastBuildDate"
+            "lastBuildDate" | "updated" => if let Some(ts) = handle_timestamp(child)? { feed.updated = ts },
+
             "category" => if let Some(category) = handle_category(child)? { feed.categories.push(category) },
-            "generator" => feed.generator = child.child_as_text()?.map(Generator::new),
+            "generator" => feed.generator = handle_generator(child)?,
             "ttl" => if let Some(text) = child.child_as_text()? { feed.ttl = text.parse::<u32>().ok() },
             "image" => feed.logo = handle_image(child)?,
             "item" => if let Some(item) = handle_item(child)? { feed.entries.push(item) },
@@ -75,11 +79,21 @@ fn handle_contact<R: Read>(role: &str, element: Element<R>) -> ParseFeedResult<O
     }))
 }
 
-// Handles an RFC 2822 (822) date
-fn handle_date_rfc2822<R: Read>(element: Element<R>) -> ParseFeedResult<Option<DateTime<Utc>>> {
-    element.child_as_text()?
-        .map(|text| timestamp_from_rfc2822(&text))
-        .transpose()
+fn handle_generator<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Generator>> {
+    let result = element.child_as_text()?.map(|c| {
+        let mut generator = Generator::new(c);
+
+        for attr in &element.attributes {
+            let tag_name = attr.name.local_name.as_str();
+            if tag_name == "uri" {
+                generator.uri = Some(attr.value.clone());
+            }
+        }
+
+        generator
+    });
+
+    Ok(result)
 }
 
 // Handles <enclosure>
@@ -147,7 +161,7 @@ fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
             "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
             "guid" => if let Some(guid) = child.child_as_text()? { entry.id = guid },
             "enclosure" => entry.content = handle_enclosure(child)?,
-            "pubDate" => entry.published = handle_date_rfc2822(child)?,
+            "pubDate" => entry.published = handle_timestamp(child)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -165,4 +179,11 @@ fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
 // Handles <title>, <description>
 fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.child_as_text()?.map(Text::new))
+}
+
+// Handles date/time
+fn handle_timestamp<R: Read>(element: Element<R>) -> ParseFeedResult<Option<DateTime<Utc>>> {
+    element.child_as_text()?
+        .map(|text| timestamp_rss2(&text))
+        .transpose()
 }

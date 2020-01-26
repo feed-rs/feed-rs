@@ -11,6 +11,8 @@ mod rss0;
 mod rss1;
 mod rss2;
 
+pub(crate) mod util;
+
 pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;
 
 /// An error returned when parsing a feed from a source fails

@@ -1,0 +1,9 @@
+[package]
+name = "testurls"
+version = "0.1.0"
+authors = ["Mark Pritchard <mpritcha@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+feed-rs = { path = "../feed-rs" }
+reqwest = { version = "0.10", features = ["blocking"] }
