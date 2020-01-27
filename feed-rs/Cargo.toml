@@ -18,7 +18,7 @@ categories = ["parser-implementations"]
 readme = "README.md"
 
 [badges]
-travis-ci = { repository = "https://travis-ci.org/feed-rs/feed-rs", branch = "master" }
+travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
 chrono = { version = "0.4" }
