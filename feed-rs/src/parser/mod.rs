@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{BufRead, BufReader, Read};
 
 use xml::reader as xml_reader;
 
@@ -7,6 +7,7 @@ use crate::util::attr_value;
 use crate::util::element_source::ElementSource;
 
 mod atom;
+mod json;
 mod rss0;
 mod rss1;
 mod rss2;
@@ -20,8 +21,20 @@ pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;
 pub enum ParseFeedError {
     // TODO add line number/position
     ParseError(ParseErrorKind),
+    // IO error
+    IoError(std::io::Error),
+    // Underlying issue with JSON (poorly formatted etc)
+    JsonSerde(serde_json::error::Error),
     // Underlying issue with XML (poorly formatted etc)
     XmlReader(xml_reader::Error),
+}
+
+impl From<serde_json::error::Error> for ParseFeedError {
+    fn from(err: serde_json::error::Error) -> Self { ParseFeedError::JsonSerde(err) }
+}
+
+impl From<std::io::Error> for ParseFeedError {
+    fn from(err: std::io::Error) -> Self { ParseFeedError::IoError(err) }
 }
 
 impl From<xml_reader::Error> for ParseFeedError {
@@ -33,7 +46,7 @@ impl From<xml_reader::Error> for ParseFeedError {
 /// Underlying cause of the parse failure
 #[derive(Debug)]
 pub enum ParseErrorKind {
-    /// Could not find the expected root element (e.g. "channel" for RSS 2)
+    /// Could not find the expected root element (e.g. "channel" for RSS 2, a JSON node etc)
     NoFeedRoot,
     /// The content type is unsupported and we cannot parse the value into a known representation
     UnknownMimeType(String),
@@ -43,11 +56,11 @@ pub enum ParseErrorKind {
     InvalidDateTime(Box<dyn std::error::Error>),
 }
 
-/// Parse the XML input (Atom or a flavour of RSS) into our model
+/// Parse the input (Atom, a flavour of RSS or JSON Feed) into our model
 ///
 /// # Arguments
 ///
-/// * `input` - A source of XML content such as a string, file etc.
+/// * `input` - A source of content such as a string, file etc.
 ///
 /// # Examples
 ///
@@ -64,11 +77,35 @@ pub enum ParseErrorKind {
 ///    </entry>
 /// </feed>
 /// "#;
-/// let feed = parser::parse(xml.as_bytes()).unwrap();
+/// let feed_from_xml = parser::parse(xml.as_bytes()).unwrap();
+///
+///
 /// ```
-pub fn parse<R: Read>(input: R) -> ParseFeedResult<model::Feed> {
+pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
+    // Buffer the reader for performance (e.g. when streaming from a network) and so we can peek to determine the type of content
+    let mut input = BufReader::new(source);
+
+    // Determine whether this is XML or JSON and call the appropriate parser
+    input.fill_buf()?;
+    let first_char = input.buffer().iter().find(|b| **b == b'<' || **b == b'{').map(|b| *b as char);
+    match first_char {
+        Some('<') => parse_xml(input),
+
+        Some('{') => parse_json(input),
+
+        _ => Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
+    }
+}
+
+// Handles JSON content
+fn parse_json<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
+    json::parse(source)
+}
+
+// Handles XML content
+fn parse_xml<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
     // Set up the source of XML elements from the input
-    let source = ElementSource::new(input);
+    let source = ElementSource::new(source);
 
     if let Ok(Some(root)) = source.root() {
         // Dispatch to the correct parser
