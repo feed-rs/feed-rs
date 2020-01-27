@@ -30,9 +30,9 @@ lazy_static! {
 
 /// Parses a timestamp from an RSS2 feed.
 /// This should be an RFC-2822 formatted timestamp but we need a bunch of fixes / workarounds for the generally broken stuff we find on the internet
-pub fn timestamp_rss2(text: &str) -> ParseFeedResult<DateTime<Utc>> {
+pub fn timestamp_rfc2822_lenient(text: &str) -> ParseFeedResult<DateTime<Utc>> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds so try that first
-    if let Ok(ts) = timestamp_atom(text) {
+    if let Ok(ts) = timestamp_rfc3339(text) {
         return Ok(ts);
     }
 
@@ -52,9 +52,9 @@ pub fn timestamp_rss2(text: &str) -> ParseFeedResult<DateTime<Utc>> {
     parsed
 }
 
-/// Parses a timestamp from an Atom feed
+/// Parses a timestamp from an Atom or JSON feed
 /// This should be an RFC-3339 formatted timestamp
-pub fn timestamp_atom(text: &str) -> ParseFeedResult<DateTime<Utc>> {
+pub fn timestamp_rfc3339(text: &str) -> ParseFeedResult<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(text.trim())
         .map(|t| t.with_timezone(&Utc))
         .map_err(|pe| ParseFeedError::ParseError(ParseErrorKind::InvalidDateTime(Box::new(pe))))
@@ -101,7 +101,7 @@ mod tests {
         );
 
         for (source, expected) in tests {
-            let parsed = timestamp_rss2(source)?;
+            let parsed = timestamp_rfc2822_lenient(source)?;
             assert_eq!(parsed, expected);
         }
 

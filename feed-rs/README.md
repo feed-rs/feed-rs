@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/feed-rs/feed-rs.svg?branch=master)](https://travis-ci.org/feed-rs/feed-rs.svg?branch=master)
 [![Crates.io Status](https://img.shields.io/crates/v/feed-rs.svg)](https://crates.io/crates/feed-rs)
 
-Library for parsing Atom and RSS.
+Library for parsing various forms of feeds such as Atom, RSS and JSON Feed.
 
 [Documentation](https://docs.rs/feed-rs/)
 
@@ -14,13 +14,6 @@ Add the dependency to your `Cargo.toml`.
 ```toml
 [dependencies]
 feed-rs = "0.2.0"
-```
-
-Or, if you want Serde include the feature like this:
-
-```toml
-[dependencies]
-feed-rs = { version = "0.2.0", features = ["serde"] }
 ```
 
 ## Reading
@@ -41,6 +34,34 @@ let xml = r#"
 </feed>
 "#;
 let feed = parser::parse(xml.as_bytes()).unwrap();
+```
+
+The parser will automatically detect XML vs. JSON so parsing JSON Feed content works the same way.
+
+```rust
+use feed_rs::parser;
+let json = r#"
+{
+  "version": "https://jsonfeed.org/version/1",
+  "title": "JSON Feed",
+  "description": "JSON Feed is a pragmatic syndication format for blogs, microblogs, and other time-based content.",
+  "home_page_url": "https://jsonfeed.org/",
+  "feed_url": "https://jsonfeed.org/feed.json",
+  "author": {
+    "name": "Brent Simmons and Manton Reece",
+    "url": "https://jsonfeed.org/"
+  },
+  "items": [
+    {
+      "title": "Announcing JSON Feed",
+      "date_published": "2017-05-17T08:02:12-07:00",
+      "id": "https://jsonfeed.org/2017/05/17/announcing_json_feed",
+      "url": "https://jsonfeed.org/2017/05/17/announcing_json_feed",
+      "content_html": "<p>We — Manton Reece and Brent Simmons — have noticed that JSON...</p>"
+    }
+  ]
+}"#;
+let feed = parser::parse(json.as_bytes()).unwrap();
 ```
 
 ## License

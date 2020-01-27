@@ -3,11 +3,11 @@ use mime::Mime;
 
 use crate::util;
 #[cfg(test)]
-use crate::parser::util::timestamp_rss2;
+use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
-use crate::parser::util::timestamp_atom;
+use crate::parser::util::timestamp_rfc3339;
 
-/// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom)
+/// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
 /// The model is based on the Atom standard as a start with RSS1+2 mapped on to it e.g.
 /// * Atom
@@ -37,6 +37,7 @@ pub struct Feed {
     /// The title of the feed
     /// * Atom (required): Contains a human readable title for the feed. Often the same as the title of the associated website. This value should not be blank.
     /// * RSS 1 + 2 (required) "title": The name of the channel. It's how people refer to your service.
+    /// * JSON Feed: is the name of the feed
     pub title: Option<Text>,
     /// The time at which the feed was last modified. If not provided in the source, it is set to the current time.
     /// * Atom (required): Indicates the last time the feed was modified in a significant way.
@@ -44,14 +45,17 @@ pub struct Feed {
     pub updated: DateTime<Utc>,
 
     /// Atom (recommended): Collection of authors defined at the feed level.
+    /// JSON Feed: specifies the feed author.
     pub authors: Vec<Person>,
     /// Description of the feed
     /// * Atom (optional): Contains a human-readable description or subtitle for the feed (from <subtitle>).
     /// * RSS 1 + 2 (required): Phrase or sentence describing the channel.
+    /// * JSON Feed: description of the feed
     pub description: Option<Text>,
     /// Links to related pages
     /// * Atom (recommended): Identifies a related Web page.
     /// * RSS 1 + 2 (required): The URL to the HTML website corresponding to the channel.
+    /// * JSON Feed: the homepage and feed URLs
     pub links: Vec<Link>,
 
     /// Structured classification of the feed
@@ -67,13 +71,16 @@ pub struct Feed {
     /// * Atom (optional): Identifies the software used to generate the feed, for debugging and other purposes.
     /// * RSS 2 (optional): A string indicating the program used to generate the channel.
     pub generator: Option<Generator>,
-    /// Atom (optional): Identifies a small image which provides iconic visual identification for the feed.
+    /// A small icon
+    /// * Atom (optional): Identifies a small image which provides iconic visual identification for the feed.
+    /// * JSON Feed: is the URL of an image for the feed suitable to be used in a source list.
     pub icon: Option<Image>,
     /// RSS 2 (optional): The language the channel is written in.
     pub language: Option<String>,
     /// An image used to visually identify the feed
     /// * Atom (optional): Identifies a larger image which provides visual identification for the feed.
     /// * RSS 1 + 2 (optional) "image": Specifies a GIF, JPEG or PNG image that can be displayed with the channel.
+    /// * JSON Feed: is the URL of an image for the feed suitable to be used in a timeline
     pub logo: Option<Image>,
     /// RSS 2 (optional): The publication date for the content in the channel.
     pub published: Option<DateTime<Utc>>,
@@ -171,7 +178,7 @@ impl Feed {
     }
 
     pub fn published_rfc2822(mut self, pub_date: &str) -> Self {
-        self.published = timestamp_rss2(pub_date).ok();
+        self.published = timestamp_rfc2822_lenient(pub_date).ok();
         self
     }
 
@@ -196,12 +203,12 @@ impl Feed {
     }
 
     pub fn updated_rfc2822(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rss2(updated).unwrap();
+        self.updated = timestamp_rfc2822_lenient(updated).unwrap();
         self
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_atom(updated).unwrap();
+        self.updated = timestamp_rfc3339(updated).unwrap();
         self
     }
 }
@@ -214,43 +221,52 @@ pub struct Entry {
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
     /// * RSS 2 (optional) "guid": A string that uniquely identifies the item.
     /// * RSS 1: does not specify a unique ID as a separate item, but does suggest the URI should be "the same as the link" so we use a hash of the link if found
+    /// * JSON Feed: is unique for that item for that feed over time.
     pub id: String,
     /// Title of this item within the feed
     /// * Atom, RSS 1(required): Contains a human readable title for the entry.
     /// * RSS 2 (optional): The title of the item.
+    /// * JSON Feed: The title of the item.
     pub title: Option<Text>,
     /// Time at which this item was last modified. It is initialised to the current time if missing.
     /// * Atom (required): Indicates the last time the entry was modified in a significant way.
     /// * RSS doesn't specify this field.
+    /// * JSON Feed: the last modification date of this item
     pub updated: DateTime<Utc>,
 
     /// Authors of this item
     /// * Atom (recommended): Collection of authors defined at the entry level.
     /// * RSS 2 (optional): Email address of the author of the item.
+    /// * JSON Feed: the author of the item
     pub authors: Vec<Person>,
     /// The content of the item
     /// * Atom (recommended): Contains or links to the complete content of the entry.
     /// * RSS 2 (optional) "enclosure": Describes a media object that is attached to the item.
+    /// * JSON Feed: the html content of the item, or the text content if no html is specified
     pub content: Option<Content>,
     /// Links associated with this item
     /// * Atom (recommended): Identifies a related Web page.
     /// * RSS 2 (optional): The URL of the item.
     /// * RSS 1 (required): The item's URL.
+    /// * JSON Feed: the url and external URL for the item is the first items, then each subsequent attachment
     pub links: Vec<Link>,
     /// A short summary of the item
     /// * Atom (recommended): Conveys a short summary, abstract, or excerpt of the entry.
     /// * RSS 1+2 (optional): The item synopsis.
+    /// * JSON Feed: the summary for the item, or the text content if no summary is provided and both text and html content are specified
     pub summary: Option<Text>,
 
     /// Structured classification of the item
     /// * Atom (optional): Specifies a category that the entry belongs to. A feed may have multiple category elements.
     /// * RSS 2 (optional): Includes the item in one or more categories.
+    /// * JSON Feed: the supplied item tags
     pub categories: Vec<Category>,
     /// Atom (optional): Names one contributor to the entry. A feed may have multiple contributor elements.
     pub contributors: Vec<Person>,
     /// Time at which this item was first published
     /// * Atom (optional): Contains the time of the initial creation or first availability of the entry.
     /// * RSS 2 (optional) "pubDate": Indicates when the item was published.
+    /// * JSON Feed: the date at which the item was published
     pub published: Option<DateTime<Utc>>,
     /// Atom (optional): If an entry is copied from one feed into another feed, then this contains the source feed metadata.
     pub source: Option<String>,
@@ -312,12 +328,12 @@ impl Entry {
     }
 
     pub fn published_rfc2822(mut self, published: &str) -> Self {
-        self.published = timestamp_rss2(published).ok();
+        self.published = timestamp_rfc2822_lenient(published).ok();
         self
     }
 
     pub fn published_rfc3339(mut self, published: &str) -> Self {
-        self.published = timestamp_atom(published).ok();
+        self.published = timestamp_rfc3339(published).ok();
         self
     }
 
@@ -337,12 +353,12 @@ impl Entry {
     }
 
     pub fn updated_rfc2822(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rss2(updated).unwrap();
+        self.updated = timestamp_rfc2822_lenient(updated).unwrap();
         self
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_atom(updated).unwrap();
+        self.updated = timestamp_rfc3339(updated).unwrap();
         self
     }
 }
@@ -357,6 +373,7 @@ pub struct Category {
     /// The category as a human readable string
     /// * Atom (required): Identifies the category.
     /// * RSS 2: The value of the element is a forward-slash-separated string that identifies a hierarchic location in the indicated taxonomy. Processors may establish conventions for the interpretation of categories.
+    /// * JSON Feed: the value of the tag
     pub term: String,
     /// Atom (optional): Identifies the categorization scheme via a URI.
     pub scheme: Option<String>,
@@ -535,8 +552,10 @@ impl Image {
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Link {
-    /// Atom: The URI of the referenced resource (typically a Web page).
-    /// RSS 2: The URL to the HTML website corresponding to the channel or item.
+    /// Link to additional content
+    /// * Atom: The URI of the referenced resource (typically a Web page).
+    /// * RSS 2: The URL to the HTML website corresponding to the channel or item.
+    /// * JSON Feed: the URI to the attachment, feed etc
     pub href: String,
     /// A single link relationship type.
     pub rel: Option<String>,
@@ -598,8 +617,10 @@ impl Link {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Person {
     /// Atom: human-readable name for the person.
+    /// JSON Feed: human-readable name for the person.
     pub name: String,
     /// Atom: home page for the person.
+    /// JSON Feed: link to media (Twitter etc) for the person
     pub uri: Option<String>,
     /// Atom: An email address for the person.
     pub email: Option<String>,

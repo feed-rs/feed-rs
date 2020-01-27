@@ -7,7 +7,7 @@ use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Perso
 use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 use crate::util::{attr_value};
 use crate::util::element_source::Element;
-use crate::parser::util::timestamp_rss2;
+use crate::parser::util::timestamp_rfc2822_lenient;
 
 #[cfg(test)]
 mod tests;
@@ -184,6 +184,6 @@ fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
 // Handles date/time
 fn handle_timestamp<R: Read>(element: Element<R>) -> ParseFeedResult<Option<DateTime<Utc>>> {
     element.child_as_text()?
-        .map(|text| timestamp_rss2(&text))
+        .map(|text| timestamp_rfc2822_lenient(&text))
         .transpose()
 }
