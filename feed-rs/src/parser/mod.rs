@@ -121,11 +121,11 @@ fn assign_missing_ids(feed: &mut model::Feed) {
     }
 }
 
-const LINK_HASH_KEY1: u64 = 0x5d78407428872d60;
-const LINK_HASH_KEY2: u64 = 0x90eeca4c90a5e228;
+const LINK_HASH_KEY1: u64 = 0x5d78_4074_2887_2d60;
+const LINK_HASH_KEY2: u64 = 0x90ee_ca4c_90a5_e228;
 
 // Creates a unique ID from the first link, or a UUID if no links are available
-fn create_id(links : &Vec<model::Link>) -> String {
+fn create_id(links : &[model::Link]) -> String {
     // Generate a stable ID for this item based on the first link
     if let Some(link) = links.iter().next() {
         let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);

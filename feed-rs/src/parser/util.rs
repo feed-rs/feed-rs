@@ -21,6 +21,7 @@ lazy_static! {
             (Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*").unwrap(), "$1"),
 
             // Some timestamps have an hours component adjusted by 24h, while not adjusting the day so we just reset to start of day
+            #[allow(clippy::trivial_regex)]
             (Regex::new(" 24:").unwrap(), " 00:"),
 
             // Single digit hours are padded

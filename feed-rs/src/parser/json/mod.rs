@@ -78,7 +78,7 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
 
     // Content HTML, content text and summary are mapped across to our model with the preference toward HTML and explicit summary fields
     entry.content = handle_content(ji.content_html, mime::TEXT_HTML);
-    entry.summary = ji.summary.map(|s| Text::new(s));
+    entry.summary = ji.summary.map(Text::new);
     if let Some(content_text) = handle_content(ji.content_text, mime::TEXT_PLAIN) {
         // If we don't have HTML content, use the text content as the entry content
         // otherwise, if the summary was not provided, we push the text there
@@ -86,7 +86,7 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
         if entry.content.is_none() {
             entry.content = Some(content_text);
         } else if entry.summary.is_none() {
-            entry.summary = content_text.body.map(|t| Text::new(t));
+            entry.summary = content_text.body.map(Text::new);
         }
     }
 
@@ -101,13 +101,13 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
 
     if let Some(tags) = ji.tags {
         tags.into_iter()
-            .map(|tag| Category::new(tag))
+            .map(Category::new)
             .for_each(|category| entry.categories.push(category));
     }
 
     if let Some(attachments) = ji.attachments {
         attachments.into_iter()
-            .map(|attachment| handle_attachment(attachment))
+            .map(handle_attachment)
             .for_each(|link| entry.links.push(link))
     }
 
@@ -126,7 +126,7 @@ fn handle_person(author: Option<JsonAuthor>) -> Option<Person> {
         }
     }
 
-    return None;
+    None
 }
 
 #[derive(Debug, Deserialize)]
