@@ -1,10 +1,12 @@
 use std::io::{BufRead, BufReader, Read};
 
+use siphasher::sip128::{Hasher128, SipHasher};
 use xml::reader as xml_reader;
 
 use crate::model;
 use crate::util::attr_value;
 use crate::util::element_source::ElementSource;
+use std::hash::Hasher;
 
 mod atom;
 mod json;
@@ -88,12 +90,51 @@ pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
     // Determine whether this is XML or JSON and call the appropriate parser
     input.fill_buf()?;
     let first_char = input.buffer().iter().find(|b| **b == b'<' || **b == b'{').map(|b| *b as char);
-    match first_char {
+    let result = match first_char {
         Some('<') => parse_xml(input),
 
         Some('{') => parse_json(input),
 
         _ => Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
+    };
+
+    // Post processing as required
+    if let Ok(mut feed) = result {
+        assign_missing_ids(&mut feed);
+
+        Ok(feed)
+    } else {
+        result
+    }
+}
+
+// Assigns IDs to missing feed + entries as required
+fn assign_missing_ids(feed: &mut model::Feed) {
+    if feed.id.is_empty() {
+        feed.id = create_id(&feed.links);
+    }
+
+    for entry in feed.entries.iter_mut() {
+        if entry.id.is_empty() {
+            entry.id = create_id(&entry.links);
+        }
+    }
+}
+
+const LINK_HASH_KEY1: u64 = 0x5d78407428872d60;
+const LINK_HASH_KEY2: u64 = 0x90eeca4c90a5e228;
+
+// Creates a unique ID from the first link, or a UUID if no links are available
+fn create_id(links : &Vec<model::Link>) -> String {
+    // Generate a stable ID for this item based on the first link
+    if let Some(link) = links.iter().next() {
+        let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
+        hasher.write(link.href.as_bytes());
+        let hash = hasher.finish128();
+        format!("{:x}{:x}", hash.h1, hash.h2)
+    } else {
+        // Generate a UUID as last resort
+        util::uuid_gen()
     }
 }
 

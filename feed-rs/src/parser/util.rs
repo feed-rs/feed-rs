@@ -1,6 +1,7 @@
 use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 use chrono::{DateTime, Utc};
 use regex::Regex;
+use uuid::Uuid;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -58,6 +59,11 @@ pub fn timestamp_rfc3339(text: &str) -> ParseFeedResult<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(text.trim())
         .map(|t| t.with_timezone(&Utc))
         .map_err(|pe| ParseFeedError::ParseError(ParseErrorKind::InvalidDateTime(Box::new(pe))))
+}
+
+/// Generates a new UUID.
+pub fn uuid_gen() -> String {
+    Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]

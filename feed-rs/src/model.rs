@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
-use crate::util;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
@@ -32,7 +31,7 @@ use crate::parser::util::timestamp_rfc3339;
 pub struct Feed {
     /// A unique identifier for this feed
     /// * Atom (required): Identifies the feed using a universally unique and permanent URI.
-    /// * RSS doesn't require an ID so it is initialised to a UUID
+    /// * RSS doesn't require an ID so it is initialised to the hash of the first link or a UUID if not found
     pub id: String,
     /// The title of the feed
     /// * Atom (required): Contains a human readable title for the feed. Often the same as the title of the associated website. This value should not be blank.
@@ -100,7 +99,7 @@ pub struct Feed {
 impl Default for Feed {
     fn default() -> Self {
         Feed {
-            id: util::uuid_gen(),
+            id: "".into(),
             title: None,
             updated: Utc::now(),
             authors: Vec::new(),
@@ -217,7 +216,7 @@ impl Feed {
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Entry {
-    /// A unique identifier for this item with a feed. If not supplied it is initialised to a UUID.
+    /// A unique identifier for this item with a feed. If not supplied it is initialised to a hash of the first link or a UUID if not available.
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
     /// * RSS 2 (optional) "guid": A string that uniquely identifies the item.
     /// * RSS 1: does not specify a unique ID as a separate item, but does suggest the URI should be "the same as the link" so we use a hash of the link if found
@@ -276,10 +275,8 @@ pub struct Entry {
 
 impl Default for Entry {
     fn default() -> Self {
-        let id = util::uuid_gen();
-
         Entry {
-            id,
+            id: "".into(),
             title: None,
             updated: Utc::now(),
             authors: Vec::new(),

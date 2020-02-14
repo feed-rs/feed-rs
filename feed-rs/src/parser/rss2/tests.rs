@@ -165,6 +165,35 @@ fn test_example_5() {
     assert_eq!(actual, expected);
 }
 
+// Trailers from Apple (no UUID)
+#[test]
+fn test_example_6() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("rss_2.0_example_6.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Expected feed
+    let expected = Feed::default()
+        .id("8aed7f5d4466ac2c2de684823e36f0b4")     // hash of the link
+        .title(Text::new("Latest Movie Trailers".into()))
+        .link(Link::new("https://trailers.apple.com/".into()))
+        .description(Text::new("Recently added Movie Trailers.".into()))
+        .language("en-us")
+        .updated_rfc3339("2020-02-07T15:30:28Z")
+        .generator(Generator::new("Custom".into()))
+        .rights(Text::new("2020 Apple Inc.".into()))
+        .entry(Entry::default()
+            .title(Text::new("Vitalina Varela - Trailer".into()))
+            .link(Link::new("https://trailers.apple.com/trailers/independent/vitalina-varela".into()))
+            .summary(Text::new("A film of deeply concentrated beauty, acclaimed filmmaker Pedro Costa’s VITALINA VARELA stars nonprofessional actor Vitalina Varela in an extraordinary performance based on her own life. Vitalina plays a Cape Verdean woman who has travelled to Lisbon to reunite with her husband, after two decades of separation, only to arrive mere days after his funeral. Alone in a strange forbidding land, she perseveres and begins to establish a new life. Winner of the Golden Leopard for Best Film and Best Actress at the Locarno Film Festival, as well as an official selection of the Sundance Film Festival, VITALINA VARELA is a film of shadow and whisper, a profoundly moving and visually ravishing masterpiece.".into()))
+            .published_rfc3339("2020-02-06T08:00:00Z")
+            .id("93c9e7fec11765c4547e537067e0155d")        // hash of the link
+            .updated(actual.updated));
+
+    // Check
+    assert_eq!(actual, expected);
+}
+
 // Verify we can parse the example contained in the RSS 2.0 specification
 #[test]
 fn test_spec_1() {
