@@ -1,6 +1,7 @@
 use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 use chrono::{DateTime, Utc};
 use regex::Regex;
+use uuid::Uuid;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -20,6 +21,7 @@ lazy_static! {
             (Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*").unwrap(), "$1"),
 
             // Some timestamps have an hours component adjusted by 24h, while not adjusting the day so we just reset to start of day
+            #[allow(clippy::trivial_regex)]
             (Regex::new(" 24:").unwrap(), " 00:"),
 
             // Single digit hours are padded
@@ -58,6 +60,11 @@ pub fn timestamp_rfc3339(text: &str) -> ParseFeedResult<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(text.trim())
         .map(|t| t.with_timezone(&Utc))
         .map_err(|pe| ParseFeedError::ParseError(ParseErrorKind::InvalidDateTime(Box::new(pe))))
+}
+
+/// Generates a new UUID.
+pub fn uuid_gen() -> String {
+    Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]

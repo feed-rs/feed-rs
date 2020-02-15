@@ -176,7 +176,7 @@ fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
     Ok(element.child_as_text()?.map(Link::new))
 }
 
-// Handles <title>, <description>
+// Handles <title>, <description>, <encoded>
 fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.child_as_text()?.map(Text::new))
 }

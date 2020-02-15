@@ -1,7 +1,4 @@
-use std::hash::Hasher;
 use std::io::Read;
-
-use siphasher::sip128::{SipHasher, Hasher128};
 
 use crate::model::{Entry, Feed, Image, Link, Text};
 use crate::parser::ParseFeedResult;
@@ -70,9 +67,6 @@ fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> 
     })
 }
 
-const LINK_HASH_KEY1: u64 = 0x5d78407428872d60;
-const LINK_HASH_KEY2: u64 = 0x90eeca4c90a5e228;
-
 // Handles <item>
 fn handle_item<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
@@ -91,13 +85,6 @@ fn handle_item<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
 
     // If we found at least 1 link
     Ok(if !entry.links.is_empty() {
-        // Generate a stable ID for this item based on the first link
-        let link = entry.links.iter().next().unwrap();
-        let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
-        hasher.write(link.href.as_bytes());
-        let hash = hasher.finish128();
-        entry.id = format!("{:x}{:x}", hash.h1, hash.h2);
-
         Some(entry)
     } else {
         // No point returning anything if we are missing a destination
