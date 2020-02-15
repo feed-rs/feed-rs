@@ -38,10 +38,10 @@ pub struct Feed {
     /// * RSS 1 + 2 (required) "title": The name of the channel. It's how people refer to your service.
     /// * JSON Feed: is the name of the feed
     pub title: Option<Text>,
-    /// The time at which the feed was last modified. If not provided in the source, it is set to the current time.
+    /// The time at which the feed was last modified. If not provided in the source, or invalid, it is `None`.
     /// * Atom (required): Indicates the last time the feed was modified in a significant way.
     /// * RSS 2 (optional) "lastBuildDate": The last time the content of the channel changed.
-    pub updated: DateTime<Utc>,
+    pub updated: Option<DateTime<Utc>>,
 
     /// Atom (recommended): Collection of authors defined at the feed level.
     /// JSON Feed: specifies the feed author.
@@ -101,7 +101,7 @@ impl Default for Feed {
         Feed {
             id: "".into(),
             title: None,
-            updated: Utc::now(),
+            updated: None,
             authors: Vec::new(),
             description: None,
             links: Vec::new(),
@@ -177,7 +177,7 @@ impl Feed {
     }
 
     pub fn published_rfc2822(mut self, pub_date: &str) -> Self {
-        self.published = timestamp_rfc2822_lenient(pub_date).ok();
+        self.published = timestamp_rfc2822_lenient(pub_date);
         self
     }
 
@@ -196,18 +196,18 @@ impl Feed {
         self
     }
 
-    pub fn updated(mut self, updated: DateTime<Utc>) -> Self {
+    pub fn updated(mut self, updated: Option<DateTime<Utc>>) -> Self {
         self.updated = updated;
         self
     }
 
     pub fn updated_rfc2822(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rfc2822_lenient(updated).unwrap();
+        self.updated = timestamp_rfc2822_lenient(updated);
         self
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rfc3339(updated).unwrap();
+        self.updated = timestamp_rfc3339(updated);
         self
     }
 }
@@ -227,11 +227,11 @@ pub struct Entry {
     /// * RSS 2 (optional): The title of the item.
     /// * JSON Feed: The title of the item.
     pub title: Option<Text>,
-    /// Time at which this item was last modified. It is initialised to the current time if missing.
+    /// Time at which this item was last modified. If not provided in the source, or invalid, it is `None`.
     /// * Atom (required): Indicates the last time the entry was modified in a significant way.
     /// * RSS doesn't specify this field.
     /// * JSON Feed: the last modification date of this item
-    pub updated: DateTime<Utc>,
+    pub updated: Option<DateTime<Utc>>,
 
     /// Authors of this item
     /// * Atom (recommended): Collection of authors defined at the entry level.
@@ -278,7 +278,7 @@ impl Default for Entry {
         Entry {
             id: "".into(),
             title: None,
-            updated: Utc::now(),
+            updated: None,
             authors: Vec::new(),
             content: None,
             links: Vec::new(),
@@ -325,12 +325,12 @@ impl Entry {
     }
 
     pub fn published_rfc2822(mut self, published: &str) -> Self {
-        self.published = timestamp_rfc2822_lenient(published).ok();
+        self.published = timestamp_rfc2822_lenient(published);
         self
     }
 
     pub fn published_rfc3339(mut self, published: &str) -> Self {
-        self.published = timestamp_rfc3339(published).ok();
+        self.published = timestamp_rfc3339(published);
         self
     }
 
@@ -344,18 +344,18 @@ impl Entry {
         self
     }
 
-    pub fn updated(mut self, updated: DateTime<Utc>) -> Self {
+    pub fn updated(mut self, updated: Option<DateTime<Utc>>) -> Self {
         self.updated = updated;
         self
     }
 
     pub fn updated_rfc2822(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rfc2822_lenient(updated).unwrap();
+        self.updated = timestamp_rfc2822_lenient(updated);
         self
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rfc3339(updated).unwrap();
+        self.updated = timestamp_rfc3339(updated);
         self
     }
 }

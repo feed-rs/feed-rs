@@ -91,10 +91,10 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
     }
 
     if let Some(published) = ji.date_published {
-        entry.published = timestamp_rfc3339(&published).ok();
+        entry.published = timestamp_rfc3339(&published);
     }
     if let Some(modified) = ji.date_modified {
-        entry.updated = timestamp_rfc3339(&modified)?;
+        entry.updated = timestamp_rfc3339(&modified);
     }
 
     if let Some(person) = handle_person(ji.author) { entry.authors.push(person); }

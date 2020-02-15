@@ -5,7 +5,7 @@ use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
 use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
-use crate::util::{attr_value};
+use crate::util::attr_value;
 use crate::util::element_source::Element;
 use crate::parser::util::timestamp_rfc2822_lenient;
 
@@ -37,10 +37,10 @@ fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
             "copyright" => feed.rights = handle_text(child)?,
             "managingEditor" => if let Some(person) = handle_contact("managingEditor", child)? { feed.contributors.push(person) },
             "webMaster" => if let Some(person) = handle_contact("webMaster", child)? { feed.contributors.push(person) },
-            "pubDate" => feed.published = handle_timestamp(child)?,
+            "pubDate" => feed.published = handle_timestamp(child),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            "lastBuildDate" | "updated" => if let Some(ts) = handle_timestamp(child)? { feed.updated = ts },
+            "lastBuildDate" | "updated" => feed.updated = handle_timestamp(child),
 
             "category" => if let Some(category) = handle_category(child)? { feed.categories.push(category) },
             "generator" => feed.generator = handle_generator(child)?,
@@ -161,7 +161,7 @@ fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
             "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
             "guid" => if let Some(guid) = child.child_as_text()? { entry.id = guid },
             "enclosure" => entry.content = handle_enclosure(child)?,
-            "pubDate" => entry.published = handle_timestamp(child)?,
+            "pubDate" => entry.published = handle_timestamp(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -182,8 +182,10 @@ fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
 }
 
 // Handles date/time
-fn handle_timestamp<R: Read>(element: Element<R>) -> ParseFeedResult<Option<DateTime<Utc>>> {
-    element.child_as_text()?
-        .map(|text| timestamp_rfc2822_lenient(&text))
-        .transpose()
+fn handle_timestamp<R: Read>(element: Element<R>) -> Option<DateTime<Utc>> {
+    if let Ok(Some(text)) = element.child_as_text() {
+        timestamp_rfc2822_lenient(&text)
+    } else {
+        None
+    }
 }

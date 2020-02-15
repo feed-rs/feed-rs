@@ -19,7 +19,7 @@ pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
         match tag_name {
             "id" => if let Some(id) = child.child_as_text()? { feed.id = id },
             "title" => feed.title = handle_text(child)?,
-            "updated" => if let Some(text) = child.child_as_text()? { if let Ok(ts) = timestamp_rfc3339(&text) { feed.updated = ts } },
+            "updated" => if let Some(text) = child.child_as_text()? { feed.updated = timestamp_rfc3339(&text) },
 
             "author" => if let Some(person) = handle_person(child)? { feed.authors.push(person) }
             "link" => if let Some(link) = handle_link(child)? { feed.links.push(link) },
@@ -130,7 +130,7 @@ fn handle_entry<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> 
             // Extract the fields from the spec
             "id" => if let Some(id) = child.child_as_text()? { entry.id = id },
             "title" => entry.title = handle_text(child)?,
-            "updated" => if let Some(text) = child.child_as_text()? { if let Ok(ts) = timestamp_rfc3339(&text) { entry.updated = ts } },
+            "updated" => if let Some(text) = child.child_as_text()? { entry.updated = timestamp_rfc3339(&text) },
 
             "author" => if let Some(person) = handle_person(child)? { entry.authors.push(person) },
             "content" => entry.content = handle_content(child)?,
@@ -139,7 +139,7 @@ fn handle_entry<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> 
 
             "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
             "contributor" => if let Some(person) = handle_person(child)? { entry.contributors.push(person) },
-            "published" => if let Some(text) = child.child_as_text()? { entry.published = timestamp_rfc3339(&text).ok() },
+            "published" => if let Some(text) = child.child_as_text()? { entry.published = timestamp_rfc3339(&text) },
             "rights" => entry.rights = handle_text(child)?,
 
             // Nothing required for unknown elements
