@@ -54,8 +54,6 @@ pub enum ParseErrorKind {
     UnknownMimeType(String),
     /// Required content within the source was not found e.g. the XML child text element for a "content" element
     MissingContent(&'static str),
-    /// The date/time string was not valid
-    InvalidDateTime(Box<dyn std::error::Error>),
 }
 
 /// Parse the input (Atom, a flavour of RSS or JSON Feed) into our model

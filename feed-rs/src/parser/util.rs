@@ -1,4 +1,3 @@
-use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use uuid::Uuid;
@@ -32,10 +31,10 @@ lazy_static! {
 
 /// Parses a timestamp from an RSS2 feed.
 /// This should be an RFC-2822 formatted timestamp but we need a bunch of fixes / workarounds for the generally broken stuff we find on the internet
-pub fn timestamp_rfc2822_lenient(text: &str) -> ParseFeedResult<DateTime<Utc>> {
+pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds so try that first
-    if let Ok(ts) = timestamp_rfc3339(text) {
-        return Ok(ts);
+    if let Some(ts) = timestamp_rfc3339(text) {
+        return Some(ts);
     }
 
     // Clean the input string by applying each of the regex fixes
@@ -44,22 +43,15 @@ pub fn timestamp_rfc2822_lenient(text: &str) -> ParseFeedResult<DateTime<Utc>> {
         text = regex.replace(&text, *replacement).to_string();
     }
 
-    let parsed = DateTime::parse_from_rfc2822(&text)
-        .map(|t| t.with_timezone(&Utc))
-        .map_err(|pe| ParseFeedError::ParseError(ParseErrorKind::InvalidDateTime(Box::new(pe))));
-
-    if parsed.is_err() {
-        println!("**************** Unable to parse {}", text);
-    }
-    parsed
+    DateTime::parse_from_rfc2822(&text)
+        .map_or(None, |t| Some(t.with_timezone(&Utc)))
 }
 
 /// Parses a timestamp from an Atom or JSON feed
 /// This should be an RFC-3339 formatted timestamp
-pub fn timestamp_rfc3339(text: &str) -> ParseFeedResult<DateTime<Utc>> {
+pub fn timestamp_rfc3339(text: &str) -> Option<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(text.trim())
-        .map(|t| t.with_timezone(&Utc))
-        .map_err(|pe| ParseFeedError::ParseError(ParseErrorKind::InvalidDateTime(Box::new(pe))))
+        .map_or(None, |t| Some(t.with_timezone(&Utc)))
 }
 
 /// Generates a new UUID.
@@ -73,12 +65,10 @@ mod tests {
 
     use super::*;
 
-    type Result = std::result::Result<(), ParseFeedError>;
-
     // Verify we can parse non-spec compliant date strings
     // Regression tests for https://github.com/feed-rs/feed-rs/issues/7
     #[test]
-    fn test_timestamp_rss2() -> Result {
+    fn test_timestamp_rss2() {
         let tests = vec!(
             //
             ("26 August 2019 10:00:00 +0000", Utc.ymd(2019, 8, 26).and_hms_milli(10, 0, 0, 0)),
@@ -108,10 +98,8 @@ mod tests {
         );
 
         for (source, expected) in tests {
-            let parsed = timestamp_rfc2822_lenient(source)?;
+            let parsed = timestamp_rfc2822_lenient(source).unwrap();
             assert_eq!(parsed, expected);
         }
-
-        Ok(())
     }
 }
