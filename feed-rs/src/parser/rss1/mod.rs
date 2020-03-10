@@ -1,6 +1,9 @@
 use std::io::Read;
 
+use chrono::{DateTime, Utc};
+
 use crate::model::{Entry, Feed, Image, Link, Text};
+use crate::parser::util::timestamp_rfc2822_lenient;
 use crate::parser::ParseFeedResult;
 use crate::util::element_source::Element;
 
@@ -77,6 +80,7 @@ fn handle_item<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
             "title" => entry.title = handle_text(child)?,
             "link" => if let Some(link) = handle_link(child)? { entry.links.push(link) },
             "description" => entry.summary = handle_text(child)?,
+            "date" => entry.published = handle_timestamp(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -100,4 +104,13 @@ fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
 // Handles <title>, <description>
 fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.child_as_text()?.map(Text::new))
+}
+
+// Handles date/time
+fn handle_timestamp<R: Read>(element: Element<R>) -> Option<DateTime<Utc>> {
+    if let Ok(Some(text)) = element.child_as_text() {
+        timestamp_rfc2822_lenient(&text)
+    } else {
+        None
+    }
 }
