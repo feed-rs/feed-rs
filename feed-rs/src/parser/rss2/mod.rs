@@ -15,8 +15,12 @@ mod tests;
 /// Parses an RSS 2.0 feed into our model
 pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     // Only expecting a channel element
-    if let Some(channel) = root.children().find(|e| &e.name.local_name == "channel") {
-        handle_channel(channel)
+    let found_channel = root.children().find(|result| match result {
+        Ok(element) => &element.name.local_name == "channel",
+        Err(_) => true,
+    });
+    if let Some(channel) = found_channel {
+        handle_channel(channel?)
     } else {
         Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
     }
@@ -27,6 +31,7 @@ fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::default();
 
     for child in channel.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "title" => feed.title = handle_text(child)?,
@@ -125,6 +130,7 @@ fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> 
     let mut image = Image::new("".to_owned());
 
     for child in element.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "url" => if let Some(url) = child.child_as_text()? { image.uri = url },
@@ -152,6 +158,7 @@ fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     for child in item.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "title" => entry.title = handle_text(child)?,

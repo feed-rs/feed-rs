@@ -15,6 +15,7 @@ mod tests;
 pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::default();
     for child in root.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "id" => if let Some(id) = child.child_as_text()? { feed.id = id },
@@ -125,6 +126,7 @@ fn handle_entry<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> 
     let mut entry = Entry::default();
 
     for child in element.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             // Extract the fields from the spec
@@ -209,6 +211,7 @@ fn handle_person<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Person>
     let mut person = Person::new(String::from("unknown"));
 
     for child in element.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         let child_text = child.child_as_text()?;
         match (tag_name, child_text) {
