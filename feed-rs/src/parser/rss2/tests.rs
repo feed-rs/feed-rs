@@ -235,3 +235,11 @@ fn test_spec_1() {
     // Check
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn test_invalid_1() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("rss_2.0_invalid_1.xml");
+    let feed = parser::parse(test_data.as_bytes());
+    assert!(feed.is_err());
+}

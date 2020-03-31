@@ -12,6 +12,7 @@ pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::default();
 
     for child in root.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "channel" => handle_channel(&mut feed, child)?,
@@ -29,6 +30,7 @@ pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
 // Handles the <channel> element
 fn handle_channel<R: Read>(feed: &mut Feed, channel: Element<R>) -> ParseFeedResult<()> {
     for child in channel.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "title" => feed.title = handle_text(child)?,
@@ -48,6 +50,7 @@ fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> 
     let mut image = Image::new("".to_owned());
 
     for child in element.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "url" => if let Some(url) = child.child_as_text()? { image.uri = url },
@@ -72,6 +75,7 @@ fn handle_item<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     for child in element.children() {
+        let child = child?;
         let tag_name = child.name.local_name.as_str();
         match tag_name {
             "title" => entry.title = handle_text(child)?,
