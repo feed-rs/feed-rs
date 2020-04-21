@@ -51,15 +51,16 @@ fn test_example_2() {
             .email("brian.dunbar@nasa.gov"))
         .entry(Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".into()))
-            .link(Link::new("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship".into()))
+            .link(Link::new("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ".into()))
             .summary(Text::new(r#"More than three months after delivering several tons of supplies and scientific experiments to
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
-                depart the orbiting laboratory Tuesday, Aug. 6."#.to_owned()))
+                depart the orbiting laboratory Tuesday, Aug. 6.
+            "#.to_owned()))
             .content(Content::default()
                 .src("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
                 .length(892854)
                 .content_type("image/jpeg"))
-            .id("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship")
+            .id("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ")
             .published_rfc2822("Thu, 01 Aug 2019 16:15 EDT")
             .updated(actual.updated));
 
@@ -78,16 +79,16 @@ fn test_example_3() {
     let expected = Feed::default()
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("News, Politics, Opinion, Commentary, and Analysis".into()))
-        .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.".into()))
+        .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.\n        ".into()))
         .link(Link::new("https://www.newyorker.com/news".into()))
         .rights(Text::new("© Condé Nast 2019".into()))
         .language("en")
         .updated_rfc2822("Tue, 06 Aug 2019 10:46:05 +0000")
         .entry(Entry::default()
             .title(Text::new("How a Historian Uncovered Ronald Reagan’s Racist Remarks to Richard Nixon".into()))
-            .link(Link::new("https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon".into()))
+            .link(Link::new("\n                https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon\n            ".into()))
             .id("5d420f3abfe6c20008d5eaad")
-            .summary(Text::new("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.".into()))
+            .summary(Text::new("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
             .category(Category::new("News / Q. & A.".into()))
             .published_rfc2822("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated(actual.updated));
@@ -114,14 +115,14 @@ fn test_example_4() {
         .generator(Generator::new("https://wordpress.org/?v=5.1.1".into()))
         .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
-            .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/".into()))
+            .link(Link::new("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ".into()))
             .published_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
             .category(Category::new("Earthquake breaking news".into()))
             .category(Category::new("Minor World Earthquakes Magnitude -3.9".into()))
             .category(Category::new("Spárti".into()))
-            .id("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/")
+            .id("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ")
 
-            .summary(Text::new("A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday. The temblor has occurred at 03:46:56/3:46 am (local time epicenter) at a depth of 10 km (6 miles). How did you react? Did you feel it?".into()))
+            .summary(Text::new("\n                A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday. The temblor has occurred at 03:46:56/3:46 am (local time epicenter) at a depth of 10 km (6 miles). How did you react? Did you feel it?".into()))
             .updated(actual.updated));
 
     // Check
@@ -220,14 +221,16 @@ fn test_spec_1() {
         .ttl(40)
         .entry(Entry::default()
             .summary(Text::new(r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
-                loves namespaces?</a>"#.to_owned()))
+                loves namespaces?</a>
+            "#.to_owned()))
             .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
             .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
             .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT"))       // copy from feed
         .entry(Entry::default()
             .summary(Text::new(r#"<a href="http://www.docuverse.com/blog/donpark/2002/09/29.html#a68">Don Park</a>:
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
-                over-anticipation.""#.to_owned()))
+                over-anticipation."
+            "#.to_owned()))
             .published_rfc2822("Mon, 30 Sep 2002 01:52:02 GMT")
             .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
             .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT"));      // copy from feed

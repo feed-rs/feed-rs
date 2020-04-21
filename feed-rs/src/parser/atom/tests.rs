@@ -12,7 +12,7 @@ fn test_example_1() {
     // Expected feed
     let expected = Feed::default()
         .title(Text::new("dive into mark".into()))
-        .description(Text::new("A <em>lot</em> of effort\n        went into making this effortless".into())
+        .description(Text::new("\n        A <em>lot</em> of effort\n        went into making this effortless\n    ".into())
             .content_type("text/html"))
         .updated_rfc3339("2005-07-31T12:29:29Z")
         .id("tag:example.org,2003:3")
@@ -24,7 +24,7 @@ fn test_example_1() {
             .rel("self")
             .media_type("application/atom+xml"))
         .rights(Text::new("Copyright (c) 2003, Mark Pilgrim".into()))
-        .generator(Generator::new("Example Toolkit".into())
+        .generator(Generator::new("\n        Example Toolkit\n    ".into())
             .uri("http://www.example.com/")
             .version("1.0"))
         .entry(Entry::default()
@@ -146,7 +146,8 @@ fn test_example_3() {
                 .label("Zero Trust")
                 .scheme("http://www.sixapart.com/ns/types#tag"))
             .content(Content::default()
-                .body(r#"<p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
+                .body(r#"
+        <p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
         <img src="http://feeds.feedburner.com/~r/TheAkamaiBlog/~4/NnQEuqRSyug" height="1" width="1" alt=""/>"#)
                 .content_type("text/html")));
 
@@ -170,12 +171,12 @@ fn test_example_4() {
         .id("tag:ebmpapst.com,2011-06-30:1309426729931")
         .updated_rfc3339("2019-07-29T09:41:09Z")
         .entry(Entry::default()
-            .title(Text::new("Connection with future".into()))
+            .title(Text::new(" Connection with future".into()))
             .link(Link::new("https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html".into())
                 .rel("alternate"))
             .id("tag:ebmpapst.com,2019-07-17:0310161724098")
             .updated_rfc3339("2019-07-17T03:10:16Z")
-            .summary(Text::new(r#"<a href="https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html"><img src="http://www.ebmpapst.com//media/content/homepage/currenttopic/ads_cd2013/FF_ep_keyvisual_100px.jpg" border="0" align="right"></a> Working in perfect harmony: the ebm-papst drive solutions for SIMATIC MICRO-DRIVE drive regulators from Siemens."#.to_owned())
+            .summary(Text::new(r#" <a href="https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html"><img src="http://www.ebmpapst.com//media/content/homepage/currenttopic/ads_cd2013/FF_ep_keyvisual_100px.jpg" border="0" align="right"></a> Working in perfect harmony: the ebm-papst drive solutions for SIMATIC MICRO-DRIVE drive regulators from Siemens. "#.to_owned())
                 .content_type("text/html")));
 
     // Check
@@ -205,7 +206,8 @@ fn test_example_5() {
             .link(Link::new("https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366".into())
                 .rel("alternate")
                 .media_type("text/html"))
-            .summary(Text::new(r#"<p class="quicksummary"><a href="https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366#shakemap" title="ShakeMap maximum estimated intensity" class="mmi-II">ShakeMap - <strong class="roman">II</strong></a> <a href="https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366#dyfi" class="mmi-IV" title="Did You Feel It? maximum reported intensity (4 reports)">DYFI? - <strong class="roman">IV</strong></a></p><dl><dt>Time</dt><dd>2019-07-31 12:26:15 UTC</dd><dd>2019-07-31 04:26:15 -08:00 at epicenter</dd><dt>Location</dt><dd>40.347&deg;N 124.460&deg;W</dd><dt>Depth</dt><dd>29.35 km (18.24 mi)</dd></dl>"#.to_owned())
+            .summary(Text::new(r#"
+            <p class="quicksummary"><a href="https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366#shakemap" title="ShakeMap maximum estimated intensity" class="mmi-II">ShakeMap - <strong class="roman">II</strong></a> <a href="https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366#dyfi" class="mmi-IV" title="Did You Feel It? maximum reported intensity (4 reports)">DYFI? - <strong class="roman">IV</strong></a></p><dl><dt>Time</dt><dd>2019-07-31 12:26:15 UTC</dd><dd>2019-07-31 04:26:15 -08:00 at epicenter</dd><dt>Location</dt><dd>40.347&deg;N 124.460&deg;W</dd><dt>Depth</dt><dd>29.35 km (18.24 mi)</dd></dl>"#.to_owned())
                 .content_type("text/html"))
             .category(Category::new("Past Hour".into())
                 .label("Age"))
@@ -253,7 +255,8 @@ fn test_example_6() {
             <li>Switch to event-based parser (xml-rs) to reduce peak memory usage and use of clone()</li>
             <li>Expanded test coverage</li>
             <li>Documentation improvements</li>
-            </ul>"#)
+            </ul>
+        "#)
                 .content_type("text/html"))
             .author(Person::new("markpritchard".into())))
         .entry(Entry::default()

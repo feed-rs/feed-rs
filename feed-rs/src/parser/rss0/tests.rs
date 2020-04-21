@@ -31,13 +31,13 @@ fn test_0_91_spec_1() {
         .entry(Entry::default()
             .title(Text::new("Giving the world a pluggable Gnutella".into()))
             .link(Link::new("http://writetheweb.com/read.php?item=24".into()))
-            .summary(Text::new("WorldOS is a framework on which to build programs that work like Freenet or Gnutella -allowing\n                distributed applications using peer-to-peer routing.".into()))
+            .summary(Text::new("WorldOS is a framework on which to build programs that work like Freenet or Gnutella -allowing\n                distributed applications using peer-to-peer routing.\n            ".into()))
             .id(entry0.id.as_ref())     // not in source data
             .updated(entry0.updated))   // not in source data
         .entry(Entry::default()
             .title(Text::new("Syndication discussions hot up".into()))
             .link(Link::new("http://writetheweb.com/read.php?item=23".into()))
-            .summary(Text::new("After a period of dormancy, the Syndication mailing list has become active again, with\n                contributions from leaders in traditional media and Web syndication.".into()))
+            .summary(Text::new("After a period of dormancy, the Syndication mailing list has become active again, with\n                contributions from leaders in traditional media and Web syndication.\n            ".into()))
             .id(entry1.id.as_ref())     // not in source data
             .updated(entry1.updated));  // not in source data
 
@@ -60,18 +60,18 @@ fn test_0_92_spec_1() {
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Dave Winer: Grateful Dead".into()))
         .link(Link::new("http://www.scripting.com/blog/categories/gratefulDead.html".into()))
-        .description(Text::new("A high-fidelity Grateful Dead song every day. This is where we're experimenting with\n            enclosures on RSS news items that download when you're not using your computer. If it works (it will)\n            it will be the end of the Click-And-Wait multimedia experience on the Internet.".into()))
+        .description(Text::new("A high-fidelity Grateful Dead song every day. This is where we're experimenting with\n            enclosures on RSS news items that download when you're not using your computer. If it works (it will)\n            it will be the end of the Click-And-Wait multimedia experience on the Internet.\n        ".into()))
         .updated_rfc2822("Fri, 13 Apr 2001 19:23:02 GMT")
         .contributor(Person::new("managingEditor".into()).email("dave@userland.com (Dave Winer)"))
         .contributor(Person::new("webMaster".into()).email("dave@userland.com (Dave Winer)"))
         .entry(Entry::default()
-            .summary(Text::new("Kevin Drennan started a <a href=\"http://deadend.editthispage.com/\">Grateful\n                Dead Weblog</a>. Hey it's cool, he even has a <a href=\"http://deadend.editthispage.com/directory/61\">directory</a>.\n                <i>A Frontier 7 feature.</i>".into()))
+            .summary(Text::new("Kevin Drennan started a <a href=\"http://deadend.editthispage.com/\">Grateful\n                Dead Weblog</a>. Hey it's cool, he even has a <a href=\"http://deadend.editthispage.com/directory/61\">directory</a>.\n                <i>A Frontier 7 feature.</i>\n            ".into()))
             .id(entry0.id.as_ref())     // not in source data
             .updated(entry0.updated))   // not in source data
         .entry(Entry::default()
             .summary(Text::new("<a href=\"http://arts.ucsc.edu/GDead/AGDL/other1.html\">The Other One</a>,
                 live instrumental, One From The Vault. Very rhythmic very spacy, you can listen to it many times, and
-                enjoy something new every time.".into()))
+                enjoy something new every time.\n            ".into()))
             .content(Content::default()
                 .src("http://www.scripting.com/mp3s/theOtherOne.mp3")
                 .length(6666097)
