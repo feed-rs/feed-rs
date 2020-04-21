@@ -27,7 +27,6 @@ impl<R: Read> ElementSource<R> {
     pub fn new(xml_data: R) -> ElementSource<R> {
         // Create the XML parser
         let config = ParserConfig::new()
-            .trim_whitespace(true)
             .cdata_to_characters(true)
             .ignore_comments(true);
         let reader = xml_reader::EventReader::new_with_config(xml_data, config);
