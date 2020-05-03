@@ -114,7 +114,7 @@ fn assign_missing_ids(feed: &mut model::Feed) {
 
     for entry in feed.entries.iter_mut() {
         if entry.id.is_empty() {
-            entry.id = create_id(&entry.links, &feed.title);
+            entry.id = create_id(&entry.links, &entry.title);
         }
     }
 }

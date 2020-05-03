@@ -20,13 +20,13 @@ fn test_example_1() {
         .description(Text::new("Site description".into()))
         .updated(actual.updated)    // not present in the test data
         .entry(Entry::default()
-            .id("e759cc25dc488d95ec723f6553e10a4e")     // hash of the link
+            .id("7d61c42a2d8ecf2289e789e1fb2035d1")     // hash of the link
             .updated(entry0.updated)                    // not present in the test data
             .title(Text::new("記事1のタイトル".into()))
             .link(Link::new("記事1のURL".into()))
             .summary(Text::new("記事1の内容".into())))
         .entry(Entry::default()
-            .id("2c802e03278c5c9b7c6f3690f69f7570")     // hash of the link
+            .id("e342c1b080da9ffbfd10c0a6ba49395f")     // hash of the link
             .updated(entry1.updated)                    // not present in the test data
             .title(Text::new("記事2のタイトル".into()))
             .link(Link::new("記事2のURL".into()))
@@ -56,13 +56,13 @@ fn test_spec_1() {
             .title("XML.com"))
         .updated(actual.updated)    // not present in the test data
         .entry(Entry::default()
-            .id("4e02e6b5e0c197983a5347308272fa20")     // hash of the link
+            .id("958983927af7075ad55f6d2c9b0c24b2")     // hash of the link
             .updated(entry0.updated)            // not present in the test data
             .title(Text::new("Processing Inclusions with XSLT".into()))
             .link(Link::new("http://xml.com/pub/2000/08/09/xslt/xslt.html".into()))
             .summary(Text::new("\n\n            Processing document inclusions with general XML tools can be\n            problematic. This article proposes a way of preserving inclusion\n            information through SAX-based processing.\n        ".into())))
         .entry(Entry::default()
-            .id("82feaa3d819de1de3e5ed0eb59b53706")     // hash of the link
+            .id("54f62e9fe8901546d7e25c0827e1b8e8")     // hash of the link
             .updated(entry1.updated)            // not present in the test data
             .title(Text::new("Putting RDF to Work".into()))
             .link(Link::new("http://xml.com/pub/2000/08/09/rdfdb/index.html".into()))
@@ -91,7 +91,7 @@ fn test_spec_2() {
             .title("Meerkat Powered!"))
         .updated(actual.updated)    // not present in the test data
         .entry(Entry::default()
-            .id("3c8aa6d4cb85520f531b5a9c08498d04")     // hash of the link
+            .id("acf7c86547d5d594af6d8f3327e84b06")     // hash of the link
             .updated(entry0.updated)            // not present in the test data
             .title(Text::new("XML: A Disruptive Technology".into()))
             .link(Link::new("http://c.moreover.com/click/here.pl?r123".into()))
