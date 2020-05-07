@@ -109,12 +109,12 @@ pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
 // Assigns IDs to missing feed + entries as required
 fn assign_missing_ids(feed: &mut model::Feed) {
     if feed.id.is_empty() {
-        feed.id = create_id(&feed.links);
+        feed.id = create_id(&feed.links, &feed.title);
     }
 
     for entry in feed.entries.iter_mut() {
         if entry.id.is_empty() {
-            entry.id = create_id(&entry.links);
+            entry.id = create_id(&entry.links, &entry.title);
         }
     }
 }
@@ -123,11 +123,14 @@ const LINK_HASH_KEY1: u64 = 0x5d78_4074_2887_2d60;
 const LINK_HASH_KEY2: u64 = 0x90ee_ca4c_90a5_e228;
 
 // Creates a unique ID from the first link, or a UUID if no links are available
-fn create_id(links : &[model::Link]) -> String {
+fn create_id(links : &[model::Link], title: &Option<model::Text>) -> String {
     // Generate a stable ID for this item based on the first link
     if let Some(link) = links.iter().next() {
         let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
         hasher.write(link.href.as_bytes());
+        if let Some(title) = title {
+            hasher.write(title.content.as_bytes());
+        }
         let hash = hasher.finish128();
         format!("{:x}{:x}", hash.h1, hash.h2)
     } else {
