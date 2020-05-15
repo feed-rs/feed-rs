@@ -9,7 +9,7 @@ include = [
     "LICENSE",
     "README.md"
 ]
-license = "MIT OR Apache-2.0"
+license = "MIT"
 homepage = "https://github.com/feed-rs/feed-rs"
 repository = "https://github.com/feed-rs/feed-rs.git"
 description = "A simple feed parser (RSS 2.0, ATOM, RSS 1.0)"
