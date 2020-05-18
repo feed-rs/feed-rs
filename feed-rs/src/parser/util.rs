@@ -44,14 +44,14 @@ pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
     }
 
     DateTime::parse_from_rfc2822(&text)
-        .map_or(None, |t| Some(t.with_timezone(&Utc)))
+        .map(|t| t.with_timezone(&Utc)).ok()
 }
 
 /// Parses a timestamp from an Atom or JSON feed
 /// This should be an RFC-3339 formatted timestamp
 pub fn timestamp_rfc3339(text: &str) -> Option<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(text.trim())
-        .map_or(None, |t| Some(t.with_timezone(&Utc)))
+        .map(|t| t.with_timezone(&Utc)).ok()
 }
 
 /// Generates a new UUID.

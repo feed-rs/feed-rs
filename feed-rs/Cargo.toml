@@ -1,15 +1,16 @@
 [package]
 name = "feed-rs"
-version = "0.2.2"
+version = "0.2.3"
 edition = '2018'
 authors = ["Hiroki Kumamoto <kumabook@live.jp>", "Mark Pritchard <mpritcha@gmail.com>"]
 include = [
     "**/*.rs",
     "Cargo.toml",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "fixture/*"
 ]
-license = "MIT OR Apache-2.0"
+license = "MIT"
 homepage = "https://github.com/feed-rs/feed-rs"
 repository = "https://github.com/feed-rs/feed-rs.git"
 description = "A simple feed parser (RSS 2.0, ATOM, RSS 1.0)"

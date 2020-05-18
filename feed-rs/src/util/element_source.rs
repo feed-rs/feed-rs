@@ -27,7 +27,6 @@ impl<R: Read> ElementSource<R> {
     pub fn new(xml_data: R) -> ElementSource<R> {
         // Create the XML parser
         let config = ParserConfig::new()
-            .trim_whitespace(true)
             .cdata_to_characters(true)
             .ignore_comments(true);
         let reader = xml_reader::EventReader::new_with_config(xml_data, config);
@@ -244,10 +243,10 @@ pub struct ElementIter<'a, R: Read> {
 }
 
 impl<'a, R: Read> Iterator for ElementIter<'a, R> {
-    type Item = Element<'a, R>;
+    type Item = Result<Element<'a, R>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.source.next_element_at_depth(self.depth).unwrap()
+        self.source.next_element_at_depth(self.depth).transpose()
     }
 }
 
@@ -290,6 +289,7 @@ mod tests {
         // Iterate over the children of the book
         let mut count = 0;
         for child in book.children() {
+            let child = child?;
             match child.name.local_name.as_str() {
                 "author" => {
                     count += 1;
@@ -319,6 +319,7 @@ mod tests {
         // Iterate over the children of the catalog
         let mut count = 0;
         for child in catalog.children() {
+            let child = child?;
             // First child should be book
             assert_eq!(child.name.local_name, "book");
 
@@ -340,6 +341,7 @@ mod tests {
         // Should have a single child called "nest2"
         let mut count = 0;
         for child in nest1.children() {
+            let child = child?;
             // First child should be nest2
             assert_eq!(child.name.local_name, "nest2");
 
@@ -378,7 +380,7 @@ mod tests {
         assert_eq!(catalog.name.local_name, "catalog");
 
         // Next element should be "book"
-        let book: Element<_> = catalog.children().next().unwrap();
+        let book: Element<_> = catalog.children().next().unwrap()?;
         assert_eq!(book.name.local_name, "book");
 
         // Contents should be as we expect
