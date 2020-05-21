@@ -4,7 +4,7 @@ use mime::Mime;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
-use crate::parser::util::timestamp_rfc3339;
+use crate::parser::util::timestamp_rfc3339_lenient;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -207,7 +207,7 @@ impl Feed {
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rfc3339(updated);
+        self.updated = timestamp_rfc3339_lenient(updated);
         self
     }
 }
@@ -330,7 +330,7 @@ impl Entry {
     }
 
     pub fn published_rfc3339(mut self, published: &str) -> Self {
-        self.published = timestamp_rfc3339(published);
+        self.published = timestamp_rfc3339_lenient(published);
         self
     }
 
@@ -355,7 +355,7 @@ impl Entry {
     }
 
     pub fn updated_rfc3339(mut self, updated: &str) -> Self {
-        self.updated = timestamp_rfc3339(updated);
+        self.updated = timestamp_rfc3339_lenient(updated);
         self
     }
 }

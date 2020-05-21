@@ -4,7 +4,7 @@ use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, Image, Link, Person, Text};
 use crate::parser::{ParseFeedError, ParseFeedResult};
-use crate::parser::util::timestamp_rfc3339;
+use crate::parser::util::timestamp_rfc3339_lenient;
 
 #[cfg(test)]
 mod tests;
@@ -91,10 +91,10 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
     }
 
     if let Some(published) = ji.date_published {
-        entry.published = timestamp_rfc3339(&published);
+        entry.published = timestamp_rfc3339_lenient(&published);
     }
     if let Some(modified) = ji.date_modified {
-        entry.updated = timestamp_rfc3339(&modified);
+        entry.updated = timestamp_rfc3339_lenient(&modified);
     }
 
     if let Some(person) = handle_person(ji.author) { entry.authors.push(person); }

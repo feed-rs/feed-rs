@@ -27,6 +27,13 @@ lazy_static! {
             (Regex::new(" ([0-9]):").unwrap(), " 0${1}:"),
         )
     };
+
+    static ref RFC3339_FIXES: Vec<(Regex, &'static str)> = {
+        vec!(
+            // inserts missing colon in timezone
+            (Regex::new(r#"(\+|-)(\d{2})(\d{2})"#).unwrap(), "${1}${2}:${3}"),
+        )
+    };
 }
 
 /// Parses a timestamp from an RSS2 feed.
@@ -45,6 +52,17 @@ pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
 
     DateTime::parse_from_rfc2822(&text)
         .map(|t| t.with_timezone(&Utc)).ok()
+}
+
+pub fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
+
+    // Clean the input string by applying each of the regex fixes
+    let mut text = text.trim().to_string();
+    for (regex, replacement) in RFC3339_FIXES.iter() {
+        text = regex.replace(&text, *replacement).to_string();
+    }
+
+    timestamp_rfc3339(&text)
 }
 
 /// Parses a timestamp from an Atom or JSON feed
@@ -98,7 +116,25 @@ mod tests {
         );
 
         for (source, expected) in tests {
-            let parsed = timestamp_rfc2822_lenient(source).unwrap();
+            let parsed = timestamp_rfc2822_lenient(source)
+                .expect(&format!("failed to parse {}", source));
+            assert_eq!(parsed, expected);
+        }
+    }
+
+    #[test]
+    fn test_timestamp_atom() {
+        let tests = vec!(
+            // properly formated rfc3339 string
+            ("2014-12-29T14:53:35+02:00", Utc.ymd(2014, 12, 29).and_hms_milli(12, 53, 35, 0)),
+
+            // missing colon in timezone
+            ("2014-12-29T14:53:35+0200", Utc.ymd(2014, 12, 29).and_hms_milli(12, 53, 35, 0)),
+        );
+
+        for (source, expected) in tests {
+            let parsed = timestamp_rfc3339_lenient(source)
+                .expect(&format!("failed to parse {}", source));
             assert_eq!(parsed, expected);
         }
     }
