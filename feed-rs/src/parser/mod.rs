@@ -1,4 +1,6 @@
 use std::io::{BufRead, BufReader, Read};
+use std::error::Error;
+use std::fmt;
 
 use siphasher::sip128::{Hasher128, SipHasher};
 use xml::reader as xml_reader;
@@ -45,6 +47,28 @@ impl From<xml_reader::Error> for ParseFeedError {
     }
 }
 
+impl fmt::Display for ParseFeedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseFeedError::ParseError(pe) => write!(f, "couldn't parse feed: {}", pe),
+            ParseFeedError::IoError(ie) => write!(f, "couldn't read feed: {}", ie),
+            ParseFeedError::JsonSerde(je) => write!(f, "couldn't parse JSON: {}", je),
+            ParseFeedError::XmlReader(xe) => write!(f, "couldn't parse XML: {}", xe),
+        }
+    }
+}
+
+impl Error for ParseFeedError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            ParseFeedError::IoError(ie) => Some(ie),
+            ParseFeedError::JsonSerde(je) => Some(je),
+            ParseFeedError::XmlReader(xe) => Some(xe),
+            _ => None,
+        }
+    }
+}
+
 /// Underlying cause of the parse failure
 #[derive(Debug)]
 pub enum ParseErrorKind {
@@ -54,6 +78,16 @@ pub enum ParseErrorKind {
     UnknownMimeType(String),
     /// Required content within the source was not found e.g. the XML child text element for a "content" element
     MissingContent(&'static str),
+}
+
+impl fmt::Display for ParseErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseErrorKind::NoFeedRoot => f.write_str("no root element"),
+            ParseErrorKind::UnknownMimeType(mime) => write!(f, "unsupported content type {}", mime),
+            ParseErrorKind::MissingContent(elem) => write!(f, "missing content element {}", elem),
+        }
+    }
 }
 
 /// Parse the input (Atom, a flavour of RSS or JSON Feed) into our model
