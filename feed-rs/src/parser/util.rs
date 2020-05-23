@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
+
     // Feeds may not comply with the specification in various ways (https://tools.ietf.org/html/rfc2822#page-14)
     static ref RFC2822_FIXES: Vec<(Regex, &'static str)> = {
         vec!(
@@ -28,6 +29,7 @@ lazy_static! {
         )
     };
 
+    // Feeds may not comply with the specification (https://tools.ietf.org/html/rfc3339)
     static ref RFC3339_FIXES: Vec<(Regex, &'static str)> = {
         vec!(
             // inserts missing colon in timezone
@@ -40,7 +42,7 @@ lazy_static! {
 /// This should be an RFC-2822 formatted timestamp but we need a bunch of fixes / workarounds for the generally broken stuff we find on the internet
 pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds so try that first
-    if let Some(ts) = timestamp_rfc3339(text) {
+    if let Some(ts) = timestamp_rfc3339_lenient(text) {
         return Some(ts);
     }
 
@@ -54,6 +56,8 @@ pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
         .map(|t| t.with_timezone(&Utc)).ok()
 }
 
+/// Parses a timestamp from an Atom or JSON feed.
+/// This should be an RFC-3339 formatted timestamp but we need fixes for feeds that don't comply
 pub fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
 
     // Clean the input string by applying each of the regex fixes
@@ -62,12 +66,6 @@ pub fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
         text = regex.replace(&text, *replacement).to_string();
     }
 
-    timestamp_rfc3339(&text)
-}
-
-/// Parses a timestamp from an Atom or JSON feed
-/// This should be an RFC-3339 formatted timestamp
-pub fn timestamp_rfc3339(text: &str) -> Option<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(text.trim())
         .map(|t| t.with_timezone(&Utc)).ok()
 }
