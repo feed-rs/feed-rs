@@ -314,6 +314,16 @@ fn test_example_7() {
     assert_eq!(body, expected_body);
 }
 
+// Verify that the Reddit ATOM feed parses correctly
+#[test]
+fn test_example_reddit() {
+    let test_data = test::fixture_as_string("atom_example_reddit.xml");
+    let feed = parser::parse(test_data.as_bytes()).unwrap();
+    for entry in feed.entries {
+        assert!(entry.updated.is_some());
+    }
+}
+
 // Verify we can parse the example contained in the Atom specification
 #[test]
 fn test_spec_1() {
