@@ -1,4 +1,4 @@
-use crate::model::{Content, Entry, Feed, Image, Link, Person, Text};
+use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
 
@@ -12,7 +12,7 @@ fn test_0_91_spec_1() {
     // Expected feed
     let entry0 = actual.entries.get(0).unwrap();
     let entry1 = actual.entries.get(1).unwrap();
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS0)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("WriteTheWeb".into()))
         .link(Link::new("http://writetheweb.com".into()))
@@ -56,7 +56,7 @@ fn test_0_92_spec_1() {
     let entry0 = actual.entries.get(0).unwrap();
     let entry1 = actual.entries.get(1).unwrap();
     let entry2 = actual.entries.get(2).unwrap();
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS0)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Dave Winer: Grateful Dead".into()))
         .link(Link::new("http://www.scripting.com/blog/categories/gratefulDead.html".into()))

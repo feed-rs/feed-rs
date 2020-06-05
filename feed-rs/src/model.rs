@@ -29,6 +29,8 @@ use crate::parser::util::timestamp_rfc3339_lenient;
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Feed {
+    /// Type of this feed (e.g. RSS2, Atom etc)
+    pub feed_type: FeedType,
     /// A unique identifier for this feed
     /// * Atom (required): Identifies the feed using a universally unique and permanent URI.
     /// * RSS doesn't require an ID so it is initialised to the hash of the first link or a UUID if not found
@@ -96,9 +98,10 @@ pub struct Feed {
     pub entries: Vec<Entry>,
 }
 
-impl Default for Feed {
-    fn default() -> Self {
+impl Feed {
+    pub fn new(feed_type: FeedType) -> Self {
         Feed {
+            feed_type,
             id: "".into(),
             title: None,
             updated: None,
@@ -210,6 +213,16 @@ impl Feed {
         self.updated = timestamp_rfc3339_lenient(updated);
         self
     }
+}
+
+/// Type of a feed (RSS, Atom etc)
+#[derive(Debug, PartialEq)]
+pub enum FeedType {
+    Atom,
+    JSON,
+    RSS0,
+    RSS1,
+    RSS2,
 }
 
 /// An item within a feed

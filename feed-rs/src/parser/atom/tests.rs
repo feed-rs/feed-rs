@@ -1,4 +1,4 @@
-use crate::model::{Entry, Person, Link, Feed, Text, Generator, Image, Category, Content};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
 
@@ -10,7 +10,7 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::Atom)
         .title(Text::new("dive into mark".into()))
         .description(Text::new("\n        A <em>lot</em> of effort\n        went into making this effortless\n    ".into())
             .content_type("text/html"))
@@ -59,7 +59,7 @@ fn test_example_2() {
     let test_data = test::fixture_as_string("atom_example_2.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::Atom)
         .id("tag:theregister.co.uk,2005:feed/theregister.co.uk/science/")
         .title(Text::new("The Register - Science".into()))
         .link(Link::new("https://www.theregister.co.uk/science/headlines.atom".into())
@@ -113,7 +113,7 @@ fn test_example_3() {
     let test_data = test::fixture_as_string("atom_example_3.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::Atom)
         .title(Text::new("The Akamai Blog".into()))
         .link(Link::new("https://blogs.akamai.com/".into())
             .rel("alternate")
@@ -162,7 +162,7 @@ fn test_example_4() {
     let test_data = test::fixture_as_string("atom_example_4.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::Atom)
         .author(Person::new("ebm-papst".into()))
         .link(Link::new("http://www.ebmpapst.com/en/ebmpapst_productnews_atom_feed.xml".into())
             .rel("self")
@@ -190,7 +190,7 @@ fn test_example_5() {
     let test_data = test::fixture_as_string("atom_example_5.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::Atom)
         .title(Text::new("USGS Magnitude 2.5+ Earthquakes, Past Hour".into()))
         .updated_rfc3339("2019-07-31T13:17:27Z")
         .author(Person::new("U.S. Geological Survey".into())
@@ -230,7 +230,7 @@ fn test_example_6() {
     let test_data = test::fixture_as_string("atom_example_6.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::Atom)
         .id("tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases")
         .link(Link::new("https://github.com/feed-rs/feed-rs/releases".into())
             .rel("alternate")
@@ -332,7 +332,7 @@ fn test_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::Atom)
         .id("urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6")
         .title(Text::new("Example Feed".into()))
         .link(Link::new("http://example.org/".into())

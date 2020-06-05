@@ -1,6 +1,5 @@
+use crate::model::{Entry, Feed, FeedType, Image, Link, Text};
 use crate::parser;
-use crate::model::{Feed, Text, Link, Entry, Image};
-
 use crate::util::test;
 
 // Example from the web
@@ -13,7 +12,7 @@ fn test_example_1() {
     // Expected feed
     let entry0 = actual.entries.get(0).unwrap();
     let entry1 = actual.entries.get(1).unwrap();
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS1)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Feed title".into()))
         .link(Link::new("http://www.example.com/main.html".into()))
@@ -46,7 +45,7 @@ fn test_spec_1() {
     // Expected feed
     let entry0 = actual.entries.get(0).unwrap();
     let entry1 = actual.entries.get(1).unwrap();
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS1)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("XML.com".into()))
         .link(Link::new("http://xml.com/pub".into()))
@@ -81,7 +80,7 @@ fn test_spec_2() {
 
     // Expected feed
     let entry0 = actual.entries.get(0).unwrap();
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS1)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Meerkat".into()))
         .link(Link::new("http://meerkat.oreillynet.com".into()))

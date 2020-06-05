@@ -1,4 +1,4 @@
-use crate::model::{Feed, Text, Link, Person, Entry, Generator, Category, Image, Content};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
 
@@ -10,7 +10,7 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("RSS Title".into()))
         .description(Text::new("This is an example of an RSS feed".into()))
@@ -38,7 +38,7 @@ fn test_example_2() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected: Feed = Feed::default()
+    let expected: Feed = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .updated(actual.updated)    // not present in the test data
         .title(Text::new("NASA Breaking News".into()))
@@ -76,7 +76,7 @@ fn test_example_3() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("News, Politics, Opinion, Commentary, and Analysis".into()))
         .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.\n        ".into()))
@@ -105,7 +105,7 @@ fn test_example_4() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Earthquakes today".into()))
         .link(Link::new("http://www.earthquakenewstoday.com".into()))
@@ -137,7 +137,7 @@ fn test_example_5() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Ars Technica".into()))
         .link(Link::new("https://arstechnica.com".into()))
@@ -174,7 +174,7 @@ fn test_example_6() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS2)
         .id("b2ef47d837e6c0d9d757e14852e5bde")     // hash of the link
         .title(Text::new("Latest Movie Trailers".into()))
         .link(Link::new("https://trailers.apple.com/".into()))
@@ -203,7 +203,7 @@ fn test_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Scripting News".into()))
         .link(Link::new("http://www.scripting.com/".into()))

@@ -2,7 +2,7 @@ use std::io::Read;
 
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, Image, Link, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser::{ParseFeedError, ParseFeedResult};
 use crate::parser::util::timestamp_rfc3339_lenient;
 
@@ -22,7 +22,7 @@ pub fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
 
 // Convert the JSON Feed into our standard model
 fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::default();
+    let mut feed = Feed::new(FeedType::JSON);
 
     // Convert feed level fields
     feed.title = Some(Text::new(jf.title));
