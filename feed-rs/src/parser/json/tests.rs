@@ -1,4 +1,4 @@
-use crate::model::{Content, Entry, Feed, Image, Link, Person, Text};
+use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
 
@@ -10,7 +10,7 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::JSON)
         .id(&actual.id)                 // not in test content
         .updated(actual.updated)        // not in test content
         .title(Text::new("Daring Fireball".into()))
@@ -57,7 +57,7 @@ fn test_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::default()
+    let expected = Feed::new(FeedType::JSON)
         .id(&actual.id)                 // not in test content
         .updated(actual.updated)        // not in test content
         .title(Text::new("JSON Feed".into()))

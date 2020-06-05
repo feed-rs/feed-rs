@@ -3,7 +3,7 @@ use std::io::Read;
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text, FeedType};
 use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
 use crate::util::attr_value;
 use crate::util::element_source::Element;
@@ -28,7 +28,7 @@ pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
 
 // Handles the <channel> element
 fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::default();
+    let mut feed = Feed::new(FeedType::RSS2);
 
     for child in channel.children() {
         let child = child?;

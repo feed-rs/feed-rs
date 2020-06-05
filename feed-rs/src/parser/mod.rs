@@ -50,10 +50,10 @@ impl From<xml_reader::Error> for ParseFeedError {
 impl fmt::Display for ParseFeedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseFeedError::ParseError(pe) => write!(f, "couldn't parse feed: {}", pe),
-            ParseFeedError::IoError(ie) => write!(f, "couldn't read feed: {}", ie),
-            ParseFeedError::JsonSerde(je) => write!(f, "couldn't parse JSON: {}", je),
-            ParseFeedError::XmlReader(xe) => write!(f, "couldn't parse XML: {}", xe),
+            ParseFeedError::ParseError(pe) => write!(f, "unable to parse feed: {}", pe),
+            ParseFeedError::IoError(ie) => write!(f, "unable to read feed: {}", ie),
+            ParseFeedError::JsonSerde(je) => write!(f, "unable to parse JSON: {}", je),
+            ParseFeedError::XmlReader(xe) => write!(f, "unable to parse XML: {}", xe),
         }
     }
 }

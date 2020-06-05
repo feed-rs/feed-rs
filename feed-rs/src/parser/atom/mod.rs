@@ -2,7 +2,7 @@ use std::io::Read;
 
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text, FeedType};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::util::attr_value;
 use crate::util::element_source::Element;
@@ -13,7 +13,7 @@ mod tests;
 
 /// Parses an Atom feed into our model
 pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::default();
+    let mut feed = Feed::new(FeedType::Atom);
     for child in root.children() {
         let child = child?;
         let tag_name = child.name.local_name.as_str();
