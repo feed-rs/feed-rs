@@ -5,7 +5,7 @@ use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
-use crate::parser::util::timestamp_rfc2822_lenient;
+use crate::parser::util::{NS, timestamp_rfc2822_lenient};
 use crate::util::attr_value;
 use crate::util::element_source::Element;
 
@@ -157,21 +157,41 @@ fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> 
 fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
+    // Per https://www.rssboard.org/rss-profile#namespace-elements-content-encoded:
+    //   The content:encoded element can be used in conjunction with the description element to provide an item's full content along with a shorter summary. Under this approach, the complete text of the item is presented in content:encoded and the summary in description.
+    // But the standard also allows an enclosure, which is the content of the item
+    // So we will keep content:encoded aside during the parse, and use it as the content if we didn't find an enclosure
+    let mut content_encoded: Option<Text> = None;
+
     for child in item.children() {
         let child = child?;
         let tag_name = child.name.local_name.as_str();
-        match tag_name {
-            "title" => entry.title = handle_text(child)?,
-            "link" => if let Some(link) = handle_link(child)? { entry.links.push(link) },
-            "description" => entry.summary = handle_text(child)?,
-            "author" => if let Some(person) = handle_contact("author", child)? { entry.authors.push(person) },
-            "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
-            "guid" => if let Some(guid) = child.child_as_text()? { entry.id = guid },
-            "enclosure" => entry.content = handle_enclosure(child)?,
-            "pubDate" => entry.published = handle_timestamp(child),
+        let ns = NS::from_uri(child.name.namespace.as_ref().map(|s| s.as_str()));
+        match (ns, tag_name) {
+            (None, "title") => entry.title = handle_text(child)?,
+            (None, "link") => if let Some(link) = handle_link(child)? { entry.links.push(link) },
+            (None, "description") => entry.summary = handle_text(child)?,
+            (None, "author") => if let Some(person) = handle_contact("author", child)? { entry.authors.push(person) },
+            (None, "category") => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
+            (None, "guid") => if let Some(guid) = child.child_as_text()? { entry.id = guid },
+            (None, "enclosure") => entry.content = handle_enclosure(child)?,
+            (None, "pubDate") => entry.published = handle_timestamp(child),
+            (Some(NS::Content), "encoded") => content_encoded = handle_text(child)?,
 
             // Nothing required for unknown elements
             _ => {}
+        }
+    }
+
+    // Use content_encoded if we didn't find an enclosure above
+    if entry.content.is_none() {
+        if let Some(ce) = content_encoded {
+            entry.content = Some(Content {
+                body: Some(ce.content),
+                content_type: ce.content_type,
+                length: None,
+                src: ce.src.map(|s| Link::new(s))
+            });
         }
     }
 

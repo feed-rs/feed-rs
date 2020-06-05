@@ -2,6 +2,28 @@ use chrono::{DateTime, Utc};
 use regex::Regex;
 use uuid::Uuid;
 
+/// Set of automatically recognised namespaces
+#[derive(Debug)]
+pub(crate) enum NS {
+    // https://web.resource.org/rss/1.0/modules/content/
+    Content,
+    // https://www.dublincore.org/specifications/dublin-core/dcmi-terms/
+    DublinCore,
+}
+
+impl NS {
+    // Return the known namespace from a given URI
+    pub(crate) fn from_uri(uri: Option<&str>) -> Option<NS> {
+        uri.and_then(|uri| {
+            match uri {
+                "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
+                "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
+                _ => None
+            }
+        })
+    }
+}
+
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
 
