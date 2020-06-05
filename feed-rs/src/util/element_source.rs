@@ -2,10 +2,10 @@ use std::cell::RefCell;
 use std::io::Read;
 use std::mem;
 
-use xml::ParserConfig;
 use xml::attribute::OwnedAttribute;
 use xml::name::OwnedName;
 use xml::namespace::Namespace;
+use xml::ParserConfig;
 use xml::reader as xml_reader;
 use xml::reader::XmlEvent;
 
@@ -24,7 +24,7 @@ impl<R: Read> ElementSource<R> {
     /// # Arguments
     ///
     /// * `xml_data` - the data you wish to parse
-    pub fn new(xml_data: R) -> ElementSource<R> {
+    pub(crate) fn new(xml_data: R) -> ElementSource<R> {
         // Create the XML parser
         let config = ParserConfig::new()
             .cdata_to_characters(true)
@@ -37,7 +37,7 @@ impl<R: Read> ElementSource<R> {
     }
 
     /// Returns the first element in the source
-    pub fn root(&self) -> Result<Option<Element<R>>> {
+    pub(crate) fn root(&self) -> Result<Option<Element<R>>> {
         self.next_element_at_depth(1)
     }
 
@@ -215,14 +215,14 @@ pub struct Element<'a, R: Read> {
 
 impl<'a, R: Read> Element<'a, R> {
     /// Returns an iterator over children of this element (i.e. descends a level in the hierarchy)
-    pub fn children(&self) -> ElementIter<'a, R> {
+    pub(crate) fn children(&self) -> ElementIter<'a, R> {
         ElementIter { source: &self.source, depth: self.depth + 1 }
     }
 
     /// Concatenates the children of this node into a string
     ///
     /// NOTE: the input stream is parsed then re-serialised so the output will not be identical as the input
-    pub fn children_as_string(&self) -> Result<Option<String>> {
+    pub(crate) fn children_as_string(&self) -> Result<Option<String>> {
         // Fill the buffer with the XML content below this element
         let mut buffer = String::new();
         self.source.children_as_string(self.depth + 1, &mut buffer)?;
@@ -231,7 +231,7 @@ impl<'a, R: Read> Element<'a, R> {
     }
 
     /// If the first child of the current node is XML characters, then it is returned as a `String` otherwise `None`.
-    pub fn child_as_text(&self) -> Result<Option<String>> {
+    pub(crate) fn child_as_text(&self) -> Result<Option<String>> {
         self.source.text_node()
     }
 }

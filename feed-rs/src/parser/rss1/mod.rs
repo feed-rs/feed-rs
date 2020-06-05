@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use crate::model::{Entry, Feed, Image, Link, Text, FeedType};
+use crate::model::{Entry, Feed, FeedType, Image, Link, Text};
 use crate::parser::ParseFeedResult;
 use crate::util::element_source::Element;
 
@@ -8,7 +8,7 @@ use crate::util::element_source::Element;
 mod tests;
 
 /// Parses an RSS 1.0 feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::RSS1);
 
     for child in root.children() {

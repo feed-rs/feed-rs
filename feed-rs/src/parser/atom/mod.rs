@@ -2,17 +2,17 @@ use std::io::Read;
 
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text, FeedType};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::util::timestamp_rfc3339_lenient;
 use crate::util::attr_value;
 use crate::util::element_source::Element;
-use crate::parser::util::timestamp_rfc3339_lenient;
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an Atom feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
     for child in root.children() {
         let child = child?;
@@ -103,17 +103,17 @@ fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Conten
             // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline." and
             // also handles base64 encoded document of the indicated mime type per "Otherwise, a base64 encoded document of the indicated media type is contained inline."
             _ => if let Ok(mime) = ct.parse::<Mime>() {
-                    element.child_as_text()?.map(|body| {
-                        let mut content = Content::default();
-                        content.body = Some(body);
-                        content.content_type = mime;
-                        Some(content)
-                    })
-                        // The text is required for an inline text or base64 element
-                        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
-                } else {
-                    Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
-                }
+                element.child_as_text()?.map(|body| {
+                    let mut content = Content::default();
+                    content.body = Some(body);
+                    content.content_type = mime;
+                    Some(content)
+                })
+                    // The text is required for an inline text or base64 element
+                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
+            } else {
+                Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
+            }
         }
     } else {
         // We can't parse without a content type

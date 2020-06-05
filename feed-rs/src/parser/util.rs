@@ -40,7 +40,7 @@ lazy_static! {
 
 /// Parses a timestamp from an RSS2 feed.
 /// This should be an RFC-2822 formatted timestamp but we need a bunch of fixes / workarounds for the generally broken stuff we find on the internet
-pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
+pub(crate) fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds so try that first
     if let Some(ts) = timestamp_rfc3339_lenient(text) {
         return Some(ts);
@@ -58,7 +58,7 @@ pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
 
 /// Parses a timestamp from an Atom or JSON feed.
 /// This should be an RFC-3339 formatted timestamp but we need fixes for feeds that don't comply
-pub fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
+pub(crate) fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
 
     // Clean the input string by applying each of the regex fixes
     let mut text = text.trim().to_string();
@@ -71,7 +71,7 @@ pub fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
 }
 
 /// Generates a new UUID.
-pub fn uuid_gen() -> String {
+pub(crate) fn uuid_gen() -> String {
     Uuid::new_v4().to_string()
 }
 
@@ -102,7 +102,7 @@ mod tests {
             ("2 September 2019 20:00:00 +0000", Utc.ymd(2019, 9, 2).and_hms_milli(20, 0, 0, 0)),
 
             // RSS2 should be RFC-2822 but we get Atom/RFC-3339 formats
-            ("2016-10-01T00:00:00+10:00", Utc.ymd(2016, 9, 30).and_hms_milli(14,0,0, 0)),
+            ("2016-10-01T00:00:00+10:00", Utc.ymd(2016, 9, 30).and_hms_milli(14, 0, 0, 0)),
 
             // Single digit hours should be padded
             ("24 Sep 2013 1:27 PDT", Utc.ymd(2013, 9, 24).and_hms_milli(8, 27, 0, 0)),

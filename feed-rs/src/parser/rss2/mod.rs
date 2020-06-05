@@ -3,17 +3,17 @@ use std::io::Read;
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text, FeedType};
-use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
+use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::util::timestamp_rfc2822_lenient;
 use crate::util::attr_value;
 use crate::util::element_source::Element;
-use crate::parser::util::timestamp_rfc2822_lenient;
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an RSS 2.0 feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     // Only expecting a channel element
     let found_channel = root.children().find(|result| match result {
         Ok(element) => &element.name.local_name == "channel",
