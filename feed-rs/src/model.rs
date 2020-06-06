@@ -184,6 +184,11 @@ impl Feed {
         self
     }
 
+    pub fn published_rfc3339(mut self, pub_date: &str) -> Self {
+        self.published = timestamp_rfc3339_lenient(pub_date);
+        self
+    }
+
     pub fn rights(mut self, rights: Text) -> Self {
         self.rights = Some(rights);
         self
@@ -344,6 +349,11 @@ impl Entry {
 
     pub fn published_rfc3339(mut self, published: &str) -> Self {
         self.published = timestamp_rfc3339_lenient(published);
+        self
+    }
+
+    pub fn rights(mut self, rights: Text) -> Self {
+        self.rights = Some(rights);
         self
     }
 

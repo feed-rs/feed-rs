@@ -1,6 +1,10 @@
+use std::io::Read;
+
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use uuid::Uuid;
+
+use crate::util::element_source::Element;
 
 /// Set of automatically recognised namespaces
 #[derive(Debug)]
@@ -11,17 +15,21 @@ pub(crate) enum NS {
     DublinCore,
 }
 
-impl NS {
-    // Return the known namespace from a given URI
-    pub(crate) fn from_uri(uri: Option<&str>) -> Option<NS> {
-        uri.and_then(|uri| {
-            match uri {
-                "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
-                "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
-                _ => None
-            }
-        })
-    }
+/// Returns the namespace and tag name for a given element
+pub(crate) fn ns_and_tag<'a, R: Read>(element: &'a Element<R>) -> (Option<NS>, &'a str) {
+    // Map the namespace into our known list
+    let ns = element.name.namespace.as_ref().and_then(|uri| {
+        match uri.as_str() {
+            "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
+            "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
+            _ => None
+        }
+    });
+
+    // Extract the tag name
+    let tag = element.name.local_name.as_str();
+
+    (ns, tag)
 }
 
 lazy_static! {
