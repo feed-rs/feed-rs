@@ -99,7 +99,7 @@ pub struct Feed {
 }
 
 impl Feed {
-    pub fn new(feed_type: FeedType) -> Self {
+    pub(crate) fn new(feed_type: FeedType) -> Self {
         Feed {
             feed_type,
             id: "".into(),
@@ -181,6 +181,11 @@ impl Feed {
 
     pub fn published_rfc2822(mut self, pub_date: &str) -> Self {
         self.published = timestamp_rfc2822_lenient(pub_date);
+        self
+    }
+
+    pub fn published_rfc3339(mut self, pub_date: &str) -> Self {
+        self.published = timestamp_rfc3339_lenient(pub_date);
         self
     }
 
@@ -347,6 +352,11 @@ impl Entry {
         self
     }
 
+    pub fn rights(mut self, rights: Text) -> Self {
+        self.rights = Some(rights);
+        self
+    }
+
     pub fn summary(mut self, summary: Text) -> Self {
         self.summary = Some(summary);
         self
@@ -479,7 +489,7 @@ pub struct Generator {
 }
 
 impl Generator {
-    pub fn new(content: String) -> Generator {
+    pub(crate) fn new(content: String) -> Generator {
         Generator { uri: None, version: None, content }
     }
 }
@@ -523,7 +533,7 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(uri: String) -> Image {
+    pub(crate) fn new(uri: String) -> Image {
         Image { uri, title: None, link: None, width: None, height: None, description: None }
     }
 }
@@ -580,7 +590,7 @@ pub struct Link {
 }
 
 impl Link {
-    pub fn new(href: String) -> Link {
+    pub(crate) fn new(href: String) -> Link {
         Link {
             href,
             rel: None,
@@ -637,7 +647,7 @@ pub struct Person {
 }
 
 impl Person {
-    pub fn new(name: String) -> Person {
+    pub(crate) fn new(name: String) -> Person {
         Person { name, uri: None, email: None }
     }
 }
@@ -665,7 +675,7 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn new(content: String) -> Text {
+    pub(crate) fn new(content: String) -> Text {
         Text { content_type: mime::TEXT_PLAIN, src: None, content }
     }
 }

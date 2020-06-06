@@ -1,6 +1,7 @@
-use std::io::{BufRead, BufReader, Read};
 use std::error::Error;
 use std::fmt;
+use std::hash::Hasher;
+use std::io::{BufRead, BufReader, Read};
 
 use siphasher::sip128::{Hasher128, SipHasher};
 use xml::reader as xml_reader;
@@ -8,7 +9,6 @@ use xml::reader as xml_reader;
 use crate::model;
 use crate::util::attr_value;
 use crate::util::element_source::ElementSource;
-use std::hash::Hasher;
 
 mod atom;
 mod json;
@@ -157,7 +157,7 @@ const LINK_HASH_KEY1: u64 = 0x5d78_4074_2887_2d60;
 const LINK_HASH_KEY2: u64 = 0x90ee_ca4c_90a5_e228;
 
 // Creates a unique ID from the first link, or a UUID if no links are available
-fn create_id(links : &[model::Link], title: &Option<model::Text>) -> String {
+fn create_id(links: &[model::Link], title: &Option<model::Text>) -> String {
     // Generate a stable ID for this item based on the first link
     if let Some(link) = links.iter().next() {
         let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);

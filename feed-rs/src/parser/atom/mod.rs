@@ -2,38 +2,37 @@ use std::io::Read;
 
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text, FeedType};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::util::{timestamp_rfc3339_lenient, ns_and_tag};
 use crate::util::attr_value;
 use crate::util::element_source::Element;
-use crate::parser::util::timestamp_rfc3339_lenient;
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an Atom feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
     for child in root.children() {
         let child = child?;
-        let tag_name = child.name.local_name.as_str();
-        match tag_name {
-            "id" => if let Some(id) = child.child_as_text()? { feed.id = id },
-            "title" => feed.title = handle_text(child)?,
-            "updated" => if let Some(text) = child.child_as_text()? { feed.updated = timestamp_rfc3339_lenient(&text) },
+        match ns_and_tag(&child) {
+            (None, "id") => if let Some(id) = child.child_as_text()? { feed.id = id },
+            (None, "title") => feed.title = handle_text(child)?,
+            (None, "updated") => if let Some(text) = child.child_as_text()? { feed.updated = timestamp_rfc3339_lenient(&text) },
 
-            "author" => if let Some(person) = handle_person(child)? { feed.authors.push(person) }
-            "link" => if let Some(link) = handle_link(child)? { feed.links.push(link) },
+            (None, "author") => if let Some(person) = handle_person(child)? { feed.authors.push(person) }
+            (None, "link") => if let Some(link) = handle_link(child)? { feed.links.push(link) },
 
-            "category" => if let Some(category) = handle_category(child)? { feed.categories.push(category) },
-            "contributor" => if let Some(person) = handle_person(child)? { feed.contributors.push(person) },
-            "generator" => feed.generator = handle_generator(child)?,
-            "icon" => feed.icon = handle_image(child)?,
-            "logo" => feed.logo = handle_image(child)?,
-            "rights" => feed.rights = handle_text(child)?,
-            "subtitle" => feed.description = handle_text(child)?,
+            (None, "category") => if let Some(category) = handle_category(child)? { feed.categories.push(category) },
+            (None, "contributor") => if let Some(person) = handle_person(child)? { feed.contributors.push(person) },
+            (None, "generator") => feed.generator = handle_generator(child)?,
+            (None, "icon") => feed.icon = handle_image(child)?,
+            (None, "logo") => feed.logo = handle_image(child)?,
+            (None, "rights") => feed.rights = handle_text(child)?,
+            (None, "subtitle") => feed.description = handle_text(child)?,
 
-            "entry" => if let Some(entry) = handle_entry(child)? { feed.entries.push(entry) },
+            (None, "entry") => if let Some(entry) = handle_entry(child)? { feed.entries.push(entry) },
 
             // Nothing required for unknown elements
             _ => {}
@@ -103,17 +102,17 @@ fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Conten
             // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline." and
             // also handles base64 encoded document of the indicated mime type per "Otherwise, a base64 encoded document of the indicated media type is contained inline."
             _ => if let Ok(mime) = ct.parse::<Mime>() {
-                    element.child_as_text()?.map(|body| {
-                        let mut content = Content::default();
-                        content.body = Some(body);
-                        content.content_type = mime;
-                        Some(content)
-                    })
-                        // The text is required for an inline text or base64 element
-                        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
-                } else {
-                    Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
-                }
+                element.child_as_text()?.map(|body| {
+                    let mut content = Content::default();
+                    content.body = Some(body);
+                    content.content_type = mime;
+                    Some(content)
+                })
+                    // The text is required for an inline text or base64 element
+                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
+            } else {
+                Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
+            }
         }
     } else {
         // We can't parse without a content type
@@ -127,22 +126,21 @@ fn handle_entry<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> 
 
     for child in element.children() {
         let child = child?;
-        let tag_name = child.name.local_name.as_str();
-        match tag_name {
+        match ns_and_tag(&child) {
             // Extract the fields from the spec
-            "id" => if let Some(id) = child.child_as_text()? { entry.id = id },
-            "title" => entry.title = handle_text(child)?,
-            "updated" => if let Some(text) = child.child_as_text()? { entry.updated = timestamp_rfc3339_lenient(&text) },
+            (None, "id") => if let Some(id) = child.child_as_text()? { entry.id = id },
+            (None, "title") => entry.title = handle_text(child)?,
+            (None, "updated") => if let Some(text) = child.child_as_text()? { entry.updated = timestamp_rfc3339_lenient(&text) },
 
-            "author" => if let Some(person) = handle_person(child)? { entry.authors.push(person) },
-            "content" => entry.content = handle_content(child)?,
-            "link" => if let Some(link) = handle_link(child)? { entry.links.push(link) },
-            "summary" => entry.summary = handle_text(child)?,
+            (None, "author") => if let Some(person) = handle_person(child)? { entry.authors.push(person) },
+            (None, "content") => entry.content = handle_content(child)?,
+            (None, "link") => if let Some(link) = handle_link(child)? { entry.links.push(link) },
+            (None, "summary") => entry.summary = handle_text(child)?,
 
-            "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
-            "contributor" => if let Some(person) = handle_person(child)? { entry.contributors.push(person) },
-            "published" => if let Some(text) = child.child_as_text()? { entry.published = timestamp_rfc3339_lenient(&text) },
-            "rights" => entry.rights = handle_text(child)?,
+            (None, "category") => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
+            (None, "contributor") => if let Some(person) = handle_person(child)? { entry.contributors.push(person) },
+            (None, "published") => if let Some(text) = child.child_as_text()? { entry.published = timestamp_rfc3339_lenient(&text) },
+            (None, "rights") => entry.rights = handle_text(child)?,
 
             // Nothing required for unknown elements
             _ => {}

@@ -88,6 +88,7 @@ fn test_example_3() {
             .title(Text::new("How a Historian Uncovered Ronald Reagan’s Racist Remarks to Richard Nixon".into()))
             .link(Link::new("\n                https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon\n            ".into()))
             .id("5d420f3abfe6c20008d5eaad")
+            .author(Person::new("Isaac Chotiner".into()))
             .summary(Text::new("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
             .category(Category::new("News / Q. & A.".into()))
             .published_rfc2822("Fri, 02 Aug 2019 15:35:34 +0000")
@@ -115,14 +116,16 @@ fn test_example_4() {
         .generator(Generator::new("https://wordpress.org/?v=5.1.1".into()))
         .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
+            .author(Person::new("admin".into()))
             .link(Link::new("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ".into()))
             .published_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
             .category(Category::new("Earthquake breaking news".into()))
             .category(Category::new("Minor World Earthquakes Magnitude -3.9".into()))
             .category(Category::new("Spárti".into()))
             .id("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ")
-
-            .summary(Text::new("\n                A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday. The temblor has occurred at 03:46:56/3:46 am (local time epicenter) at a depth of 10 km (6 miles). How did you react? Did you feel it?".into()))
+            .summary(Text::new("\n                A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday.".into()))
+            .content(Content::default()
+                .body("<p><img class='size-full alignleft' title='Earthquake location 37.102S, 21.9072W' alt='Earthquake location 37.102S, 21.9072W' src='http://www.earthquakenewstoday.com/wp-content/uploads/35_20.jpg' width='146' height='146' />A minor earthquake with magnitude 3.5 (ml/mb) was detected on Tuesday, 8 kilometers (5 miles) from Aris in Greece.Exact location of event, depth 10 km, 21.9072&deg; East, 37.102&deg; North. </p>"))
             .updated(actual.updated));
 
     // Check
@@ -159,7 +162,10 @@ fn test_example_5() {
             .category(Category::new("apple".into()))
             .category(Category::new("google".into()))
             .id("https://arstechnica.com/?p=1546121")
+            .author(Person::new("Samuel Axon".into()))
             .summary(Text::new("Alphabet has $117 billion in cash on hand.".into()))
+            .content(Content::default()
+                .body("Google co-founder Larry Page is now CEO of Alphabet."))
             .updated(actual.updated));
 
     // Check
@@ -187,6 +193,8 @@ fn test_example_6() {
             .title(Text::new("Vitalina Varela - Trailer".into()))
             .link(Link::new("https://trailers.apple.com/trailers/independent/vitalina-varela".into()))
             .summary(Text::new("A film of deeply concentrated beauty, acclaimed filmmaker Pedro Costa’s VITALINA VARELA stars nonprofessional actor Vitalina Varela in an extraordinary performance based on her own life. Vitalina plays a Cape Verdean woman who has travelled to Lisbon to reunite with her husband, after two decades of separation, only to arrive mere days after his funeral. Alone in a strange forbidding land, she perseveres and begins to establish a new life. Winner of the Golden Leopard for Best Film and Best Actress at the Locarno Film Festival, as well as an official selection of the Sundance Film Festival, VITALINA VARELA is a film of shadow and whisper, a profoundly moving and visually ravishing masterpiece.".into()))
+            .content(Content::default()
+                .body(r#"<span style="font-size: 16px; font-weight: 900; text-decoration: underline;">Vitalina Varela - Trailer</span>"#))
             .published_rfc3339("2020-02-06T08:00:00Z")
             .id("73226f21f249d758bd97a1fac90897d2")        // hash of the link
             .updated(actual.updated));

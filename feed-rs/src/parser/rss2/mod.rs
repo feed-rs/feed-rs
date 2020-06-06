@@ -3,17 +3,17 @@ use std::io::Read;
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, Person, Text, FeedType};
-use crate::parser::{ParseFeedResult, ParseFeedError, ParseErrorKind};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
+use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::util::{NS, ns_and_tag, timestamp_rfc2822_lenient};
 use crate::util::attr_value;
 use crate::util::element_source::Element;
-use crate::parser::util::timestamp_rfc2822_lenient;
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an RSS 2.0 feed into our model
-pub fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
     // Only expecting a channel element
     let found_channel = root.children().find(|result| match result {
         Ok(element) => &element.name.local_name == "channel",
@@ -32,26 +32,25 @@ fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
 
     for child in channel.children() {
         let child = child?;
-        let tag_name = child.name.local_name.as_str();
-        match tag_name {
-            "title" => feed.title = handle_text(child)?,
-            "link" => if let Some(link) = handle_link(child)? { feed.links.push(link) },
-            "description" => feed.description = handle_text(child)?,
+        match ns_and_tag(&child) {
+            (None, "title") => feed.title = handle_text(child)?,
+            (None, "link") => if let Some(link) = handle_link(child)? { feed.links.push(link) },
+            (None, "description") => feed.description = handle_text(child)?,
 
-            "language" => feed.language = child.child_as_text()?.map(|text| text.to_lowercase()),
-            "copyright" => feed.rights = handle_text(child)?,
-            "managingEditor" => if let Some(person) = handle_contact("managingEditor", child)? { feed.contributors.push(person) },
-            "webMaster" => if let Some(person) = handle_contact("webMaster", child)? { feed.contributors.push(person) },
-            "pubDate" => feed.published = handle_timestamp(child),
+            (None, "language") => feed.language = child.child_as_text()?.map(|text| text.to_lowercase()),
+            (None, "copyright") => feed.rights = handle_text(child)?,
+            (None, "managingEditor") => if let Some(person) = handle_contact("managingEditor", child)? { feed.contributors.push(person) },
+            (None, "webMaster") => if let Some(person) = handle_contact("webMaster", child)? { feed.contributors.push(person) },
+            (None, "pubDate") => feed.published = handle_timestamp(child),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            "lastBuildDate" | "updated" => feed.updated = handle_timestamp(child),
+            (None, "lastBuildDate") | (None, "updated") => feed.updated = handle_timestamp(child),
 
-            "category" => if let Some(category) = handle_category(child)? { feed.categories.push(category) },
-            "generator" => feed.generator = handle_generator(child)?,
-            "ttl" => if let Some(text) = child.child_as_text()? { feed.ttl = text.parse::<u32>().ok() },
-            "image" => feed.logo = handle_image(child)?,
-            "item" => if let Some(item) = handle_item(child)? { feed.entries.push(item) },
+            (None, "category") => if let Some(category) = handle_category(child)? { feed.categories.push(category) },
+            (None, "generator") => feed.generator = handle_generator(child)?,
+            (None, "ttl") => if let Some(text) = child.child_as_text()? { feed.ttl = text.parse::<u32>().ok() },
+            (None, "image") => feed.logo = handle_image(child)?,
+            (None, "item") => if let Some(item) = handle_item(child)? { feed.entries.push(item) },
 
             // Nothing required for unknown elements
             _ => {}
@@ -131,14 +130,13 @@ fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> 
 
     for child in element.children() {
         let child = child?;
-        let tag_name = child.name.local_name.as_str();
-        match tag_name {
-            "url" => if let Some(url) = child.child_as_text()? { image.uri = url },
-            "title" => image.title = child.child_as_text()?,
-            "link" => if let Some(uri) = child.child_as_text()? { image.link = Some(Link::new(uri)) },
-            "width" => if let Some(width) = child.child_as_text()? { if let Ok(width) = width.parse::<u32>() { if width > 0 && width <= 144 { image.width = Some(width) } } },
-            "height" => if let Some(height) = child.child_as_text()? { if let Ok(height) = height.parse::<u32>() { if height > 0 && height <= 400 { image.height = Some(height) } } },
-            "description" => image.description = child.child_as_text()?,
+        match ns_and_tag(&child) {
+            (None, "url") => if let Some(url) = child.child_as_text()? { image.uri = url },
+            (None, "title") => image.title = child.child_as_text()?,
+            (None, "link") => if let Some(uri) = child.child_as_text()? { image.link = Some(Link::new(uri)) },
+            (None, "width") => if let Some(width) = child.child_as_text()? { if let Ok(width) = width.parse::<u32>() { if width > 0 && width <= 144 { image.width = Some(width) } } },
+            (None, "height") => if let Some(height) = child.child_as_text()? { if let Ok(height) = height.parse::<u32>() { if height > 0 && height <= 400 { image.height = Some(height) } } },
+            (None, "description") => image.description = child.child_as_text()?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -157,21 +155,40 @@ fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> 
 fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
+    // Per https://www.rssboard.org/rss-profile#namespace-elements-content-encoded:
+    //   The content:encoded element can be used in conjunction with the description element to provide an item's full content along with a shorter summary. Under this approach, the complete text of the item is presented in content:encoded and the summary in description.
+    // But the standard also allows an enclosure, which is the content of the item
+    // So we will keep content:encoded aside during the parse, and use it as the content if we didn't find an enclosure
+    let mut content_encoded: Option<Text> = None;
+
     for child in item.children() {
         let child = child?;
-        let tag_name = child.name.local_name.as_str();
-        match tag_name {
-            "title" => entry.title = handle_text(child)?,
-            "link" => if let Some(link) = handle_link(child)? { entry.links.push(link) },
-            "description" => entry.summary = handle_text(child)?,
-            "author" => if let Some(person) = handle_contact("author", child)? { entry.authors.push(person) },
-            "category" => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
-            "guid" => if let Some(guid) = child.child_as_text()? { entry.id = guid },
-            "enclosure" => entry.content = handle_enclosure(child)?,
-            "pubDate" => entry.published = handle_timestamp(child),
+        match ns_and_tag(&child) {
+            (None, "title") => entry.title = handle_text(child)?,
+            (None, "link") => if let Some(link) = handle_link(child)? { entry.links.push(link) },
+            (None, "description") => entry.summary = handle_text(child)?,
+            (None, "author") => if let Some(person) = handle_contact("author", child)? { entry.authors.push(person) },
+            (None, "category") => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
+            (None, "guid") => if let Some(guid) = child.child_as_text()? { entry.id = guid },
+            (None, "enclosure") => entry.content = handle_enclosure(child)?,
+            (None, "pubDate") => entry.published = handle_timestamp(child),
+            (Some(NS::Content), "encoded") => content_encoded = handle_text(child)?,
+            (Some(NS::DublinCore), "creator") => if let Some(name) = child.child_as_text()? { entry.authors.push(Person::new(name)) },
 
             // Nothing required for unknown elements
             _ => {}
+        }
+    }
+
+    // Use content_encoded if we didn't find an enclosure above
+    if entry.content.is_none() {
+        if let Some(ce) = content_encoded {
+            entry.content = Some(Content {
+                body: Some(ce.content),
+                content_type: ce.content_type,
+                length: None,
+                src: ce.src.map(|s| Link::new(s)),
+            });
         }
     }
 

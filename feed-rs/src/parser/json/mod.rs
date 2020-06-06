@@ -10,7 +10,7 @@ use crate::parser::util::timestamp_rfc3339_lenient;
 mod tests;
 
 /// Parses a JSON feed into our model
-pub fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
     let parsed = serde_json::from_reader(stream);
     if let Ok(json_feed) = parsed {
         convert(json_feed)

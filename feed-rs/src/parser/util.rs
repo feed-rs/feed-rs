@@ -1,6 +1,36 @@
+use std::io::Read;
+
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use uuid::Uuid;
+
+use crate::util::element_source::Element;
+
+/// Set of automatically recognised namespaces
+#[derive(Debug)]
+pub(crate) enum NS {
+    // https://web.resource.org/rss/1.0/modules/content/
+    Content,
+    // https://www.dublincore.org/specifications/dublin-core/dcmi-terms/
+    DublinCore,
+}
+
+/// Returns the namespace and tag name for a given element
+pub(crate) fn ns_and_tag<'a, R: Read>(element: &'a Element<R>) -> (Option<NS>, &'a str) {
+    // Map the namespace into our known list
+    let ns = element.name.namespace.as_ref().and_then(|uri| {
+        match uri.as_str() {
+            "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
+            "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
+            _ => None
+        }
+    });
+
+    // Extract the tag name
+    let tag = element.name.local_name.as_str();
+
+    (ns, tag)
+}
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -40,7 +70,7 @@ lazy_static! {
 
 /// Parses a timestamp from an RSS2 feed.
 /// This should be an RFC-2822 formatted timestamp but we need a bunch of fixes / workarounds for the generally broken stuff we find on the internet
-pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
+pub(crate) fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds so try that first
     if let Some(ts) = timestamp_rfc3339_lenient(text) {
         return Some(ts);
@@ -58,7 +88,7 @@ pub fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
 
 /// Parses a timestamp from an Atom or JSON feed.
 /// This should be an RFC-3339 formatted timestamp but we need fixes for feeds that don't comply
-pub fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
+pub(crate) fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
 
     // Clean the input string by applying each of the regex fixes
     let mut text = text.trim().to_string();
@@ -71,7 +101,7 @@ pub fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
 }
 
 /// Generates a new UUID.
-pub fn uuid_gen() -> String {
+pub(crate) fn uuid_gen() -> String {
     Uuid::new_v4().to_string()
 }
 
@@ -102,7 +132,7 @@ mod tests {
             ("2 September 2019 20:00:00 +0000", Utc.ymd(2019, 9, 2).and_hms_milli(20, 0, 0, 0)),
 
             // RSS2 should be RFC-2822 but we get Atom/RFC-3339 formats
-            ("2016-10-01T00:00:00+10:00", Utc.ymd(2016, 9, 30).and_hms_milli(14,0,0, 0)),
+            ("2016-10-01T00:00:00+10:00", Utc.ymd(2016, 9, 30).and_hms_milli(14, 0, 0, 0)),
 
             // Single digit hours should be padded
             ("24 Sep 2013 1:27 PDT", Utc.ymd(2013, 9, 24).and_hms_milli(8, 27, 0, 0)),
