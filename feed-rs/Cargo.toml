@@ -1,6 +1,6 @@
 [package]
 name = "feed-rs"
-version = "0.2.4"
+version = "0.3.0"
 edition = '2018'
 authors = ["Hiroki Kumamoto <kumabook@live.jp>", "Mark Pritchard <mpritcha@gmail.com>"]
 include = [
@@ -13,8 +13,8 @@ include = [
 license = "MIT"
 homepage = "https://github.com/feed-rs/feed-rs"
 repository = "https://github.com/feed-rs/feed-rs.git"
-description = "A simple feed parser (RSS 2.0, ATOM, RSS 1.0)"
-keywords = ["feed", "rss", "atom"]
+description = "A unified feed parser that handles Atom, RSS 2.0, RSS 1.0, RSS 0.x and JSON Feed"
+keywords = ["feed", "rss", "atom", "json", "jsonfeed"]
 categories = ["parser-implementations"]
 readme = "README.md"
 
