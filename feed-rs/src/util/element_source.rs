@@ -389,4 +389,26 @@ mod tests {
 
         Ok(())
     }
+
+    // Verifies the XML decoder handles the various encodings detailed in the RSS2 best practices guide (https://www.rssboard.org/rss-profile#data-types-characterdata)
+    #[test]
+    fn test_rss_decoding() -> Result {
+        let tests = vec!(
+            ("<title>AT&#x26;T</title>", "AT&T"),
+            ("<title>Bill &#x26; Ted's Excellent Adventure</title>", "Bill & Ted's Excellent Adventure"),
+            ("<title>The &#x26;amp; entity</title>", "The &amp; entity"),
+            ("<title>I &#x3C;3 Phil Ringnalda</title>", "I <3 Phil Ringnalda"),
+            ("<title>A &#x3C; B</title>", "A < B"),
+            ("<title>A&#x3C;B</title>", "A<B"),
+            ("<title>Nice &#x3C;gorilla&#x3E;, what's he weigh?</title>", "Nice <gorilla>, what's he weigh?"),
+        );
+        for (xml, expected) in tests {
+            let source = ElementSource::new(xml.as_bytes());
+            let title = source.root()?.unwrap();
+            let parsed = title.children_as_string()?.unwrap();
+            assert_eq!(expected, parsed);
+        }
+
+        Ok(())
+    }
 }
