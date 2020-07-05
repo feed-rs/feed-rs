@@ -5,6 +5,8 @@ rust:
   - stable
   - beta
   - nightly
+  # Used in freedesktop sdk 19.08
+  - 1.39.0
 
 matrix:
   allow_failures:

@@ -307,9 +307,9 @@ fn test_example_7() {
     let body = feed.entries
         .get(3)
         .map(|e| e.content.as_ref())
-        .flatten()
+        .unwrap()
         .map(|c| c.body.as_ref())
-        .flatten()
+        .unwrap()
         .unwrap();
     assert_eq!(body, expected_body);
 }
