@@ -72,51 +72,46 @@ fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Conten
         .find(|a| &a.name.local_name == "type")
         .map(|oa| oa.value.as_str());
 
-    if let Some(ct) = content_type {
-        // from http://www.atomenabled.org/developers/syndication/#contentElement
-        match ct {
-            // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
-            "text" | "html" | "xhtml" => {
-                handle_text(element)?.map(|text| {
-                    let mut content = Content::default();
-                    content.body = Some(text.content);
-                    content.content_type = text.content_type;
-                    Some(content)
-                })
-                    // The text is required for a text or HTML element
-                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.text")))
-            }
-
-            // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
-            ct if ct.ends_with(" +xml") || ct.ends_with("/xml") => {
-                handle_text(element)?.map(|body| {
-                    let mut content = Content::default();
-                    content.body = Some(body.content);
-                    content.content_type = mime::TEXT_XML;
-                    Some(content)
-                })
-                    // The XML is required for an XML content element
-                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.xml")))
-            }
-
-            // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline." and
-            // also handles base64 encoded document of the indicated mime type per "Otherwise, a base64 encoded document of the indicated media type is contained inline."
-            _ => if let Ok(mime) = ct.parse::<Mime>() {
-                element.child_as_text()?.map(|body| {
-                    let mut content = Content::default();
-                    content.body = Some(body);
-                    content.content_type = mime;
-                    Some(content)
-                })
-                    // The text is required for an inline text or base64 element
-                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
-            } else {
-                Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
-            }
+    // from http://www.atomenabled.org/developers/syndication/#contentElement
+    match content_type {
+        // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
+        Some("text") | Some("html") | Some("xhtml") | None => {
+            handle_text(element)?.map(|text| {
+                let mut content = Content::default();
+                content.body = Some(text.content);
+                content.content_type = text.content_type;
+                Some(content)
+            })
+                // The text is required for a text or HTML element
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.text")))
         }
-    } else {
-        // We can't parse without a content type
-        Err(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.type")))
+
+        // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
+        Some(ct) if ct.ends_with(" +xml") || ct.ends_with("/xml") => {
+            handle_text(element)?.map(|body| {
+                let mut content = Content::default();
+                content.body = Some(body.content);
+                content.content_type = mime::TEXT_XML;
+                Some(content)
+            })
+                // The XML is required for an XML content element
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.xml")))
+        }
+
+        // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline." and
+        // also handles base64 encoded document of the indicated mime type per "Otherwise, a base64 encoded document of the indicated media type is contained inline."
+        Some(ct) => if let Ok(mime) = ct.parse::<Mime>() {
+            element.child_as_text()?.map(|body| {
+                let mut content = Content::default();
+                content.body = Some(body);
+                content.content_type = mime;
+                Some(content)
+            })
+                // The text is required for an inline text or base64 element
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
+        } else {
+            Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
+        }
     }
 }
 
