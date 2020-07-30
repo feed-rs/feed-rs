@@ -325,6 +325,7 @@ fn test_example_reddit() {
 }
 
 // Verify we can parse the example contained in the Atom specification
+// https://tools.ietf.org/html/rfc4287#section-1.1
 #[test]
 fn test_spec_1() {
     // Parse the feed
@@ -346,6 +347,32 @@ fn test_spec_1() {
             .summary(Text::new("Some text.".into()))
             .link(Link::new("http://example.org/2003/12/13/atom03".into())
                 .rel("alternate")));
+
+    // Check
+    assert_eq!(actual, expected);
+}
+
+// Verify we can parse Atom content elements without a type attribute
+// https://tools.ietf.org/html/rfc5023#section-9.2.1
+//
+// TODO fix parsing original example without feed root
+#[test]
+fn test_publishing_spec_1() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("atom_publishing_spec_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap()
+        .id(""); // Clear randomly generated UUID
+
+    // Expected feed
+    let expected = Feed::new(FeedType::Atom)
+        .entry(Entry::default()
+               .title(Text::new("Atom-Powered Robots Run Amok".into()))
+               .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
+               .updated_rfc3339("2003-12-13T18:30:02Z")
+               .author(Person::new("John Doe".into()))
+               .content(Content::default()
+                        .content_type("text/plain")
+                        .body("Some text.")));
 
     // Check
     assert_eq!(actual, expected);
