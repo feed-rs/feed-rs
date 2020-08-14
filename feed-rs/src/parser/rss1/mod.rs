@@ -109,7 +109,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
                 body: Some(ce.content),
                 content_type: ce.content_type,
                 length: None,
-                src: ce.src.map(|s| Link::new(s)),
+                src: ce.src.map(Link::new),
             });
         }
     }

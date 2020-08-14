@@ -68,7 +68,7 @@ fn handle_channel<R: BufRead>(channel: Element<R>) -> ParseFeedResult<Feed> {
 fn handle_category<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
     Ok(element.child_as_text()?.map(|text| {
         let mut category = Category::new(&text);
-        category.scheme = element.attr_value("domain").map(|s| s.to_owned());
+        category.scheme = element.attr_value("domain");
         category
     }))
 }
@@ -186,7 +186,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
                 body: Some(ce.content),
                 content_type: ce.content_type,
                 length: None,
-                src: ce.src.map(|s| Link::new(s)),
+                src: ce.src.map(Link::new),
             });
         }
     }

@@ -425,7 +425,7 @@ fn append_element_end(buffer: &mut String, name: &str) {
 }
 
 // Appends an element-start to the buffer
-fn append_element_start(buffer: &mut String, name: &str, attributes: &Vec<NameValue>) {
+fn append_element_start(buffer: &mut String, name: &str, attributes: &[NameValue]) {
     buffer.push('<');
     buffer.push_str(name);
     for attr in attributes {

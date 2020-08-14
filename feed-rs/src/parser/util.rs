@@ -51,7 +51,7 @@ pub (crate) fn as_deref<'a, T: 'a + Deref>(v: &'a Option<T>) -> Option<&'a T::Ta
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
-    Ok(element.children_as_string()?.map(|s| Text::new(s)))
+    Ok(element.children_as_string()?.map(Text::new))
 }
 
 /// Parses a timestamp from an RSS2 feed.
