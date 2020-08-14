@@ -40,6 +40,17 @@ fn test_example_1() {
     assert_eq!(actual, expected);
 }
 
+// Example with content:encoded from https://planet.freedesktop.org/rss10.xml
+#[test]
+fn test_example_2() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("rss_1.0_example_2.xml");
+    let feed = parser::parse(test_data.as_bytes()).unwrap();
+
+    // content:encoded should be mapped to the content field
+    assert!(feed.entries[0].content.as_ref().unwrap().body.as_ref().unwrap().starts_with("This morning I saw two things that were Microsoft "));
+}
+
 // Example 1 from the spec at https://validator.w3.org/feed/docs/rss1.html
 #[test]
 fn test_spec_1() {

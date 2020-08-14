@@ -2,8 +2,8 @@ use std::io::BufRead;
 
 use chrono::{DateTime, Utc};
 
-use crate::model::{Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::ParseFeedResult;
+use crate::model::{Entry, Feed, FeedType, Image, Link, Person, Text, Content};
+use crate::parser::{ParseFeedResult, util};
 use crate::parser::util::timestamp_rfc2822_lenient;
 use crate::xml::{Element, NS};
 
@@ -79,6 +79,11 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
+    // Per https://www.w3.org/wiki/RssContent:
+    //   How to encode content in a RSS 1.0 feed is an unsolved problem, many persons have made different problems and there's no consensus for a definitive solution.
+    // But we see it in real feeds, so might as well add it in the same manner as RSS2.0 best practice
+    let mut content_encoded: Option<Text> = None;
+
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
@@ -86,6 +91,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
             (None, "link") => if let Some(link) = handle_link(child)? { entry.links.push(link) },
             (None, "description") => entry.summary = handle_text(child)?,
 
+            (Some(NS::Content), "encoded") => content_encoded = util::handle_encoded(child)?,
             (Some(NS::DublinCore), "creator") => if let Some(name) = child.child_as_text()? { entry.authors.push(Person::new(&name)) },
             (Some(NS::DublinCore), "date") => entry.published = handle_timestamp(child),
             (Some(NS::DublinCore), "description") => if entry.summary.is_none() { entry.summary = handle_text(child)? },
@@ -93,6 +99,18 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             // Nothing required for unknown elements
             _ => {}
+        }
+    }
+
+    // Use content_encoded if we didn't find an enclosure above
+    if entry.content.is_none() {
+        if let Some(ce) = content_encoded {
+            entry.content = Some(Content {
+                body: Some(ce.content),
+                content_type: ce.content_type,
+                length: None,
+                src: ce.src.map(|s| Link::new(s)),
+            });
         }
     }
 

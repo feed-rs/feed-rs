@@ -1,6 +1,10 @@
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use uuid::Uuid;
+use std::io::BufRead;
+use crate::parser::ParseFeedResult;
+use crate::model::Text;
+use crate::xml::Element;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -36,6 +40,11 @@ lazy_static! {
             (Regex::new(r#"(\+|-)(\d{2})(\d{2})"#).unwrap(), "${1}${2}:${3}"),
         )
     };
+}
+
+/// Handles <content:encoded>
+pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
+    Ok(element.children_as_string()?.map(|s| Text::new(s)))
 }
 
 /// Parses a timestamp from an RSS2 feed.
