@@ -1,6 +1,12 @@
 use std::fs;
 use std::path::PathBuf;
 
+/// Load a test file as bytes
+pub(crate) fn fixture_as_raw(resource: &str) -> Vec<u8> {
+    let path = fixture_filename(resource);
+    fs::read(path).unwrap()
+}
+
 /// Load a test file and return it as a String
 pub(crate) fn fixture_as_string(resource: &str) -> String {
     let path = fixture_filename(resource);

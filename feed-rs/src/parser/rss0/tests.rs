@@ -45,6 +45,14 @@ fn test_0_91_spec_1() {
     assert_eq!(actual, expected);
 }
 
+// Verifies that we can handle non-UTF8 streams
+#[test]
+fn test_0_91_encoding_1() {
+    let test_data = test::fixture_as_raw("rss_0.91_encoding_1.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+    assert_eq!(feed.description.unwrap().content, "Dicas-L: Informações Úteis para Administradores de Sistemas");
+}
+
 // Trimmed example of RSS 0.92 from the specification at http://backend.userland.com/rss092
 #[test]
 fn test_0_92_spec_1() {

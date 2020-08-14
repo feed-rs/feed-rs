@@ -247,10 +247,19 @@ fn test_spec_1() {
     assert_eq!(actual, expected);
 }
 
+// Verifies that an invalid XML document (e.g. truncated) fails to parse
 #[test]
 fn test_invalid_1() {
     // Parse the feed
     let test_data = test::fixture_as_string("rss_2.0_invalid_1.xml");
     let feed = parser::parse(test_data.as_bytes());
     assert!(feed.is_err());
+}
+
+// Verifies that we can handle non-UTF8 streams
+#[test]
+fn test_encoding_1() {
+    let test_data = test::fixture_as_raw("rss_2.0_encoding_1.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+    assert_eq!(feed.title.unwrap().content, "RSS Feed do Site Inovação Tecnológica");
 }

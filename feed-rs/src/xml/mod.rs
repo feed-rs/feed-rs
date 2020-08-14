@@ -358,7 +358,6 @@ enum XmlEvent {
     Text(String),
 }
 
-// TODO how do we handle errors at this level?
 impl XmlEvent {
     // Creates a new event corresponding to an XML end-tag
     fn end<R: BufRead>(event: &BytesEnd, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
@@ -370,17 +369,18 @@ impl XmlEvent {
 
     // Extracts the element name, dropping the namespace prefix if present
     fn parse_name<R: BufRead>(bytes: &[u8], reader: &Reader<R>) -> String {
-        let mut name = reader.decode(bytes).unwrap().to_owned();
-        if let Some(index) = name.find(':') {
-            name = name.split_off(index + 1);
-        }
-        name
+        reader.decode(bytes)
+            .split(':')
+            .rev().next()
+            .unwrap_or("")
+            .into()
     }
+
     // Creates a new event corresponding to an XML start-tag
     fn start<R: BufRead>(ns: Option<&[u8]>, event: &BytesStart, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
         // Parse the namespace
-        let namespace = ns.map(|bytes| reader.decode(bytes).unwrap())
-            .and_then(|s| NS::parse(s));
+        let namespace = ns.map(|bytes| reader.decode(bytes))
+            .and_then(|s| NS::parse(s.as_ref()));
 
         // Parse the name
         let name = XmlEvent::parse_name(event.name(), reader);
@@ -389,8 +389,8 @@ impl XmlEvent {
         let attributes = event.attributes()
             .map(|a| {
                 let a = a.unwrap();
-                let name = reader.decode(a.key).unwrap();
-                let value = reader.decode(a.value.as_ref()).unwrap();
+                let name = reader.decode(a.key);
+                let value = reader.decode(a.value.as_ref());
 
                 NameValue { name: name.into(), value: value.into() }
             })
@@ -411,7 +411,7 @@ impl XmlEvent {
 
     // Creates a new event corresponding to an XML CData tag
     fn text_from_cdata<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
-        let text = reader.decode(text)?;
+        let text = reader.decode(text);
         Ok(Some(XmlEvent::Text(text.into())))
     }
 }
