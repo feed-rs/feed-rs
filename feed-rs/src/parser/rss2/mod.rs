@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
-use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult, util};
 use crate::parser::util::timestamp_rfc2822_lenient;
 use crate::xml::{Element, NS};
 
@@ -123,11 +123,6 @@ fn handle_enclosure<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<C
     })
 }
 
-// Handles <content:encoded>
-fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
-    Ok(element.children_as_string()?.map(|s| Text::new(s)))
-}
-
 // Handles <image>
 fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
     let mut image = Image::new("".to_owned());
@@ -170,13 +165,13 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
         match child.ns_and_tag() {
             (None, "title") => entry.title = handle_text(child)?,
             (None, "link") => if let Some(link) = handle_link(child)? { entry.links.push(link) },
-            (None, "description") => entry.summary = handle_encoded(child)?,
+            (None, "description") => entry.summary = util::handle_encoded(child)?,
             (None, "author") => if let Some(person) = handle_contact("author", child)? { entry.authors.push(person) },
             (None, "category") => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
             (None, "guid") => if let Some(guid) = child.child_as_text()? { entry.id = guid },
             (None, "enclosure") => entry.content = handle_enclosure(child)?,
             (None, "pubDate") => entry.published = handle_timestamp(child),
-            (Some(NS::Content), "encoded") => content_encoded = handle_encoded(child)?,
+            (Some(NS::Content), "encoded") => content_encoded = util::handle_encoded(child)?,
             (Some(NS::DublinCore), "creator") => if let Some(name) = child.child_as_text()? { entry.authors.push(Person::new(&name)) },
 
             // Nothing required for unknown elements
