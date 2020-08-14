@@ -183,7 +183,8 @@ fn parse_xml<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
     if let Ok(Some(root)) = element_source.root() {
         // Dispatch to the correct parser
         let version = root.attr_value("version");
-        match (root.name.as_str(), version.as_deref()) {
+        // TODO once we no longer need to support 1.39 we can switch to as_deref()
+        match (root.name.as_str(), version.as_ref().map(|v| &**v)) {
             ("feed", _) => return atom::parse(root),
             ("rss", Some("2.0")) => return rss2::parse(root),
             ("rss", Some("0.91")) | ("rss", Some("0.92")) => return rss0::parse(root),
