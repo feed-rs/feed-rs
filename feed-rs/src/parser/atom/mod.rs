@@ -1,22 +1,21 @@
-use std::io::Read;
+use std::io::BufRead;
 
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
-use crate::parser::util::{timestamp_rfc3339_lenient, ns_and_tag};
-use crate::util::attr_value;
-use crate::util::element_source::Element;
+use crate::parser::util::timestamp_rfc3339_lenient;
+use crate::xml::Element;
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an Atom feed into our model
-pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
     for child in root.children() {
         let child = child?;
-        match ns_and_tag(&child) {
+        match child.ns_and_tag() {
             (None, "id") => if let Some(id) = child.child_as_text()? { feed.id = id },
             (None, "title") => feed.title = handle_text(child)?,
             (None, "updated") => if let Some(text) = child.child_as_text()? { feed.updated = timestamp_rfc3339_lenient(&text) },
@@ -43,13 +42,13 @@ pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
 }
 
 // Handles an Atom <category>
-fn handle_category<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
+fn handle_category<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
     // Always need a term
-    if let Some(term) = attr_value(&element.attributes, "term") {
-        let mut category = Category::new(term.to_owned());
+    if let Some(term) = element.attr_value("term") {
+        let mut category = Category::new(&term);
 
-        for attr in &element.attributes {
-            match attr.name.local_name.as_str() {
+        for attr in element.attributes {
+            match attr.name.as_str() {
                 "scheme" => category.scheme = Some(attr.value.clone()),
                 "label" => category.label = Some(attr.value.clone()),
 
@@ -66,15 +65,13 @@ fn handle_category<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Categ
 }
 
 // Handles an Atom <content> element
-fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
+fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     // Extract the content type so we can parse the body
-    let content_type = element.attributes.iter()
-        .find(|a| &a.name.local_name == "type")
-        .map(|oa| oa.value.as_str());
+    let content_type = element.attr_value("type");
 
     if let Some(ct) = content_type {
         // from http://www.atomenabled.org/developers/syndication/#contentElement
-        match ct {
+        match ct.as_str() {
             // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
             "text" | "html" | "xhtml" => {
                 handle_text(element)?.map(|text| {
@@ -121,12 +118,12 @@ fn handle_content<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Conten
 }
 
 // Handles an Atom <entry>
-fn handle_entry<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
+fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     for child in element.children() {
         let child = child?;
-        match ns_and_tag(&child) {
+        match child.ns_and_tag() {
             // Extract the fields from the spec
             (None, "id") => if let Some(id) = child.child_as_text()? { entry.id = id },
             (None, "title") => entry.title = handle_text(child)?,
@@ -151,12 +148,12 @@ fn handle_entry<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Entry>> 
 }
 
 // Handles an Atom <generator>
-fn handle_generator<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Generator>> {
+fn handle_generator<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Generator>> {
     let generator = element.child_as_text()?.map(|content| {
-        let mut generator = Generator::new(content);
+        let mut generator = Generator::new(&content);
 
-        for attr in &element.attributes {
-            match attr.name.local_name.as_str() {
+        for attr in element.attributes {
+            match attr.name.as_str() {
                 "uri" => generator.uri = Some(attr.value.clone()),
                 "version" => generator.version = Some(attr.value.clone()),
                 // Nothing required for unknown attributes
@@ -171,18 +168,18 @@ fn handle_generator<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Gene
 }
 
 // Handles an Atom <icon> or <logo>
-fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
+fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
     Ok(element.child_as_text()?.map(Image::new))
 }
 
 // Handles an Atom <link>
-fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
+fn handle_link<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
     // Always need an href
-    let link = attr_value(&element.attributes, "href").and_then(|href| {
+    let link = element.attr_value("href").and_then(|href| {
         let mut link = Link::new(href.to_owned());
 
-        for attr in &element.attributes {
-            match attr.name.local_name.as_str() {
+        for attr in element.attributes {
+            match attr.name.as_str() {
                 "rel" => link.rel = Some(attr.value.clone()),
                 "type" => link.media_type = Some(attr.value.clone()),
                 "hreflang" => link.href_lang = Some(attr.value.clone()),
@@ -193,6 +190,7 @@ fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
                 _ => {}
             }
         }
+
         // Default "rel" to "alternate" if not set
         if link.rel.is_none() {
             link.rel = Some(String::from("alternate"));
@@ -205,12 +203,12 @@ fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
 }
 
 // Handles an Atom <author> or <contributor>
-fn handle_person<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Person>> {
-    let mut person = Person::new(String::from("unknown"));
+fn handle_person<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Person>> {
+    let mut person = Person::new("unknown");
 
     for child in element.children() {
         let child = child?;
-        let tag_name = child.name.local_name.as_str();
+        let tag_name = child.name.as_str();
         let child_text = child.child_as_text()?;
         match (tag_name, child_text) {
             // Extract the fields from the spec
@@ -227,10 +225,10 @@ fn handle_person<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Person>
 }
 
 // Directly handles an Atom <title>, <summary>, <rights> or <subtitle> element
-fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
+fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     // Find type, defaulting to "text" if not present
     let type_attr = element.attributes.iter()
-        .find(|a| &a.name.local_name == "type")
+        .find(|a| &a.name == "type")
         .map_or("text", |a| a.value.as_str());
 
     let mime = match type_attr {

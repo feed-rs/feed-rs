@@ -1,22 +1,21 @@
-use std::io::Read;
+use std::io::BufRead;
 
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
-use crate::parser::util::{NS, ns_and_tag, timestamp_rfc2822_lenient};
-use crate::util::attr_value;
-use crate::util::element_source::Element;
+use crate::parser::util::timestamp_rfc2822_lenient;
+use crate::xml::{Element, NS};
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an RSS 2.0 feed into our model
-pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
     // Only expecting a channel element
     let found_channel = root.children().find(|result| match result {
-        Ok(element) => &element.name.local_name == "channel",
+        Ok(element) => &element.name == "channel",
         Err(_) => true,
     });
     if let Some(channel) = found_channel {
@@ -27,12 +26,12 @@ pub(crate) fn parse<R: Read>(root: Element<R>) -> ParseFeedResult<Feed> {
 }
 
 // Handles the <channel> element
-fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
+fn handle_channel<R: BufRead>(channel: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::RSS2);
 
     for child in channel.children() {
         let child = child?;
-        match ns_and_tag(&child) {
+        match child.ns_and_tag() {
             (None, "title") => feed.title = handle_text(child)?,
             (None, "link") => if let Some(link) = handle_link(child)? { feed.links.push(link) },
             (None, "description") => feed.description = handle_text(child)?,
@@ -66,29 +65,29 @@ fn handle_channel<R: Read>(channel: Element<R>) -> ParseFeedResult<Feed> {
 }
 
 // Handles <category>
-fn handle_category<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
+fn handle_category<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
     Ok(element.child_as_text()?.map(|text| {
-        let mut category = Category::new(text);
-        category.scheme = attr_value(&element.attributes, "domain").map(|s| s.to_owned());
+        let mut category = Category::new(&text);
+        category.scheme = element.attr_value("domain").map(|s| s.to_owned());
         category
     }))
 }
 
 // Handles <managingEditor> and <webMaster>
-fn handle_contact<R: Read>(role: &str, element: Element<R>) -> ParseFeedResult<Option<Person>> {
+fn handle_contact<R: BufRead>(role: &str, element: Element<R>) -> ParseFeedResult<Option<Person>> {
     Ok(element.child_as_text()?.map(|email| {
-        let mut person = Person::new(role.to_owned());
+        let mut person = Person::new(role);
         person.email = Some(email);
         person
     }))
 }
 
-fn handle_generator<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Generator>> {
+fn handle_generator<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Generator>> {
     let result = element.child_as_text()?.map(|c| {
-        let mut generator = Generator::new(c);
+        let mut generator = Generator::new(&c);
 
-        for attr in &element.attributes {
-            let tag_name = attr.name.local_name.as_str();
+        for attr in element.attributes {
+            let tag_name = attr.name.as_str();
             if tag_name == "uri" {
                 generator.uri = Some(attr.value.clone());
             }
@@ -101,11 +100,11 @@ fn handle_generator<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Gene
 }
 
 // Handles <enclosure>
-fn handle_enclosure<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
+fn handle_enclosure<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     let mut content = Content::default();
 
-    for attr in &element.attributes {
-        let tag_name = attr.name.local_name.as_str();
+    for attr in element.attributes {
+        let tag_name = attr.name.as_str();
         match tag_name {
             "url" => content.src = Some(Link::new(attr.value.clone())),
             "length" => content.length = attr.value.parse::<u64>().ok(),
@@ -124,13 +123,18 @@ fn handle_enclosure<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Cont
     })
 }
 
+// Handles <content:encoded>
+fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
+    Ok(element.children_as_string()?.map(|s| Text::new(s)))
+}
+
 // Handles <image>
-fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
+fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
     let mut image = Image::new("".to_owned());
 
     for child in element.children() {
         let child = child?;
-        match ns_and_tag(&child) {
+        match child.ns_and_tag() {
             (None, "url") => if let Some(url) = child.child_as_text()? { image.uri = url },
             (None, "title") => image.title = child.child_as_text()?,
             (None, "link") => if let Some(uri) = child.child_as_text()? { image.link = Some(Link::new(uri)) },
@@ -152,7 +156,7 @@ fn handle_image<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Image>> 
 }
 
 // Handles <item>
-fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
+fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     // Per https://www.rssboard.org/rss-profile#namespace-elements-content-encoded:
@@ -161,19 +165,19 @@ fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
     // So we will keep content:encoded aside during the parse, and use it as the content if we didn't find an enclosure
     let mut content_encoded: Option<Text> = None;
 
-    for child in item.children() {
+    for child in element.children() {
         let child = child?;
-        match ns_and_tag(&child) {
+        match child.ns_and_tag() {
             (None, "title") => entry.title = handle_text(child)?,
             (None, "link") => if let Some(link) = handle_link(child)? { entry.links.push(link) },
-            (None, "description") => entry.summary = handle_text(child)?,
+            (None, "description") => entry.summary = handle_encoded(child)?,
             (None, "author") => if let Some(person) = handle_contact("author", child)? { entry.authors.push(person) },
             (None, "category") => if let Some(category) = handle_category(child)? { entry.categories.push(category) },
             (None, "guid") => if let Some(guid) = child.child_as_text()? { entry.id = guid },
             (None, "enclosure") => entry.content = handle_enclosure(child)?,
             (None, "pubDate") => entry.published = handle_timestamp(child),
-            (Some(NS::Content), "encoded") => content_encoded = handle_text(child)?,
-            (Some(NS::DublinCore), "creator") => if let Some(name) = child.child_as_text()? { entry.authors.push(Person::new(name)) },
+            (Some(NS::Content), "encoded") => content_encoded = handle_encoded(child)?,
+            (Some(NS::DublinCore), "creator") => if let Some(name) = child.child_as_text()? { entry.authors.push(Person::new(&name)) },
 
             // Nothing required for unknown elements
             _ => {}
@@ -196,17 +200,17 @@ fn handle_item<R: Read>(item: Element<R>) -> ParseFeedResult<Option<Entry>> {
 }
 
 // Handles <link>
-fn handle_link<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
+fn handle_link<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
     Ok(element.child_as_text()?.map(Link::new))
 }
 
-// Handles <title>, <description>, <encoded>
-fn handle_text<R: Read>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
+// Handles <title>, <description> etc
+fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.child_as_text()?.map(Text::new))
 }
 
 // Handles date/time
-fn handle_timestamp<R: Read>(element: Element<R>) -> Option<DateTime<Utc>> {
+fn handle_timestamp<R: BufRead>(element: Element<R>) -> Option<DateTime<Utc>> {
     if let Ok(Some(text)) = element.child_as_text() {
         timestamp_rfc2822_lenient(&text)
     } else {

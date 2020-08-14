@@ -24,6 +24,7 @@ extern crate lazy_static;
 extern crate serde;
 
 mod util;
+mod xml;
 
 pub mod model;
 pub mod parser;

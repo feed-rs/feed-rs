@@ -1,4 +1,5 @@
 use std::io::{self, BufRead};
+
 use feed_rs::parser;
 
 // Fetch each URL and try to parse it

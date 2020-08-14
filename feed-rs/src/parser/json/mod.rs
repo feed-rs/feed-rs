@@ -101,7 +101,7 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
 
     if let Some(tags) = ji.tags {
         tags.into_iter()
-            .map(Category::new)
+            .map(|t| Category::new(&t))
             .for_each(|category| entry.categories.push(category));
     }
 
@@ -118,7 +118,7 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
 fn handle_person(author: Option<JsonAuthor>) -> Option<Person> {
     if let Some(ja) = author {
         if ja.name.is_some() {
-            let mut person = Person::new(ja.name.unwrap());
+            let mut person = Person::new(&ja.name.unwrap());
 
             person.uri = ja.url;
 

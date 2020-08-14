@@ -402,8 +402,8 @@ pub struct Category {
 }
 
 impl Category {
-    pub fn new(term: String) -> Category {
-        Category { term, scheme: None, label: None }
+    pub fn new(term: &str) -> Category {
+        Category { term: term.trim().into(), scheme: None, label: None }
     }
 }
 
@@ -489,8 +489,8 @@ pub struct Generator {
 }
 
 impl Generator {
-    pub(crate) fn new(content: String) -> Generator {
-        Generator { uri: None, version: None, content }
+    pub(crate) fn new(content: &str) -> Generator {
+        Generator { uri: None, version: None, content: content.trim().into() }
     }
 }
 
@@ -647,8 +647,8 @@ pub struct Person {
 }
 
 impl Person {
-    pub(crate) fn new(name: String) -> Person {
-        Person { name, uri: None, email: None }
+    pub(crate) fn new(name: &str) -> Person {
+        Person { name: name.trim().into(), uri: None, email: None }
     }
 }
 
