@@ -5,6 +5,7 @@ use std::io::BufRead;
 use crate::parser::ParseFeedResult;
 use crate::model::Text;
 use crate::xml::Element;
+use std::ops::Deref;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -40,6 +41,12 @@ lazy_static! {
             (Regex::new(r#"(\+|-)(\d{2})(\d{2})"#).unwrap(), "${1}${2}:${3}"),
         )
     };
+}
+
+/// Work around for missing as_deref in 1.39
+// TODO once we no longer need to support 1.39 we can switch to as_deref()
+pub (crate) fn as_deref<'a, T: 'a + Deref>(v: &'a Option<T>) -> Option<&'a T::Target> {
+    v.as_ref().map(|t| t.deref())
 }
 
 /// Handles <content:encoded>
