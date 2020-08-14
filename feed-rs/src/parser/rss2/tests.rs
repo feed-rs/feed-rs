@@ -90,7 +90,7 @@ fn test_example_3() {
             .id("5d420f3abfe6c20008d5eaad")
             .author(Person::new("Isaac Chotiner".into()))
             .summary(Text::new("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
-            .category(Category::new("News / Q. & A.".into()))
+            .category(Category::new("News / Q. & A."))
             .published_rfc2822("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated(actual.updated));
 
@@ -113,15 +113,15 @@ fn test_example_4() {
         .description(Text::new("Current and latest world earthquakes breaking news, activity and articles today".into()))
         .updated_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
         .language("en-us")
-        .generator(Generator::new("https://wordpress.org/?v=5.1.1".into()))
+        .generator(Generator::new("https://wordpress.org/?v=5.1.1"))
         .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
             .author(Person::new("admin".into()))
             .link(Link::new("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ".into()))
             .published_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
-            .category(Category::new("Earthquake breaking news".into()))
-            .category(Category::new("Minor World Earthquakes Magnitude -3.9".into()))
-            .category(Category::new("Spárti".into()))
+            .category(Category::new("Earthquake breaking news"))
+            .category(Category::new("Minor World Earthquakes Magnitude -3.9"))
+            .category(Category::new("Spárti"))
             .id("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ")
             .summary(Text::new("\n                A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday.".into()))
             .content(Content::default()
@@ -147,7 +147,7 @@ fn test_example_5() {
         .description(Text::new("Serving the Technologist for more than a decade. IT news, reviews, and analysis.".into()))
         .updated_rfc2822("Tue, 06 Aug 2019 00:03:56 +0000")
         .language("en-us")
-        .generator(Generator::new("https://wordpress.org/?v=4.8.3".into()))
+        .generator(Generator::new("https://wordpress.org/?v=4.8.3"))
         .logo(Image::new("https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-32x32.png".into())
             .title("Ars Technica")
             .link("https://arstechnica.com")
@@ -157,10 +157,10 @@ fn test_example_5() {
             .title(Text::new("Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter".into()))
             .link(Link::new("https://arstechnica.com/?p=1546121".into()))
             .published_rfc2822("Mon, 05 Aug 2019 23:11:09 +0000")
-            .category(Category::new("Tech".into()))
-            .category(Category::new("alphabet".into()))
-            .category(Category::new("apple".into()))
-            .category(Category::new("google".into()))
+            .category(Category::new("Tech"))
+            .category(Category::new("alphabet"))
+            .category(Category::new("apple"))
+            .category(Category::new("google"))
             .id("https://arstechnica.com/?p=1546121")
             .author(Person::new("Samuel Axon".into()))
             .summary(Text::new("Alphabet has $117 billion in cash on hand.".into()))
@@ -187,7 +187,7 @@ fn test_example_6() {
         .description(Text::new("Recently added Movie Trailers.".into()))
         .language("en-us")
         .updated_rfc3339("2020-02-07T15:30:28Z")
-        .generator(Generator::new("Custom".into()))
+        .generator(Generator::new("Custom"))
         .rights(Text::new("2020 Apple Inc.".into()))
         .entry(Entry::default()
             .title(Text::new("Vitalina Varela - Trailer".into()))
@@ -219,8 +219,8 @@ fn test_spec_1() {
         .language("en-us")
         .rights(Text::new("Copyright 1997-2002 Dave Winer".into()))
         .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT")
-        .generator(Generator::new("Radio UserLand v8.0.5".into()))
-        .category(Category::new("1765".into())
+        .generator(Generator::new("Radio UserLand v8.0.5"))
+        .category(Category::new("1765")
             .scheme("Syndic8"))
         .contributor(Person::new("managingEditor".into())
             .email("dave@userland.com"))
@@ -247,10 +247,19 @@ fn test_spec_1() {
     assert_eq!(actual, expected);
 }
 
+// Verifies that an invalid XML document (e.g. truncated) fails to parse
 #[test]
 fn test_invalid_1() {
     // Parse the feed
     let test_data = test::fixture_as_string("rss_2.0_invalid_1.xml");
     let feed = parser::parse(test_data.as_bytes());
     assert!(feed.is_err());
+}
+
+// Verifies that we can handle non-UTF8 streams
+#[test]
+fn test_encoding_1() {
+    let test_data = test::fixture_as_raw("rss_2.0_encoding_1.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+    assert_eq!(feed.title.unwrap().content, "RSS Feed do Site Inovação Tecnológica");
 }

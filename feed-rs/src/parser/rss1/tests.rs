@@ -1,4 +1,4 @@
-use crate::model::{Entry, Feed, FeedType, Image, Link, Text, Person};
+use crate::model::{Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
 
@@ -27,14 +27,14 @@ fn test_example_1() {
             .link(Link::new("記事1のURL".into()))
             .summary(Text::new("記事1の内容".into()))
             .published_rfc3339("2017-06-13T09:00:00Z")
-            .author(Person::new("記事1の作者名".into())))
+            .author(Person::new("記事1の作者名")))
         .entry(Entry::default()
             .id("e342c1b080da9ffbfd10c0a6ba49395f")     // hash of the link
             .updated(entry1.updated)                    // not present in the test data
             .title(Text::new("記事2のタイトル".into()))
             .link(Link::new("記事2のURL".into()))
             .summary(Text::new("記事2の内容".into()))
-            .author(Person::new("記事2の作者名".into())));
+            .author(Person::new("記事2の作者名")));
 
     // Check
     assert_eq!(actual, expected);
@@ -94,7 +94,7 @@ fn test_spec_2() {
             .link("http://meerkat.oreillynet.com")
             .title("Meerkat Powered!"))
         .updated(actual.updated)    // not present in the test data
-        .author(Person::new("Rael Dornfest (mailto:rael@oreilly.com)".into()))
+        .author(Person::new("Rael Dornfest (mailto:rael@oreilly.com)"))
         .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into()))
         .entry(Entry::default()
             .id("acf7c86547d5d594af6d8f3327e84b06")     // hash of the link

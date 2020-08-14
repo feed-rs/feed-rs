@@ -4,11 +4,9 @@ use std::hash::Hasher;
 use std::io::{BufRead, BufReader, Read};
 
 use siphasher::sip128::{Hasher128, SipHasher};
-use xml::reader as xml_reader;
 
 use crate::model;
-use crate::util::attr_value;
-use crate::util::element_source::ElementSource;
+use crate::xml;
 
 mod atom;
 mod json;
@@ -30,7 +28,7 @@ pub enum ParseFeedError {
     // Underlying issue with JSON (poorly formatted etc)
     JsonSerde(serde_json::error::Error),
     // Underlying issue with XML (poorly formatted etc)
-    XmlReader(xml_reader::Error),
+    XmlReader(xml::XmlError),
 }
 
 impl From<serde_json::error::Error> for ParseFeedError {
@@ -41,8 +39,8 @@ impl From<std::io::Error> for ParseFeedError {
     fn from(err: std::io::Error) -> Self { ParseFeedError::IoError(err) }
 }
 
-impl From<xml_reader::Error> for ParseFeedError {
-    fn from(err: xml_reader::Error) -> Self {
+impl From<xml::XmlError> for ParseFeedError {
+    fn from(err: xml::XmlError) -> Self {
         ParseFeedError::XmlReader(err)
     }
 }
@@ -174,19 +172,19 @@ fn create_id(links: &[model::Link], title: &Option<model::Text>) -> String {
 }
 
 // Handles JSON content
-fn parse_json<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
+fn parse_json<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
     json::parse(source)
 }
 
 // Handles XML content
-fn parse_xml<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
+fn parse_xml<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
     // Set up the source of XML elements from the input
-    let source = ElementSource::new(source);
-
-    if let Ok(Some(root)) = source.root() {
+    let element_source = xml::ElementSource::new(source);
+    if let Ok(Some(root)) = element_source.root() {
         // Dispatch to the correct parser
-        let version = attr_value(&root.attributes, "version");
-        match (root.name.local_name.as_str(), version) {
+        let version = root.attr_value("version");
+        // TODO once we no longer need to support 1.39 we can switch to as_deref()
+        match (root.name.as_str(), version.as_ref().map(|v| &**v)) {
             ("feed", _) => return atom::parse(root),
             ("rss", Some("2.0")) => return rss2::parse(root),
             ("rss", Some("0.91")) | ("rss", Some("0.92")) => return rss0::parse(root),
