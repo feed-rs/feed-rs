@@ -170,8 +170,8 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 // Handles an Atom <link>
 fn handle_link<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
     // Always need an href
-    let link = element.attr_value("href").and_then(|href| {
-        let mut link = Link::new(href.to_owned());
+    let link = element.attr_value("href").map(|href| {
+        let mut link = Link::new(href);
 
         for attr in element.attributes {
             match attr.name.as_str() {
@@ -191,7 +191,7 @@ fn handle_link<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Link>>
             link.rel = Some(String::from("alternate"));
         }
 
-        Some(link)
+        link
     });
 
     Ok(link)
