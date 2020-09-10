@@ -376,3 +376,30 @@ fn test_pub_spec_1() {
     // Check
     assert_eq!(actual, expected);
 }
+
+// Verify we can parse an Atom Entry (no feed)
+#[test]
+fn test_entry() {
+    let test_data = test::fixture_as_string("atom_entry_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap()
+        .id("");
+
+    let expected = Feed::new(FeedType::Atom)
+        .entry(Entry::default()
+            .title(Text::new("Specifications".into()))
+            .id("urn:uuid:988EF5C55CDEA24EDE1251744888912")
+            .updated_rfc3339("2009-08-31T18:55:12.569Z")
+            .author(Person::new("S. A. Khuba".into()))
+            .category(Category::new("45121504")
+                .scheme("http://www.unspsc.org/UNv1111201")
+                .label("Digital Camera"))
+            .contributor(Person::new("Shri. S. A. Khuba"))
+            .content(Content::default()
+                .body("1) Pixels 12.3 million Effective . 12) Weight is Approx. 840 g")
+                .content_type("text/plain"))
+            .summary(Text::new("This Atom Entry XML Doc publishes tech specifications of Nikon D300S Digital Camera".into()))
+        );
+
+    // Check
+    assert_eq!(actual, expected);
+}
