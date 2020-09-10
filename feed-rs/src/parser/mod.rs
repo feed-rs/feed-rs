@@ -94,6 +94,11 @@ impl fmt::Display for ParseErrorKind {
 ///
 /// * `input` - A source of content such as a string, file etc.
 ///
+/// NOTE: feed-rs uses the encoding attribute in the XML prolog to decode content.
+/// HTTP libraries (such as reqwest) provide a `text()` method which applies the content-encoding header and decodes the source into UTF-8.
+/// This then causes feed-rs to fail when it attempts to interpret the UTF-8 stream as a different character set.
+/// Instead, pass the raw, encoded source to feed-rs e.g. the `.bytes()` method if using reqwest.
+///
 /// # Examples
 ///
 /// ```
