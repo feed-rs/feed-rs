@@ -184,7 +184,8 @@ fn parse_xml<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
         // Dispatch to the correct parser
         let version = root.attr_value("version");
         match (root.name.as_str(), util::as_deref(&version)) {
-            ("feed", _) => return atom::parse(root),
+            ("feed", _) => return atom::parse_feed(root),
+            ("entry", _) => return atom::parse_entry(root),
             ("rss", Some("2.0")) => return rss2::parse(root),
             ("rss", Some("0.91")) | ("rss", Some("0.92")) => return rss0::parse(root),
             ("RDF", _) => return rss1::parse(root),

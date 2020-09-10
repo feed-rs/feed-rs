@@ -11,7 +11,7 @@ use crate::xml::Element;
 mod tests;
 
 /// Parses an Atom feed into our model
-pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse_feed<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
     for child in root.children() {
         let child = child?;
@@ -36,6 +36,19 @@ pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
             // Nothing required for unknown elements
             _ => {}
         }
+    }
+
+    Ok(feed)
+}
+
+/// Parses an Atom entry into our model
+///
+/// Note that the entry is wrapped in an empty Feed to keep the API consistent
+pub(crate) fn parse_entry<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
+    let mut feed = Feed::new(FeedType::Atom);
+
+    if let Some(entry) = handle_entry(root)? {
+        feed.entries.push(entry)
     }
 
     Ok(feed)
