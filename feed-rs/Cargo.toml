@@ -6,7 +6,7 @@ authors = ["Hiroki Kumamoto <kumabook@live.jp>", "Mark Pritchard <mpritcha@gmail
 include = [
     "**/*.rs",
     "Cargo.toml",
-    "LICENSE",
+    "LICENSE-MIT",
     "README.md",
     "fixture/*"
 ]
