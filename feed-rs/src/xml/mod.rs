@@ -387,12 +387,15 @@ impl XmlEvent {
 
         // Parse the attributes
         let attributes = event.attributes()
-            .map(|a| {
-                let a = a.unwrap();
-                let name = reader.decode(a.key);
-                let value = reader.decode(a.value.as_ref());
+            .filter_map(|a| {
+                if let Ok(a) = a {
+                    let name = reader.decode(a.key);
+                    let value = reader.decode(a.value.as_ref());
 
-                NameValue { name: name.into(), value: value.into() }
+                    Some(NameValue { name: name.into(), value: value.into() })
+                } else {
+                    None
+                }
             })
             .collect::<Vec<NameValue>>();
 
