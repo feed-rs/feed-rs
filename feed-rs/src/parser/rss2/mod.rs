@@ -3,7 +3,8 @@ use std::io::BufRead;
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person, Text};
+use crate::parser::itunes::handle_itunes_element;
 use crate::parser::util::{if_ok_then_some, if_some_then, timestamp_rfc2822_lenient};
 use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
@@ -179,6 +180,9 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
     // So we will keep content:encoded aside during the parse, and use it as the content if we didn't find an enclosure
     let mut content_encoded: Option<Text> = None;
 
+    // Create a default MediaRSS content object for <itunes> elements.
+    let mut media_obj = MediaObject::new();
+
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
@@ -202,13 +206,24 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text()?, |name| entry.authors.push(Person::new(&name))),
 
+            (Some(NS::Itunes), _) => handle_itunes_element(child, &mut media_obj)?,
+
             // Nothing required for unknown elements
             _ => {}
         }
     }
 
-    // Use content_encoded if we didn't find an enclosure above
-    if entry.content.is_none() {
+    // If we have an enclosure insert a media element based on (optional)
+    // itunes data.
+    if let Some(ref content) = entry.content {
+        if let Some(ref src) = content.src {
+            let media_content = media_obj.content.get_or_insert_with(MediaContent::new);
+            media_content.content_type = Some(content.content_type.clone());
+            media_content.url = Some(src.clone().href);
+            entry.media.push(media_obj);
+        }
+    } else {
+        // Use content_encoded if we didn't find an enclosure above
         if let Some(ce) = content_encoded {
             entry.content = Some(Content {
                 body: Some(ce.content),
