@@ -21,3 +21,12 @@ lint:clippy:
     paths:
       - target/
       - cargo/
+
+lint:fmt:
+  allow_failure: false
+  script:
+    - cargo fmt --all -- --check # fail on formatting issues
+  cache:
+    paths:
+      - target/
+      - cargo/
