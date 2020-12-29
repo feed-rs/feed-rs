@@ -3,8 +3,8 @@ use std::io::Read;
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::{ParseFeedError, ParseFeedResult};
 use crate::parser::util::timestamp_rfc3339_lenient;
+use crate::parser::{ParseFeedError, ParseFeedResult};
 
 #[cfg(test)]
 mod tests;
@@ -27,18 +27,34 @@ fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
     // Convert feed level fields
     feed.title = Some(Text::new(jf.title));
 
-    if let Some(uri) = jf.home_page_url { feed.links.push(Link::new(uri)); }
-    if let Some(uri) = jf.feed_url { feed.links.push(Link::new(uri)); }
+    if let Some(uri) = jf.home_page_url {
+        feed.links.push(Link::new(uri));
+    }
+    if let Some(uri) = jf.feed_url {
+        feed.links.push(Link::new(uri));
+    }
 
-    if let Some(text) = jf.description { feed.description = Some(Text::new(text)); }
+    if let Some(text) = jf.description {
+        feed.description = Some(Text::new(text));
+    }
 
-    if let Some(uri) = jf.icon { feed.logo = Some(Image::new(uri)); }
-    if let Some(uri) = jf.favicon { feed.icon = Some(Image::new(uri)); }
+    if let Some(uri) = jf.icon {
+        feed.logo = Some(Image::new(uri));
+    }
+    if let Some(uri) = jf.favicon {
+        feed.icon = Some(Image::new(uri));
+    }
 
-    if let Some(person) = handle_person(jf.author) { feed.authors.push(person); }
+    if let Some(person) = handle_person(jf.author) {
+        feed.authors.push(person);
+    }
 
     // Convert items within the JSON feed
-    jf.items.into_iter().for_each(|ji| if let Ok(entry) = handle_item(ji) { feed.entries.push(entry); });
+    jf.items.into_iter().for_each(|ji| {
+        if let Ok(entry) = handle_item(ji) {
+            feed.entries.push(entry);
+        }
+    });
 
     Ok(feed)
 }
@@ -71,10 +87,16 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
 
     entry.id = ji.id;
 
-    if let Some(uri) = ji.url { entry.links.push(Link::new(uri)); }
-    if let Some(uri) = ji.external_url { entry.links.push(Link::new(uri)); }
+    if let Some(uri) = ji.url {
+        entry.links.push(Link::new(uri));
+    }
+    if let Some(uri) = ji.external_url {
+        entry.links.push(Link::new(uri));
+    }
 
-    if let Some(text) = ji.title { entry.title = Some(Text::new(text)); }
+    if let Some(text) = ji.title {
+        entry.title = Some(Text::new(text));
+    }
 
     // Content HTML, content text and summary are mapped across to our model with the preference toward HTML and explicit summary fields
     entry.content = handle_content(ji.content_html, mime::TEXT_HTML);
@@ -97,18 +119,16 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
         entry.updated = timestamp_rfc3339_lenient(&modified);
     }
 
-    if let Some(person) = handle_person(ji.author) { entry.authors.push(person); }
+    if let Some(person) = handle_person(ji.author) {
+        entry.authors.push(person);
+    }
 
     if let Some(tags) = ji.tags {
-        tags.into_iter()
-            .map(|t| Category::new(&t))
-            .for_each(|category| entry.categories.push(category));
+        tags.into_iter().map(|t| Category::new(&t)).for_each(|category| entry.categories.push(category));
     }
 
     if let Some(attachments) = ji.attachments {
-        attachments.into_iter()
-            .map(handle_attachment)
-            .for_each(|link| entry.links.push(link))
+        attachments.into_iter().map(handle_attachment).for_each(|link| entry.links.push(link))
     }
 
     Ok(entry)

@@ -222,7 +222,6 @@ fn test_example_5() {
     assert_eq!(actual, expected);
 }
 
-
 // GitHub Atom feed for feed-rs (https://github.com/feed-rs/feed-rs/issues/6)
 #[test]
 fn test_example_6() {
@@ -232,23 +231,32 @@ fn test_example_6() {
 
     let expected = Feed::new(FeedType::Atom)
         .id("tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases")
-        .link(Link::new("https://github.com/feed-rs/feed-rs/releases".into())
-            .rel("alternate")
-            .media_type("text/html"))
-        .link(Link::new("https://github.com/feed-rs/feed-rs/releases.atom".into())
-            .rel("self")
-            .media_type("application/atom+xml"))
+        .link(
+            Link::new("https://github.com/feed-rs/feed-rs/releases".into())
+                .rel("alternate")
+                .media_type("text/html"),
+        )
+        .link(
+            Link::new("https://github.com/feed-rs/feed-rs/releases.atom".into())
+                .rel("self")
+                .media_type("application/atom+xml"),
+        )
         .title(Text::new("Release notes from feed-rs".into()))
         .updated_rfc3339("2020-01-19T16:01:56+11:00")
-        .entry(Entry::default()
-            .id("tag:github.com,2008:Repository/90976281/v0.2.0")
-            .updated_rfc3339("2020-01-19T16:08:59+11:00")
-            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/v0.2.0".into())
-                .rel("alternate")
-                .media_type("text/html"))
-            .title(Text::new("0.2.0".into()))
-            .content(Content::default()
-                .body(r#"<p>A range of maintenance work, including:</p>
+        .entry(
+            Entry::default()
+                .id("tag:github.com,2008:Repository/90976281/v0.2.0")
+                .updated_rfc3339("2020-01-19T16:08:59+11:00")
+                .link(
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/v0.2.0".into())
+                        .rel("alternate")
+                        .media_type("text/html"),
+                )
+                .title(Text::new("0.2.0".into()))
+                .content(
+                    Content::default()
+                        .body(
+                            r#"<p>A range of maintenance work, including:</p>
             <ul>
             <li>migrate to Rust 2018 edition</li>
             <li>Align domain model around Atom spec as it is more modern+complete</li>
@@ -256,42 +264,55 @@ fn test_example_6() {
             <li>Expanded test coverage</li>
             <li>Documentation improvements</li>
             </ul>
-        "#)
-                .content_type("text/html"))
-            .author(Person::new("markpritchard")))
-        .entry(Entry::default()
-            .id("tag:github.com,2008:Repository/90976281/0.1.3")
-            .updated_rfc3339("2017-07-07T21:47:46+10:00")
-            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.3".into())
-                .rel("alternate")
-                .media_type("text/html"))
-            .title(Text::new("0.1.3".into()))
-            .content(Content::default()
-                .body(r#"<p>Update version to 0.1.3</p>"#)
-                .content_type("text/html"))
-            .author(Person::new("kumabook")))
-        .entry(Entry::default()
-            .id("tag:github.com,2008:Repository/90976281/0.1.1")
-            .updated_rfc3339("2017-06-16T18:49:36+10:00")
-            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1".into())
-                .rel("alternate")
-                .media_type("text/html"))
-            .title(Text::new("0.1.1".into()))
-            .content(Content::default()
-                .body(r#"<p>Handle rel attribute of link element of entry of atom</p>"#)
-                .content_type("text/html"))
-            .author(Person::new("kumabook")))
-        .entry(Entry::default()
-            .id("tag:github.com,2008:Repository/90976281/0.1.0")
-            .updated_rfc3339("2017-06-15T16:44:26+10:00")
-            .link(Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0".into())
-                .rel("alternate")
-                .media_type("text/html"))
-            .title(Text::new("0.1.0".into()))
-            .content(Content::default()
-                .body(r#"<p>Update crate info to Cargo.toml</p>"#)
-                .content_type("text/html"))
-            .author(Person::new("kumabook")));
+        "#,
+                        )
+                        .content_type("text/html"),
+                )
+                .author(Person::new("markpritchard")),
+        )
+        .entry(
+            Entry::default()
+                .id("tag:github.com,2008:Repository/90976281/0.1.3")
+                .updated_rfc3339("2017-07-07T21:47:46+10:00")
+                .link(
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.3".into())
+                        .rel("alternate")
+                        .media_type("text/html"),
+                )
+                .title(Text::new("0.1.3".into()))
+                .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
+                .author(Person::new("kumabook")),
+        )
+        .entry(
+            Entry::default()
+                .id("tag:github.com,2008:Repository/90976281/0.1.1")
+                .updated_rfc3339("2017-06-16T18:49:36+10:00")
+                .link(
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1".into())
+                        .rel("alternate")
+                        .media_type("text/html"),
+                )
+                .title(Text::new("0.1.1".into()))
+                .content(
+                    Content::default()
+                        .body(r#"<p>Handle rel attribute of link element of entry of atom</p>"#)
+                        .content_type("text/html"),
+                )
+                .author(Person::new("kumabook")),
+        )
+        .entry(
+            Entry::default()
+                .id("tag:github.com,2008:Repository/90976281/0.1.0")
+                .updated_rfc3339("2017-06-15T16:44:26+10:00")
+                .link(
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0".into())
+                        .rel("alternate")
+                        .media_type("text/html"),
+                )
+                .title(Text::new("0.1.0".into()))
+                .content(Content::default().body(r#"<p>Update crate info to Cargo.toml</p>"#).content_type("text/html"))
+                .author(Person::new("kumabook")),
+        );
 
     // Check
     assert_eq!(actual, expected);
@@ -305,7 +326,8 @@ fn test_example_7() {
     // Parse the feed
     let test_data = test::fixture_as_string("atom_example_7.xml");
     let feed = parser::parse(test_data.as_bytes()).unwrap();
-    let body = feed.entries
+    let body = feed
+        .entries
         .get(3)
         .map(|e| e.content.as_ref())
         .unwrap()
@@ -337,17 +359,17 @@ fn test_spec_1() {
     let expected = Feed::new(FeedType::Atom)
         .id("urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6")
         .title(Text::new("Example Feed".into()))
-        .link(Link::new("http://example.org/".into())
-            .rel("alternate"))
+        .link(Link::new("http://example.org/".into()).rel("alternate"))
         .updated_rfc3339("2003-12-13T18:30:02Z")
         .author(Person::new("John Doe"))
-        .entry(Entry::default()
-            .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
-            .title(Text::new("Atom-Powered Robots Run Amok".into()))
-            .updated_rfc3339("2003-12-13T18:30:02Z")
-            .summary(Text::new("Some text.".into()))
-            .link(Link::new("http://example.org/2003/12/13/atom03".into())
-                .rel("alternate")));
+        .entry(
+            Entry::default()
+                .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
+                .title(Text::new("Atom-Powered Robots Run Amok".into()))
+                .updated_rfc3339("2003-12-13T18:30:02Z")
+                .summary(Text::new("Some text.".into()))
+                .link(Link::new("http://example.org/2003/12/13/atom03".into()).rel("alternate")),
+        );
 
     // Check
     assert_eq!(actual, expected);
@@ -359,19 +381,17 @@ fn test_spec_1() {
 fn test_pub_spec_1() {
     // Parse the feed
     let test_data = test::fixture_as_string("atom_pub_spec_1.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap()
-        .id(""); // Clear randomly generated UUID
+    let actual = parser::parse(test_data.as_bytes()).unwrap().id(""); // Clear randomly generated UUID
 
     // Expected feed
-    let expected = Feed::new(FeedType::Atom)
-        .entry(Entry::default()
+    let expected = Feed::new(FeedType::Atom).entry(
+        Entry::default()
             .title(Text::new("Atom-Powered Robots Run Amok".into()))
             .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
             .updated_rfc3339("2003-12-13T18:30:02Z")
             .author(Person::new("John Doe".into()))
-            .content(Content::default()
-                .content_type("text/plain")
-                .body("Some text.")));
+            .content(Content::default().content_type("text/plain").body("Some text.")),
+    );
 
     // Check
     assert_eq!(actual, expected);
@@ -381,24 +401,25 @@ fn test_pub_spec_1() {
 #[test]
 fn test_entry() {
     let test_data = test::fixture_as_string("atom_entry_1.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap()
-        .id("");
+    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = Feed::new(FeedType::Atom)
-        .entry(Entry::default()
+    let expected = Feed::new(FeedType::Atom).entry(
+        Entry::default()
             .title(Text::new("Specifications".into()))
             .id("urn:uuid:988EF5C55CDEA24EDE1251744888912")
             .updated_rfc3339("2009-08-31T18:55:12.569Z")
             .author(Person::new("S. A. Khuba".into()))
-            .category(Category::new("45121504")
-                .scheme("http://www.unspsc.org/UNv1111201")
-                .label("Digital Camera"))
+            .category(Category::new("45121504").scheme("http://www.unspsc.org/UNv1111201").label("Digital Camera"))
             .contributor(Person::new("Shri. S. A. Khuba"))
-            .content(Content::default()
-                .body("1) Pixels 12.3 million Effective . 12) Weight is Approx. 840 g")
-                .content_type("text/plain"))
-            .summary(Text::new("This Atom Entry XML Doc publishes tech specifications of Nikon D300S Digital Camera".into()))
-        );
+            .content(
+                Content::default()
+                    .body("1) Pixels 12.3 million Effective . 12) Weight is Approx. 840 g")
+                    .content_type("text/plain"),
+            )
+            .summary(Text::new(
+                "This Atom Entry XML Doc publishes tech specifications of Nikon D300S Digital Camera".into(),
+            )),
+    );
 
     // Check
     assert_eq!(actual, expected);

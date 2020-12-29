@@ -39,7 +39,7 @@ fn test_0_91_spec_1() {
             .link(Link::new("http://writetheweb.com/read.php?item=23".into()))
             .summary(Text::new("After a period of dormancy, the Syndication mailing list has become active again, with\n                contributions from leaders in traditional media and Web syndication.\n            ".into()))
             .id(entry1.id.as_ref())     // not in source data
-            .updated(entry1.updated));  // not in source data
+            .updated(entry1.updated)); // not in source data
 
     // Check
     assert_eq!(actual, expected);
@@ -99,7 +99,7 @@ fn test_0_92_spec_1() {
         .entry(Entry::default()
             .summary(Text::new("This is a test of a change I just made. Still diggin..".into()))
             .id(entry2.id.as_ref())     // not in source data
-            .updated(entry2.updated));  // not in source data
+            .updated(entry2.updated)); // not in source data
 
     // Check
     assert_eq!(actual, expected);

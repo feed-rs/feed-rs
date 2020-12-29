@@ -30,9 +30,7 @@ impl<R: BufRead> ElementSource<R> {
     pub(crate) fn new(xml_data: R) -> ElementSource<R> {
         // Create the XML parser
         let mut reader = quick_xml::Reader::from_reader(xml_data);
-        reader.expand_empty_elements(true)
-            .trim_markup_names_in_closing_tags(true)
-            .trim_text(false);
+        reader.expand_empty_elements(true).trim_markup_names_in_closing_tags(true).trim_text(false);
 
         let state = RefCell::new(SourceState::new(reader));
         ElementSource { state }
@@ -109,7 +107,13 @@ impl<R: BufRead> ElementSource<R> {
 
                     // If we are at the correct depth we found a node of interest
                     if state.current_depth == iter_depth {
-                        let element = Element { namespace, name, attributes, source: &self, depth: state.current_depth };
+                        let element = Element {
+                            namespace,
+                            name,
+                            attributes,
+                            source: &self,
+                            depth: state.current_depth,
+                        };
                         return Ok(Some(element));
                     }
                 }
@@ -125,7 +129,7 @@ impl<R: BufRead> ElementSource<R> {
             if state.current_depth < iter_depth - 1 {
                 return Ok(None);
             }
-        };
+        }
 
         // Hit the end of the document
         if state.current_depth > 0 {
@@ -146,7 +150,7 @@ impl<R: BufRead> ElementSource<R> {
             // Grab the next event - we know its a Text event from the above
             match state.next() {
                 Ok(Some(XmlEvent::Text(text))) => return Ok(Some(text)),
-                _ => unreachable!("state.next() did not return expected XmlEvent::Text")
+                _ => unreachable!("state.next() did not return expected XmlEvent::Text"),
             }
         }
 
@@ -168,7 +172,13 @@ impl<R: BufRead> SourceState<R> {
     fn new(reader: Reader<R>) -> SourceState<R> {
         let buf_event = Vec::with_capacity(512);
         let buf_ns = Vec::with_capacity(128);
-        let mut state = SourceState { reader, buf_event, buf_ns, next: Ok(None), current_depth: 0 };
+        let mut state = SourceState {
+            reader,
+            buf_event,
+            buf_ns,
+            next: Ok(None),
+            current_depth: 0,
+        };
         state.next = state.fetch_next();
         state
     }
@@ -180,10 +190,14 @@ impl<R: BufRead> SourceState<R> {
             let (ns, event) = reader.read_namespaced_event(&mut self.buf_event, &mut self.buf_ns)?;
             match event {
                 // Start of an element
-                Event::Start(ref e) => { return XmlEvent::start(ns, e, &reader); }
+                Event::Start(ref e) => {
+                    return XmlEvent::start(ns, e, &reader);
+                }
 
                 // End of an element
-                Event::End(ref e) => { return XmlEvent::end(e, &reader); }
+                Event::End(ref e) => {
+                    return XmlEvent::end(e, &reader);
+                }
 
                 // Text
                 Event::Text(ref t) => {
@@ -195,10 +209,14 @@ impl<R: BufRead> SourceState<R> {
                 }
 
                 // CData
-                Event::CData(ref t) => { return XmlEvent::text_from_cdata(t, &reader); }
+                Event::CData(ref t) => {
+                    return XmlEvent::text_from_cdata(t, &reader);
+                }
 
                 // The end of the document
-                Event::Eof => { return Ok(None); }
+                Event::Eof => {
+                    return Ok(None);
+                }
 
                 // Ignore everything else
                 _ => {}
@@ -241,9 +259,7 @@ pub(crate) struct Element<'a, R: BufRead> {
 impl<'a, R: BufRead> Element<'a, R> {
     /// Returns the value for an attribute if it exists
     pub(crate) fn attr_value(&self, name: &str) -> Option<String> {
-        self.attributes.iter()
-            .find(|a| a.name == name)
-            .map(|a| a.value.clone())
+        self.attributes.iter().find(|a| a.name == name).map(|a| a.value.clone())
     }
 
     /// If the first child of the current node is XML characters, then it is returned as a `String` otherwise `None`.
@@ -253,7 +269,10 @@ impl<'a, R: BufRead> Element<'a, R> {
 
     /// Returns an iterator over children of this element (i.e. descends a level in the hierarchy)
     pub(crate) fn children(&self) -> ElementIter<R> {
-        ElementIter { source: &self.source, depth: self.depth + 1 }
+        ElementIter {
+            source: &self.source,
+            depth: self.depth + 1,
+        }
     }
 
     /// Concatenates the children of this node into a string
@@ -309,7 +328,7 @@ impl NS {
         match s {
             "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
             "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -323,13 +342,13 @@ pub(crate) struct NameValue {
 /// Errors for the underlying parser
 #[derive(Debug)]
 pub enum XmlError {
-    Parser { e: quick_xml::Error }
+    Parser { e: quick_xml::Error },
 }
 
 impl fmt::Display for XmlError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            XmlError::Parser { e } => write!(f, "Parser error: {}", e)
+            XmlError::Parser { e } => write!(f, "Parser error: {}", e),
         }
     }
 }
@@ -369,30 +388,29 @@ impl XmlEvent {
 
     // Extracts the element name, dropping the namespace prefix if present
     fn parse_name<R: BufRead>(bytes: &[u8], reader: &Reader<R>) -> String {
-        reader.decode(bytes)
-            .split(':')
-            .rev().next()
-            .unwrap_or("")
-            .into()
+        reader.decode(bytes).split(':').rev().next().unwrap_or("").into()
     }
 
     // Creates a new event corresponding to an XML start-tag
     fn start<R: BufRead>(ns: Option<&[u8]>, event: &BytesStart, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
         // Parse the namespace
-        let namespace = ns.map(|bytes| reader.decode(bytes))
-            .and_then(|s| NS::parse(s.as_ref()));
+        let namespace = ns.map(|bytes| reader.decode(bytes)).and_then(|s| NS::parse(s.as_ref()));
 
         // Parse the name
         let name = XmlEvent::parse_name(event.name(), reader);
 
         // Parse the attributes
-        let attributes = event.attributes()
+        let attributes = event
+            .attributes()
             .filter_map(|a| {
                 if let Ok(a) = a {
                     let name = reader.decode(a.key);
                     let value = reader.decode(a.value.as_ref());
 
-                    Some(NameValue { name: name.into(), value: value.into() })
+                    Some(NameValue {
+                        name: name.into(),
+                        value: value.into(),
+                    })
                 } else {
                     None
                 }

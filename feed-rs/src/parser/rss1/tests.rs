@@ -13,28 +13,32 @@ fn test_example_1() {
     let entry0 = actual.entries.get(0).unwrap();
     let entry1 = actual.entries.get(1).unwrap();
     let expected = Feed::new(FeedType::RSS1)
-        .id(actual.id.as_ref())     // not present in the test data
+        .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Feed title".into()))
         .link(Link::new("http://www.example.com/main.html".into()))
         .description(Text::new("Site description".into()))
-        .updated(actual.updated)    // not present in the test data
+        .updated(actual.updated) // not present in the test data
         .published_rfc3339("2017-06-13T09:00:00Z")
         .language("ja")
-        .entry(Entry::default()
-            .id("7d61c42a2d8ecf2289e789e1fb2035d1")     // hash of the link
-            .updated(entry0.updated)                    // not present in the test data
-            .title(Text::new("記事1のタイトル".into()))
-            .link(Link::new("記事1のURL".into()))
-            .summary(Text::new("記事1の内容".into()))
-            .published_rfc3339("2017-06-13T09:00:00Z")
-            .author(Person::new("記事1の作者名")))
-        .entry(Entry::default()
-            .id("e342c1b080da9ffbfd10c0a6ba49395f")     // hash of the link
-            .updated(entry1.updated)                    // not present in the test data
-            .title(Text::new("記事2のタイトル".into()))
-            .link(Link::new("記事2のURL".into()))
-            .summary(Text::new("記事2の内容".into()))
-            .author(Person::new("記事2の作者名")));
+        .entry(
+            Entry::default()
+                .id("7d61c42a2d8ecf2289e789e1fb2035d1") // hash of the link
+                .updated(entry0.updated) // not present in the test data
+                .title(Text::new("記事1のタイトル".into()))
+                .link(Link::new("記事1のURL".into()))
+                .summary(Text::new("記事1の内容".into()))
+                .published_rfc3339("2017-06-13T09:00:00Z")
+                .author(Person::new("記事1の作者名")),
+        )
+        .entry(
+            Entry::default()
+                .id("e342c1b080da9ffbfd10c0a6ba49395f") // hash of the link
+                .updated(entry1.updated) // not present in the test data
+                .title(Text::new("記事2のタイトル".into()))
+                .link(Link::new("記事2のURL".into()))
+                .summary(Text::new("記事2の内容".into()))
+                .author(Person::new("記事2の作者名")),
+        );
 
     // Check
     assert_eq!(actual, expected);
@@ -48,7 +52,14 @@ fn test_example_2() {
     let feed = parser::parse(test_data.as_bytes()).unwrap();
 
     // content:encoded should be mapped to the content field
-    assert!(feed.entries[0].content.as_ref().unwrap().body.as_ref().unwrap().starts_with("This morning I saw two things that were Microsoft "));
+    assert!(feed.entries[0]
+        .content
+        .as_ref()
+        .unwrap()
+        .body
+        .as_ref()
+        .unwrap()
+        .starts_with("This morning I saw two things that were Microsoft "));
 }
 
 // Example 1 from the spec at https://validator.w3.org/feed/docs/rss1.html
@@ -97,24 +108,31 @@ fn test_spec_2() {
     // Expected feed
     let entry0 = actual.entries.get(0).unwrap();
     let expected = Feed::new(FeedType::RSS1)
-        .id(actual.id.as_ref())     // not present in the test data
+        .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Meerkat".into()))
         .link(Link::new("http://meerkat.oreillynet.com".into()))
         .description(Text::new("Meerkat: An Open Wire Service".into()))
-        .logo(Image::new("http://meerkat.oreillynet.com/icons/meerkat-powered.jpg".into())
-            .link("http://meerkat.oreillynet.com")
-            .title("Meerkat Powered!"))
-        .updated(actual.updated)    // not present in the test data
+        .logo(
+            Image::new("http://meerkat.oreillynet.com/icons/meerkat-powered.jpg".into())
+                .link("http://meerkat.oreillynet.com")
+                .title("Meerkat Powered!"),
+        )
+        .updated(actual.updated) // not present in the test data
         .author(Person::new("Rael Dornfest (mailto:rael@oreilly.com)"))
         .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into()))
-        .entry(Entry::default()
-            .id("acf7c86547d5d594af6d8f3327e84b06")     // hash of the link
-            .updated(entry0.updated)            // not present in the test data
-            .title(Text::new("XML: A Disruptive Technology".into()))
-            .link(Link::new("http://c.moreover.com/click/here.pl?r123".into()))
-            .summary(Text::new("\n            XML is placing increasingly heavy loads on the existing technical\n            infrastructure of the Internet.\n        ".into()))
-            .author(Person::new("Simon St.Laurent (mailto:simonstl@simonstl.com)".into()))
-            .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into())));
+        .entry(
+            Entry::default()
+                .id("acf7c86547d5d594af6d8f3327e84b06") // hash of the link
+                .updated(entry0.updated) // not present in the test data
+                .title(Text::new("XML: A Disruptive Technology".into()))
+                .link(Link::new("http://c.moreover.com/click/here.pl?r123".into()))
+                .summary(Text::new(
+                    "\n            XML is placing increasingly heavy loads on the existing technical\n            infrastructure of the Internet.\n        "
+                        .into(),
+                ))
+                .author(Person::new("Simon St.Laurent (mailto:simonstl@simonstl.com)".into()))
+                .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into())),
+        );
 
     // Check
     assert_eq!(actual, expected);

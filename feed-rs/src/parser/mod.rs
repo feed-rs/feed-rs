@@ -32,11 +32,15 @@ pub enum ParseFeedError {
 }
 
 impl From<serde_json::error::Error> for ParseFeedError {
-    fn from(err: serde_json::error::Error) -> Self { ParseFeedError::JsonSerde(err) }
+    fn from(err: serde_json::error::Error) -> Self {
+        ParseFeedError::JsonSerde(err)
+    }
 }
 
 impl From<std::io::Error> for ParseFeedError {
-    fn from(err: std::io::Error) -> Self { ParseFeedError::IoError(err) }
+    fn from(err: std::io::Error) -> Self {
+        ParseFeedError::IoError(err)
+    }
 }
 
 impl From<xml::XmlError> for ParseFeedError {
@@ -130,7 +134,7 @@ pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
 
         Some('{') => parse_json(input),
 
-        _ => Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
+        _ => Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot)),
     };
 
     // Post processing as required
