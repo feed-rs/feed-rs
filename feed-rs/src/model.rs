@@ -403,7 +403,11 @@ pub struct Category {
 
 impl Category {
     pub fn new(term: &str) -> Category {
-        Category { term: term.trim().into(), scheme: None, label: None }
+        Category {
+            term: term.trim().into(),
+            scheme: None,
+            label: None,
+        }
     }
 }
 
@@ -446,7 +450,12 @@ pub struct Content {
 
 impl Default for Content {
     fn default() -> Content {
-        Content { body: None, content_type: mime::TEXT_PLAIN, length: None, src: None }
+        Content {
+            body: None,
+            content_type: mime::TEXT_PLAIN,
+            length: None,
+            src: None,
+        }
     }
 }
 
@@ -490,7 +499,11 @@ pub struct Generator {
 
 impl Generator {
     pub(crate) fn new(content: &str) -> Generator {
-        Generator { uri: None, version: None, content: content.trim().into() }
+        Generator {
+            uri: None,
+            version: None,
+            content: content.trim().into(),
+        }
     }
 }
 
@@ -534,7 +547,14 @@ pub struct Image {
 
 impl Image {
     pub(crate) fn new(uri: String) -> Image {
-        Image { uri, title: None, link: None, width: None, height: None, description: None }
+        Image {
+            uri,
+            title: None,
+            link: None,
+            width: None,
+            height: None,
+            description: None,
+        }
     }
 }
 
@@ -648,7 +668,11 @@ pub struct Person {
 
 impl Person {
     pub(crate) fn new(name: &str) -> Person {
-        Person { name: name.trim().into(), uri: None, email: None }
+        Person {
+            name: name.trim().into(),
+            uri: None,
+            email: None,
+        }
     }
 }
 
@@ -676,7 +700,11 @@ pub struct Text {
 
 impl Text {
     pub(crate) fn new(content: String) -> Text {
-        Text { content_type: mime::TEXT_PLAIN, src: None, content }
+        Text {
+            content_type: mime::TEXT_PLAIN,
+            src: None,
+            content,
+        }
     }
 }
 

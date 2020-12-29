@@ -26,7 +26,7 @@ fn handle_book<R: BufRead>(book: Element<R>) -> Result {
             "empty1" | "empty2" => {
                 assert!(child.child_as_text()?.is_none());
             }
-            _ => panic!("Unexpected child node: {}", child.name)
+            _ => panic!("Unexpected child node: {}", child.name),
         }
     }
 
@@ -120,7 +120,7 @@ fn test_children_as_string() -> Result {
 // Verifies the XML decoder handles the various encodings detailed in the RSS2 best practices guide (https://www.rssboard.org/rss-profile#data-types-characterdata)
 #[test]
 fn test_rss_decoding() -> Result {
-    let tests = vec!(
+    let tests = vec![
         ("<title>AT&#x26;T</title>", "AT&T"),
         ("<title>Bill &#x26; Ted's Excellent Adventure</title>", "Bill & Ted's Excellent Adventure"),
         ("<title>The &#x26;amp; entity</title>", "The &amp; entity"),
@@ -128,7 +128,7 @@ fn test_rss_decoding() -> Result {
         ("<title>A &#x3C; B</title>", "A < B"),
         ("<title>A&#x3C;B</title>", "A<B"),
         ("<title>Nice &#x3C;gorilla&#x3E;, what's he weigh?</title>", "Nice <gorilla>, what's he weigh?"),
-    );
+    ];
     for (xml, expected) in tests {
         let source = ElementSource::new(xml.as_bytes());
         let title = source.root()?.unwrap();

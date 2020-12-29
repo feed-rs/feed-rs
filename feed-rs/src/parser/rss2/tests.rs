@@ -11,20 +11,22 @@ fn test_example_1() {
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref())     // not present in the test data
+        .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("RSS Title".into()))
         .description(Text::new("This is an example of an RSS feed".into()))
         .link(Link::new("http://www.example.com/main.html".into()))
         .updated_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000")
         .published_rfc2822("Sun, 06 Sep 2009 16:20:00 +0000")
         .ttl(1800)
-        .entry(Entry::default()
-            .title(Text::new("Example entry".into()))
-            .summary(Text::new("Here is some text containing an interesting description.".into()))
-            .link(Link::new("http://www.example.com/blog/post/1".into()))
-            .id("7bd204c6-1655-4c27-aeee-53f933c5395f")
-            .published_rfc2822("Sun, 06 Sep 2009 16:20:00 +0000")
-            .updated_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000"));       // copy from feed
+        .entry(
+            Entry::default()
+                .title(Text::new("Example entry".into()))
+                .summary(Text::new("Here is some text containing an interesting description.".into()))
+                .link(Link::new("http://www.example.com/blog/post/1".into()))
+                .id("7bd204c6-1655-4c27-aeee-53f933c5395f")
+                .published_rfc2822("Sun, 06 Sep 2009 16:20:00 +0000")
+                .updated_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000"),
+        ); // copy from feed
 
     // Check
     assert_eq!(actual, expected);
@@ -141,32 +143,39 @@ fn test_example_5() {
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref())     // not present in the test data
+        .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Ars Technica".into()))
         .link(Link::new("https://arstechnica.com".into()))
-        .description(Text::new("Serving the Technologist for more than a decade. IT news, reviews, and analysis.".into()))
+        .description(Text::new(
+            "Serving the Technologist for more than a decade. IT news, reviews, and analysis.".into(),
+        ))
         .updated_rfc2822("Tue, 06 Aug 2019 00:03:56 +0000")
         .language("en-us")
         .generator(Generator::new("https://wordpress.org/?v=4.8.3"))
-        .logo(Image::new("https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-32x32.png".into())
-            .title("Ars Technica")
-            .link("https://arstechnica.com")
-            .width(32)
-            .height(32))
-        .entry(Entry::default()
-            .title(Text::new("Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter".into()))
-            .link(Link::new("https://arstechnica.com/?p=1546121".into()))
-            .published_rfc2822("Mon, 05 Aug 2019 23:11:09 +0000")
-            .category(Category::new("Tech"))
-            .category(Category::new("alphabet"))
-            .category(Category::new("apple"))
-            .category(Category::new("google"))
-            .id("https://arstechnica.com/?p=1546121")
-            .author(Person::new("Samuel Axon".into()))
-            .summary(Text::new("Alphabet has $117 billion in cash on hand.".into()))
-            .content(Content::default()
-                .body("Google co-founder Larry Page is now CEO of Alphabet."))
-            .updated(actual.updated));
+        .logo(
+            Image::new("https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-32x32.png".into())
+                .title("Ars Technica")
+                .link("https://arstechnica.com")
+                .width(32)
+                .height(32),
+        )
+        .entry(
+            Entry::default()
+                .title(Text::new(
+                    "Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter".into(),
+                ))
+                .link(Link::new("https://arstechnica.com/?p=1546121".into()))
+                .published_rfc2822("Mon, 05 Aug 2019 23:11:09 +0000")
+                .category(Category::new("Tech"))
+                .category(Category::new("alphabet"))
+                .category(Category::new("apple"))
+                .category(Category::new("google"))
+                .id("https://arstechnica.com/?p=1546121")
+                .author(Person::new("Samuel Axon".into()))
+                .summary(Text::new("Alphabet has $117 billion in cash on hand.".into()))
+                .content(Content::default().body("Google co-founder Larry Page is now CEO of Alphabet."))
+                .updated(actual.updated),
+        );
 
     // Check
     assert_eq!(actual, expected);
@@ -212,7 +221,7 @@ fn test_spec_1() {
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref())     // not present in the test data
+        .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Scripting News".into()))
         .link(Link::new("http://www.scripting.com/".into()))
         .description(Text::new("A weblog about scripting and stuff like that.".into()))
@@ -220,28 +229,35 @@ fn test_spec_1() {
         .rights(Text::new("Copyright 1997-2002 Dave Winer".into()))
         .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT")
         .generator(Generator::new("Radio UserLand v8.0.5"))
-        .category(Category::new("1765")
-            .scheme("Syndic8"))
-        .contributor(Person::new("managingEditor".into())
-            .email("dave@userland.com"))
-        .contributor(Person::new("webMaster".into())
-            .email("dave@userland.com"))
+        .category(Category::new("1765").scheme("Syndic8"))
+        .contributor(Person::new("managingEditor".into()).email("dave@userland.com"))
+        .contributor(Person::new("webMaster".into()).email("dave@userland.com"))
         .ttl(40)
-        .entry(Entry::default()
-            .summary(Text::new(r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
+        .entry(
+            Entry::default()
+                .summary(Text::new(
+                    r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>
-            "#.to_owned()))
-            .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
-            .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
-            .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT"))       // copy from feed
-        .entry(Entry::default()
-            .summary(Text::new(r#"<a href="http://www.docuverse.com/blog/donpark/2002/09/29.html#a68">Don Park</a>:
+            "#
+                    .to_owned(),
+                ))
+                .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
+                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
+                .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT"),
+        ) // copy from feed
+        .entry(
+            Entry::default()
+                .summary(Text::new(
+                    r#"<a href="http://www.docuverse.com/blog/donpark/2002/09/29.html#a68">Don Park</a>:
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation."
-            "#.to_owned()))
-            .published_rfc2822("Mon, 30 Sep 2002 01:52:02 GMT")
-            .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
-            .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT"));      // copy from feed
+            "#
+                    .to_owned(),
+                ))
+                .published_rfc2822("Mon, 30 Sep 2002 01:52:02 GMT")
+                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
+                .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT"),
+        ); // copy from feed
 
     // Check
     assert_eq!(actual, expected);
