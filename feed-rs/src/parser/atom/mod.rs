@@ -4,7 +4,7 @@ use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser::util::timestamp_rfc3339_lenient;
-use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::Element;
 
 #[cfg(test)]
@@ -111,7 +111,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
     let content_type = element.attr_value("type");
 
     // from http://www.atomenabled.org/developers/syndication/#contentElement
-    match util::as_deref(&content_type) {
+    match content_type.as_deref() {
         // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
         Some("text") | Some("html") | Some("xhtml") | None => {
             handle_text(element)?
