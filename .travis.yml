@@ -15,4 +15,5 @@ matrix:
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
+  - rustup component add rustfmt
   - cargo fmt --all -- --check
