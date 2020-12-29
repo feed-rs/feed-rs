@@ -4,7 +4,6 @@ use crate::xml::Element;
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use std::io::BufRead;
-use std::ops::Deref;
 use uuid::Uuid;
 
 lazy_static! {
@@ -41,12 +40,6 @@ lazy_static! {
             (Regex::new(r#"(\+|-)(\d{2})(\d{2})"#).unwrap(), "${1}${2}:${3}"),
         )
     };
-}
-
-/// Work around for missing as_deref in 1.39
-// TODO once we no longer need to support 1.39 we can switch to as_deref()
-pub(crate) fn as_deref<'a, T: 'a + Deref>(v: &'a Option<T>) -> Option<&'a T::Target> {
-    v.as_ref().map(|t| t.deref())
 }
 
 /// Handles <content:encoded>
