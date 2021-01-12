@@ -3,6 +3,7 @@ use crate::parser::ParseFeedResult;
 use crate::xml::Element;
 use chrono::{DateTime, Utc};
 use regex::Regex;
+use std::error::Error;
 use std::io::BufRead;
 use uuid::Uuid;
 
@@ -40,6 +41,20 @@ lazy_static! {
             (Regex::new(r#"(\+|-)(\d{2})(\d{2})"#).unwrap(), "${1}${2}:${3}"),
         )
     };
+}
+
+/// Simplifies the "if let ... = parse ... assign" block
+pub(crate) fn some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
+    if let Some(v) = v {
+        func(v)
+    }
+}
+
+/// Simplifies the "if let ... = parse ... assign" block
+pub(crate) fn ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>, func: F) {
+    if let Ok(v) = v {
+        func(Some(v))
+    }
 }
 
 /// Handles <content:encoded>

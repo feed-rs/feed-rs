@@ -2,10 +2,12 @@ use std::io::BufRead;
 
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text, MediaObject};
+use crate::parser::mediarss;
 use crate::parser::util::timestamp_rfc3339_lenient;
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
-use crate::xml::Element;
+use crate::xml::{Element, NS};
+use crate::parser::mediarss::handle_media_element;
 
 #[cfg(test)]
 mod tests;
@@ -161,8 +163,11 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
 
 // Handles an Atom <entry>
 fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
-    let mut entry = Entry::default();
+    // Create a default MediaRSS content object for non-grouped elements
+    let mut media_obj = MediaObject::new();
 
+    // Parse the entry
+    let mut entry = Entry::default();
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
@@ -178,7 +183,6 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
                     entry.updated = timestamp_rfc3339_lenient(&text)
                 }
             }
-
             (None, "author") => {
                 if let Some(person) = handle_person(child)? {
                     entry.authors.push(person)
@@ -191,7 +195,6 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
                 }
             }
             (None, "summary") => entry.summary = handle_text(child)?,
-
             (None, "category") => {
                 if let Some(category) = handle_category(child)? {
                     entry.categories.push(category)
@@ -209,9 +212,25 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
             }
             (None, "rights") => entry.rights = handle_text(child)?,
 
+            // MediaRSS group creates a new object for this group of elements
+            (Some(NS::MediaRSS), "group") => {
+                if let Some(obj) = mediarss::handle_media_group(child)? {
+                    entry.media.push(obj)
+                }
+            }
+            // MediaRSS tags that are not grouped are parsed into the default object
+            (Some(NS::MediaRSS), _) => {
+                handle_media_element(child, &mut media_obj)?;
+            }
+
             // Nothing required for unknown elements
             _ => {}
         }
+    }
+
+    // If a media:content item was found in this entry, then attach it
+    if media_obj.content.is_some() {
+        entry.media.push(media_obj);
     }
 
     Ok(Some(entry))

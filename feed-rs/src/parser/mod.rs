@@ -14,6 +14,7 @@ mod rss0;
 mod rss1;
 mod rss2;
 
+pub(crate) mod mediarss;
 pub(crate) mod util;
 
 pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;

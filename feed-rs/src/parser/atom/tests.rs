@@ -1,4 +1,4 @@
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaThumbnail, Person, Text, MediaText};
 use crate::parser;
 use crate::util::test;
 
@@ -423,4 +423,63 @@ fn test_entry() {
 
     // Check
     assert_eq!(actual, expected);
+}
+
+// Verify we can parse MediaRSS extensions from youtube
+#[test]
+fn test_mediarss_youtube() {
+    let test_data = test::fixture_as_string("atom_mediarss_youtube_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
+
+    let expected = MediaObject::new()
+        .title("Navigating with Quantum Entanglement")
+        .content(
+            MediaContent::new()
+                .url("https://www.youtube.com/v/0A1ouV7iD8o?version=3")
+                .content_type("application/x-shockwave-flash")
+                .width(640)
+                .height(390),
+        )
+        .thumbnail(MediaThumbnail::new(
+            Image::new("https://i1.ytimg.com/vi/0A1ouV7iD8o/hqdefault.jpg".to_string())
+                .width(480)
+                .height(360),
+        ))
+        .description("Check Out Weathered on PBS Terra https://www.youtube.com/watch?v=znSN7ZFIaOg&ab_channel=PBSTerra")
+        .community(MediaCommunity::new().star_rating(15020, 4.95, 1, 5).statistics(304321, 42));
+
+    // Check the media object
+    let entry = &actual.entries[0];
+    let media_obj = &entry.media[0];
+    assert_eq!(media_obj, &expected);
+}
+
+// Verify we can parse MediaRSS extensions from newscred (don't use the media:group)
+#[test]
+fn test_mediarss_newscred() {
+    let test_data = test::fixture_as_string("atom_mediarss_newscred_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
+
+    let expected = MediaObject::new()
+        .title("media title")
+        .description("media description")
+        .text(MediaText::new(Text::new("media text".to_string())))
+        .credit("media credit")
+        .content(
+            MediaContent::new()
+                .url("https://www.example.com/Zz1hNjRiMWFjMzdhYWIzNTEwNjk2YjIzYjc5NWQxNWFlMA==/.jpeg")
+                .content_type("image/jpeg")
+                .width(2048)
+                .height(1365),
+        )
+        .thumbnail(MediaThumbnail::new(
+            Image::new("https://www.example.com/Zz1hNjRiMWFjMzdhYWIzNTEwNjk2YjIzYjc5NWQxNWFlMA==?width=75&amp;height=75".to_string())
+                .width(2048)
+                .height(1365),
+        ));
+
+    // Check the media object
+    let entry = &actual.entries[0];
+    let media_obj = &entry.media[0];
+    assert_eq!(media_obj, &expected);
 }

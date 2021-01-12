@@ -320,6 +320,8 @@ pub(crate) enum NS {
     Content,
     // http://purl.org/dc/elements/1.1/
     DublinCore,
+    // http://search.yahoo.com/mrss/
+    MediaRSS,
 }
 
 impl NS {
@@ -327,6 +329,7 @@ impl NS {
         match s {
             "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
             "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
+            "http://search.yahoo.com/mrss/" => Some(NS::MediaRSS),
             _ => None,
         }
     }
