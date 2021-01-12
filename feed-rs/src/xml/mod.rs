@@ -7,7 +7,6 @@ use std::mem;
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Reader;
-use serde::export::Formatter;
 
 #[cfg(test)]
 mod tests;
@@ -293,7 +292,7 @@ impl<'a, R: BufRead> Element<'a, R> {
 }
 
 impl<'a, R: BufRead> Debug for Element<'a, R> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut buffer = String::new();
         append_element_start(&mut buffer, &self.name, &self.attributes);
         writeln!(f, "{}", buffer)
