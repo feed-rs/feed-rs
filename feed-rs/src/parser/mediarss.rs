@@ -1,13 +1,12 @@
 use std::io::BufRead;
 
 use crate::model::{Image, MediaCommunity, MediaContent, MediaObject, MediaThumbnail, Text, MediaCredit, MediaText};
-use crate::parser::util::{ok_then_some, some_then};
+use crate::parser::util::{if_ok_then_some, if_some_then};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 use mime::Mime;
 
 // TODO switch to Duration for thumbnail and text time
-// TODO use the helper functions in the parsers
 // TODO find an RSS feed with media tags in it
 // TODO When an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
 // TODO Duplicated elements appearing at deeper levels of the document tree have higher priority over other levels. For example, <media:content> level elements are favored over <item> level elements. The priority level is listed from strongest to weakest: <media:content>, <media:group>, <item>, <channel>.
@@ -35,15 +34,15 @@ pub(crate) fn handle_media_element<R: BufRead>(element: Element<R>, media_obj: &
 
         (Some(NS::MediaRSS), "content") => handle_media_content(element, media_obj)?,
 
-        (Some(NS::MediaRSS), "thumbnail") => some_then(handle_media_thumbnail(element)?, |v| media_obj.thumbnails.push(v)),
+        (Some(NS::MediaRSS), "thumbnail") => if_some_then(handle_media_thumbnail(element)?, |thumbnail| media_obj.thumbnails.push(thumbnail)),
 
         (Some(NS::MediaRSS), "description") => media_obj.description = handle_text(element)?,
 
         (Some(NS::MediaRSS), "community") => media_obj.community = handle_media_community(element)?,
 
-        (Some(NS::MediaRSS), "credit") => some_then(handle_media_credit(element)?, |v| media_obj.credits.push(v)),
+        (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(element)?, |credit| media_obj.credits.push(credit)),
 
-        (Some(NS::MediaRSS), "text") => some_then(handle_media_text(element)?, |v| media_obj.texts.push(v)),
+        (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(element)?, |text| media_obj.texts.push(text)),
 
         // Nothing required for unknown elements
         _ => {}
@@ -62,10 +61,10 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
             (Some(NS::MediaRSS), "starRating") => {
                 for attr in &child.attributes {
                     match attr.name.as_str() {
-                        "average" => ok_then_some(attr.value.parse::<f64>(), |v| community.stars_avg = v),
-                        "count" => ok_then_some(attr.value.parse::<u64>(), |v| community.stars_count = v),
-                        "min" => ok_then_some(attr.value.parse::<u64>(), |v| community.stars_min = v),
-                        "max" => ok_then_some(attr.value.parse::<u64>(), |v| community.stars_max = v),
+                        "average" => if_ok_then_some(attr.value.parse::<f64>(), |v| community.stars_avg = v),
+                        "count" => if_ok_then_some(attr.value.parse::<u64>(), |v| community.stars_count = v),
+                        "min" => if_ok_then_some(attr.value.parse::<u64>(), |v| community.stars_min = v),
+                        "max" => if_ok_then_some(attr.value.parse::<u64>(), |v| community.stars_max = v),
 
                         // Nothing required for unknown attributes
                         _ => {}
@@ -75,8 +74,8 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
             (Some(NS::MediaRSS), "statistics") => {
                 for attr in &child.attributes {
                     match attr.name.as_str() {
-                        "views" => ok_then_some(attr.value.parse::<u64>(), |v| community.stats_views = v),
-                        "favorites" => ok_then_some(attr.value.parse::<u64>(), |v| community.stats_favorites = v),
+                        "views" => if_ok_then_some(attr.value.parse::<u64>(), |v| community.stats_views = v),
+                        "favorites" => if_ok_then_some(attr.value.parse::<u64>(), |v| community.stats_favorites = v),
 
                         // Nothing required for unknown attributes
                         _ => {}
@@ -100,10 +99,10 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
         match attr.name.as_str() {
             "url" => content.url = Some(attr.value.clone()),
 
-            "type" => ok_then_some(attr.value.parse::<Mime>(), |v| content.content_type = v),
+            "type" => if_ok_then_some(attr.value.parse::<Mime>(), |v| content.content_type = v),
 
-            "width" => ok_then_some(attr.value.parse::<u32>(), |v| content.width = v),
-            "height" => ok_then_some(attr.value.parse::<u32>(), |v| content.height = v),
+            "width" => if_ok_then_some(attr.value.parse::<u32>(), |v| content.width = v),
+            "height" => if_ok_then_some(attr.value.parse::<u32>(), |v| content.height = v),
 
             // Nothing required for unknown elements
             _ => {}
@@ -184,8 +183,8 @@ fn handle_media_thumbnail<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
         match attr.name.as_str() {
             "url" => url = Some(attr.value.clone()),
 
-            "width" => ok_then_some(attr.value.parse::<u32>(), |v| width = v),
-            "height" => ok_then_some(attr.value.parse::<u32>(), |v| height = v),
+            "width" => if_ok_then_some(attr.value.parse::<u32>(), |v| width = v),
+            "height" => if_ok_then_some(attr.value.parse::<u32>(), |v| height = v),
 
             "time" => time = Some(attr.value.clone()),
 

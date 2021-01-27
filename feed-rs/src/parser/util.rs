@@ -43,23 +43,23 @@ lazy_static! {
     };
 }
 
+/// Handles <content:encoded>
+pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
+    Ok(element.children_as_string()?.map(Text::new))
+}
+
 /// Simplifies the "if let ... = parse ... assign" block
-pub(crate) fn some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
+pub(crate) fn if_some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
     if let Some(v) = v {
         func(v)
     }
 }
 
 /// Simplifies the "if let ... = parse ... assign" block
-pub(crate) fn ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>, func: F) {
+pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>, func: F) {
     if let Ok(v) = v {
         func(Some(v))
     }
-}
-
-/// Handles <content:encoded>
-pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
-    Ok(element.children_as_string()?.map(Text::new))
 }
 
 /// Parses a timestamp from an RSS2 feed.
