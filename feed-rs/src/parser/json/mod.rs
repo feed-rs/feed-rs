@@ -3,7 +3,7 @@ use std::io::Read;
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::util::{timestamp_rfc3339_lenient, if_some_then};
+use crate::parser::util::{if_some_then, timestamp_rfc3339_lenient};
 use crate::parser::{ParseFeedError, ParseFeedResult};
 
 #[cfg(test)]
@@ -62,13 +62,11 @@ fn handle_attachment(attachment: JsonAttachment) -> Link {
 
 // Handles HTML or plain text content
 fn handle_content(content: Option<String>, content_type: Mime) -> Option<Content> {
-    content.map(|body| {
-        Content {
-            length: Some(body.as_bytes().len() as u64),
-            body: Some(body.trim().into()),
-            content_type,
-            ..Default::default()
-        }
+    content.map(|body| Content {
+        length: Some(body.as_bytes().len() as u64),
+        body: Some(body.trim().into()),
+        content_type,
+        ..Default::default()
     })
 }
 
@@ -105,9 +103,13 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
 
     if_some_then(handle_person(ji.author), |person| entry.authors.push(person));
 
-    if_some_then(ji.tags, |tags| tags.into_iter().map(|t| Category::new(&t)).for_each(|category| entry.categories.push(category)));
+    if_some_then(ji.tags, |tags| {
+        tags.into_iter().map(|t| Category::new(&t)).for_each(|category| entry.categories.push(category))
+    });
 
-    if_some_then(ji.attachments, |attachments| attachments.into_iter().map(handle_attachment).for_each(|link| entry.links.push(link)));
+    if_some_then(ji.attachments, |attachments| {
+        attachments.into_iter().map(handle_attachment).for_each(|link| entry.links.push(link))
+    });
 
     Ok(entry)
 }
