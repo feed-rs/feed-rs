@@ -126,9 +126,11 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
                 element
                     .child_as_text()?
                     .map(|body| {
-                        let mut content = Content::default();
-                        content.body = Some(body);
-                        content.content_type = mime;
+                        let content = Content {
+                            body: Some(body),
+                            content_type: mime,
+                            ..Default::default()
+                        };
                         Some(content)
                     })
                     // The text is required for an inline text or base64 element

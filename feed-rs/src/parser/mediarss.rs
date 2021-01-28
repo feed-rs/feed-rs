@@ -132,7 +132,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
 // Handles the "media:credit" element
 fn handle_media_credit<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaCredit>> {
     Ok(element.child_as_text()?
-        .map(|t| MediaCredit::new(t)))
+        .map(MediaCredit::new))
 }
 
 // Handles the "media:text" element
@@ -256,22 +256,18 @@ fn parse_npt(text: &str) -> Option<Duration> {
         let h = captures.name("h");
         let m = captures.name("m");
         let s = captures.name("s");
-        match (h, m, s) {
-            (Some(h), Some(m), Some(s)) => {
-                // Parse the hours, minutes and seconds
-                let mut seconds = s.as_str().parse::<u64>().unwrap();
-                seconds += m.as_str().parse::<u64>().unwrap() * 60;
-                seconds += h.as_str().parse::<u64>().unwrap() * 3600;
-                let mut duration = Duration::from_secs(seconds);
 
-                // Add fractional seconds if present
-                duration = parse_npt_add_frac_sec(duration, captures);
+        if let (Some(h), Some(m), Some(s)) = (h, m, s) {
+            // Parse the hours, minutes and seconds
+            let mut seconds = s.as_str().parse::<u64>().unwrap();
+            seconds += m.as_str().parse::<u64>().unwrap() * 60;
+            seconds += h.as_str().parse::<u64>().unwrap() * 3600;
+            let mut duration = Duration::from_secs(seconds);
 
-                return Some(duration);
-            }
+            // Add fractional seconds if present
+            duration = parse_npt_add_frac_sec(duration, captures);
 
-            // String is not in npt-hhmmss format
-            _ => {}
+            return Some(duration);
         }
     }
 

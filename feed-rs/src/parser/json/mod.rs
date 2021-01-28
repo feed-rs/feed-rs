@@ -63,19 +63,21 @@ fn handle_attachment(attachment: JsonAttachment) -> Link {
 // Handles HTML or plain text content
 fn handle_content(content: Option<String>, content_type: Mime) -> Option<Content> {
     content.map(|body| {
-        let mut content = Content::default();
-        content.length = Some(body.as_bytes().len() as u64);
-        content.body = Some(body.trim().into());
-        content.content_type = content_type;
-        content
+        Content {
+            length: Some(body.as_bytes().len() as u64),
+            body: Some(body.trim().into()),
+            content_type,
+            ..Default::default()
+        }
     })
 }
 
 // Converts a JSON feed item into our model
 fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
-    let mut entry = Entry::default();
-
-    entry.id = ji.id;
+    let mut entry = Entry {
+        id: ji.id,
+        ..Default::default()
+    };
 
     if_some_then(ji.url, |uri| entry.links.push(Link::new(uri)));
 
