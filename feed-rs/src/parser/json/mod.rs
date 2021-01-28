@@ -3,7 +3,7 @@ use std::io::Read;
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::util::timestamp_rfc3339_lenient;
+use crate::parser::util::{timestamp_rfc3339_lenient, if_some_then};
 use crate::parser::{ParseFeedError, ParseFeedResult};
 
 #[cfg(test)]
@@ -27,27 +27,17 @@ fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
     // Convert feed level fields
     feed.title = Some(Text::new(jf.title));
 
-    if let Some(uri) = jf.home_page_url {
-        feed.links.push(Link::new(uri));
-    }
-    if let Some(uri) = jf.feed_url {
-        feed.links.push(Link::new(uri));
-    }
+    if_some_then(jf.home_page_url, |uri| feed.links.push(Link::new(uri)));
 
-    if let Some(text) = jf.description {
-        feed.description = Some(Text::new(text));
-    }
+    if_some_then(jf.feed_url, |uri| feed.links.push(Link::new(uri)));
 
-    if let Some(uri) = jf.icon {
-        feed.logo = Some(Image::new(uri));
-    }
-    if let Some(uri) = jf.favicon {
-        feed.icon = Some(Image::new(uri));
-    }
+    if_some_then(jf.description, |text| feed.description = Some(Text::new(text)));
 
-    if let Some(person) = handle_person(jf.author) {
-        feed.authors.push(person);
-    }
+    if_some_then(jf.icon, |uri| feed.logo = Some(Image::new(uri)));
+
+    if_some_then(jf.favicon, |uri| feed.icon = Some(Image::new(uri)));
+
+    if_some_then(handle_person(jf.author), |person| feed.authors.push(person));
 
     // Convert items within the JSON feed
     jf.items.into_iter().for_each(|ji| {
@@ -73,30 +63,27 @@ fn handle_attachment(attachment: JsonAttachment) -> Link {
 // Handles HTML or plain text content
 fn handle_content(content: Option<String>, content_type: Mime) -> Option<Content> {
     content.map(|body| {
-        let mut content = Content::default();
-        content.length = Some(body.as_bytes().len() as u64);
-        content.body = Some(body.trim().into());
-        content.content_type = content_type;
-        content
+        Content {
+            length: Some(body.as_bytes().len() as u64),
+            body: Some(body.trim().into()),
+            content_type,
+            ..Default::default()
+        }
     })
 }
 
 // Converts a JSON feed item into our model
 fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
-    let mut entry = Entry::default();
+    let mut entry = Entry {
+        id: ji.id,
+        ..Default::default()
+    };
 
-    entry.id = ji.id;
+    if_some_then(ji.url, |uri| entry.links.push(Link::new(uri)));
 
-    if let Some(uri) = ji.url {
-        entry.links.push(Link::new(uri));
-    }
-    if let Some(uri) = ji.external_url {
-        entry.links.push(Link::new(uri));
-    }
+    if_some_then(ji.external_url, |uri| entry.links.push(Link::new(uri)));
 
-    if let Some(text) = ji.title {
-        entry.title = Some(Text::new(text));
-    }
+    if_some_then(ji.title, |text| entry.title = Some(Text::new(text)));
 
     // Content HTML, content text and summary are mapped across to our model with the preference toward HTML and explicit summary fields
     entry.content = handle_content(ji.content_html, mime::TEXT_HTML);
@@ -112,24 +99,15 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
         }
     }
 
-    if let Some(published) = ji.date_published {
-        entry.published = timestamp_rfc3339_lenient(&published);
-    }
-    if let Some(modified) = ji.date_modified {
-        entry.updated = timestamp_rfc3339_lenient(&modified);
-    }
+    if_some_then(ji.date_published, |published| entry.published = timestamp_rfc3339_lenient(&published));
 
-    if let Some(person) = handle_person(ji.author) {
-        entry.authors.push(person);
-    }
+    if_some_then(ji.date_modified, |modified| entry.updated = timestamp_rfc3339_lenient(&modified));
 
-    if let Some(tags) = ji.tags {
-        tags.into_iter().map(|t| Category::new(&t)).for_each(|category| entry.categories.push(category));
-    }
+    if_some_then(handle_person(ji.author), |person| entry.authors.push(person));
 
-    if let Some(attachments) = ji.attachments {
-        attachments.into_iter().map(handle_attachment).for_each(|link| entry.links.push(link))
-    }
+    if_some_then(ji.tags, |tags| tags.into_iter().map(|t| Category::new(&t)).for_each(|category| entry.categories.push(category)));
+
+    if_some_then(ji.attachments, |attachments| attachments.into_iter().map(handle_attachment).for_each(|link| entry.links.push(link)));
 
     Ok(entry)
 }

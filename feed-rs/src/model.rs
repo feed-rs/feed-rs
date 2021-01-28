@@ -5,6 +5,7 @@ use mime::Mime;
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
+use std::time::Duration;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -289,6 +290,13 @@ pub struct Entry {
     pub source: Option<String>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
     pub rights: Option<Text>,
+
+    /// Extension for MediaRSS - https://www.rssboard.org/media-rss
+    /// A MediaObject will be created in two cases:
+    /// 1) each "media:group" element encountered in the feed
+    /// 2) a default for any other "media:*" elements found at the item level
+    /// See the Atom tests for youtube and newscred for examples
+    pub media: Vec<MediaObject>,
 }
 
 impl Default for Entry {
@@ -306,6 +314,7 @@ impl Default for Entry {
             published: None,
             source: None,
             rights: None,
+            media: Vec::new(),
         }
     }
 }
@@ -647,6 +656,215 @@ impl Link {
     pub fn title(mut self, title: &str) -> Self {
         self.title = Some(title.to_owned());
         self
+    }
+}
+
+/// The top-level representation of a media object
+/// i.e. combines "media:*" elements from the RSS Media spec such as those under a media:group
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaObject {
+    /// Title of the object (from the media:title element)
+    pub title: Option<Text>,
+    /// The media:content element
+    pub content: Option<MediaContent>,
+    /// Representative images for the object (from media:thumbnail elements)
+    pub thumbnails: Vec<MediaThumbnail>,
+    /// A text transcript, closed captioning or lyrics of the media content.
+    pub texts: Vec<MediaText>,
+    /// Short description of the media object (from the media:description element)
+    pub description: Option<Text>,
+    /// Community info (from the media:community element)
+    pub community: Option<MediaCommunity>,
+    /// Credits
+    pub credits: Vec<MediaCredit>,
+}
+
+impl MediaObject {
+    pub(crate) fn new() -> MediaObject {
+        MediaObject {
+            title: None,
+            content: None,
+            thumbnails: Vec::new(),
+            texts: Vec::new(),
+            description: None,
+            community: None,
+            credits: Vec::new(),
+        }
+    }
+}
+
+#[cfg(test)]
+impl MediaObject {
+    pub fn community(mut self, community: MediaCommunity) -> Self {
+        self.community = Some(community);
+        self
+    }
+
+    pub fn content(mut self, content: MediaContent) -> Self {
+        self.content = Some(content);
+        self
+    }
+
+    pub fn credit(mut self, entity: &str) -> Self {
+        self.credits.push(MediaCredit::new(entity.to_string()));
+        self
+    }
+
+    pub fn description(mut self, description: &str) -> Self {
+        self.description = Some(Text::new(description.to_string()));
+        self
+    }
+
+    pub fn text(mut self, text: MediaText) -> Self {
+        self.texts.push(text);
+        self
+    }
+
+    pub fn thumbnail(mut self, thumbnail: MediaThumbnail) -> Self {
+        self.thumbnails.push(thumbnail);
+        self
+    }
+
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = Some(Text::new(title.to_string()));
+        self
+    }
+}
+
+/// Represents a "media:community" item from the RSS Media spec
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaCommunity {
+    /// Star rating
+    pub stars_avg: Option<f64>,
+    pub stars_count: Option<u64>,
+    pub stars_min: Option<u64>,
+    pub stars_max: Option<u64>,
+
+    /// Statistics on engagement
+    pub stats_views: Option<u64>,
+    pub stats_favorites: Option<u64>,
+}
+
+impl MediaCommunity {
+    pub(crate) fn new() -> MediaCommunity {
+        MediaCommunity {
+            stars_avg: None,
+            stars_count: None,
+            stars_min: None,
+            stars_max: None,
+            stats_views: None,
+            stats_favorites: None,
+        }
+    }
+}
+
+#[cfg(test)]
+impl MediaCommunity {
+    pub fn star_rating(mut self, count: u64, average: f64, min: u64, max: u64) -> Self {
+        self.stars_count = Some(count);
+        self.stars_avg = Some(average);
+        self.stars_min = Some(min);
+        self.stars_max = Some(max);
+        self
+    }
+
+    pub fn statistics(mut self, views: u64, favorites: u64) -> Self {
+        self.stats_views = Some(views);
+        self.stats_favorites = Some(favorites);
+        self
+    }
+}
+
+/// Represents a "media:content" item from the RSS Media spec
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaContent {
+    /// The direct URL
+    pub url: Option<String>,
+    /// Standard MIME type
+    pub content_type: Option<Mime>,
+    /// Height and width
+    pub height: Option<u32>,
+    pub width: Option<u32>,
+}
+
+#[cfg(test)]
+impl MediaContent {
+    pub fn content_type(mut self, content_type: &str) -> Self {
+        self.content_type = Some(content_type.parse::<Mime>().unwrap());
+        self
+    }
+
+    pub fn height(mut self, height: u32) -> Self {
+        self.height = Some(height);
+        self
+    }
+
+    pub fn url(mut self, url: &str) -> Self {
+        self.url = Some(url.to_string());
+        self
+    }
+
+    pub fn width(mut self, width: u32) -> Self {
+        self.width = Some(width);
+        self
+    }
+}
+
+impl MediaContent {
+    pub(crate) fn new() -> MediaContent {
+        MediaContent {
+            url: None,
+            content_type: None,
+            height: None,
+            width: None,
+        }
+    }
+}
+
+/// Represents a "media:credit" item from the RSS Media spec
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaCredit {
+    /// The entity being credited
+    pub entity: String,
+}
+
+impl MediaCredit {
+    pub(crate) fn new(entity: String) -> MediaCredit {
+        MediaCredit {
+            entity
+        }
+    }
+}
+
+/// Represents a "media:text" item from the RSS Media spec
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaText {
+    /// The text
+    pub text: Text,
+    /// The start time offset that the text starts being relevant to the media object.
+    pub start_time: Option<Duration>,
+    /// The end time that the text is relevant. If this attribute is not provided, and a start time is used, it is expected that the end time is either the end of the clip or the start of the next <media:text> element.
+    pub end_time: Option<Duration>,
+}
+
+impl MediaText {
+    pub(crate) fn new(text: Text) -> MediaText {
+        MediaText { text, start_time: None, end_time: None }
+    }
+}
+
+/// Represents a "media:thumbnail" item from the RSS Media spec
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaThumbnail {
+    /// The thumbnail image
+    pub image: Image,
+    /// The time this thumbnail represents
+    pub time: Option<Duration>,
+}
+
+impl MediaThumbnail {
+    pub(crate) fn new(image: Image) -> MediaThumbnail {
+        MediaThumbnail { image, time: None }
     }
 }
 

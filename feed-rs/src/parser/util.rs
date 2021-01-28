@@ -3,6 +3,7 @@ use crate::parser::ParseFeedResult;
 use crate::xml::Element;
 use chrono::{DateTime, Utc};
 use regex::Regex;
+use std::error::Error;
 use std::io::BufRead;
 use uuid::Uuid;
 
@@ -45,6 +46,20 @@ lazy_static! {
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.children_as_string()?.map(Text::new))
+}
+
+/// Simplifies the "if let ... = parse ... assign" block
+pub(crate) fn if_some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
+    if let Some(v) = v {
+        func(v)
+    }
+}
+
+/// Simplifies the "if let ... = parse ... assign" block
+pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>, func: F) {
+    if let Ok(v) = v {
+        func(Some(v))
+    }
 }
 
 /// Parses a timestamp from an RSS2 feed.

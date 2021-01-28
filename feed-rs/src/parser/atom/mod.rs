@@ -2,10 +2,12 @@ use std::io::BufRead;
 
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
-use crate::parser::util::timestamp_rfc3339_lenient;
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text, MediaObject};
+use crate::parser::mediarss;
+use crate::parser::util::{timestamp_rfc3339_lenient, if_some_then};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
-use crate::xml::Element;
+use crate::xml::{Element, NS};
+use crate::parser::mediarss::handle_media_element;
 
 #[cfg(test)]
 mod tests;
@@ -16,50 +18,31 @@ pub(crate) fn parse_feed<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> 
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "id") => {
-                if let Some(id) = child.child_as_text()? {
-                    feed.id = id
-                }
-            }
+            (None, "id") => if_some_then(child.child_as_text()?, |id| feed.id = id),
+
             (None, "title") => feed.title = handle_text(child)?,
-            (None, "updated") => {
-                if let Some(text) = child.child_as_text()? {
-                    feed.updated = timestamp_rfc3339_lenient(&text)
-                }
-            }
 
-            (None, "author") => {
-                if let Some(person) = handle_person(child)? {
-                    feed.authors.push(person)
-                }
-            }
-            (None, "link") => {
-                if let Some(link) = handle_link(child)? {
-                    feed.links.push(link)
-                }
-            }
+            (None, "updated") => if_some_then(child.child_as_text()?, |text| feed.updated = timestamp_rfc3339_lenient(&text)),
 
-            (None, "category") => {
-                if let Some(category) = handle_category(child)? {
-                    feed.categories.push(category)
-                }
-            }
-            (None, "contributor") => {
-                if let Some(person) = handle_person(child)? {
-                    feed.contributors.push(person)
-                }
-            }
+            (None, "author") => if_some_then(handle_person(child)?, |person| feed.authors.push(person)),
+
+            (None, "link") => if_some_then(handle_link(child)?, |link| feed.links.push(link)),
+
+            (None, "category") => if_some_then(handle_category(child)?, |category| feed.categories.push(category)),
+
+            (None, "contributor") => if_some_then(handle_person(child)?, |person| feed.contributors.push(person)),
+
             (None, "generator") => feed.generator = handle_generator(child)?,
+
             (None, "icon") => feed.icon = handle_image(child)?,
+
             (None, "logo") => feed.logo = handle_image(child)?,
+
             (None, "rights") => feed.rights = handle_text(child)?,
+
             (None, "subtitle") => feed.description = handle_text(child)?,
 
-            (None, "entry") => {
-                if let Some(entry) = handle_entry(child)? {
-                    feed.entries.push(entry)
-                }
-            }
+            (None, "entry") => if_some_then(handle_entry(child)?, |entry| feed.entries.push(entry)),
 
             // Nothing required for unknown elements
             _ => {}
@@ -75,9 +58,7 @@ pub(crate) fn parse_feed<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> 
 pub(crate) fn parse_entry<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
 
-    if let Some(entry) = handle_entry(root)? {
-        feed.entries.push(entry)
-    }
+    if_some_then(handle_entry(root)?, |entry| feed.entries.push(entry));
 
     Ok(feed)
 }
@@ -145,9 +126,11 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
                 element
                     .child_as_text()?
                     .map(|body| {
-                        let mut content = Content::default();
-                        content.body = Some(body);
-                        content.content_type = mime;
+                        let content = Content {
+                            body: Some(body),
+                            content_type: mime,
+                            ..Default::default()
+                        };
                         Some(content)
                     })
                     // The text is required for an inline text or base64 element
@@ -161,57 +144,51 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
 
 // Handles an Atom <entry>
 fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
-    let mut entry = Entry::default();
+    // Create a default MediaRSS content object for non-grouped elements
+    let mut media_obj = MediaObject::new();
 
+    // Parse the entry
+    let mut entry = Entry::default();
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
             // Extract the fields from the spec
-            (None, "id") => {
-                if let Some(id) = child.child_as_text()? {
-                    entry.id = id
-                }
-            }
-            (None, "title") => entry.title = handle_text(child)?,
-            (None, "updated") => {
-                if let Some(text) = child.child_as_text()? {
-                    entry.updated = timestamp_rfc3339_lenient(&text)
-                }
-            }
+            (None, "id") => if_some_then(child.child_as_text()?, |id| entry.id = id),
 
-            (None, "author") => {
-                if let Some(person) = handle_person(child)? {
-                    entry.authors.push(person)
-                }
-            }
+            (None, "title") => entry.title = handle_text(child)?,
+
+            (None, "updated") => if_some_then(child.child_as_text()?, |text| entry.updated = timestamp_rfc3339_lenient(&text)),
+
+            (None, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
+
             (None, "content") => entry.content = handle_content(child)?,
-            (None, "link") => {
-                if let Some(link) = handle_link(child)? {
-                    entry.links.push(link)
-                }
-            }
+
+            (None, "link") => if_some_then(handle_link(child)?, |link| entry.links.push(link)),
+
             (None, "summary") => entry.summary = handle_text(child)?,
 
-            (None, "category") => {
-                if let Some(category) = handle_category(child)? {
-                    entry.categories.push(category)
-                }
-            }
-            (None, "contributor") => {
-                if let Some(person) = handle_person(child)? {
-                    entry.contributors.push(person)
-                }
-            }
-            (None, "published") => {
-                if let Some(text) = child.child_as_text()? {
-                    entry.published = timestamp_rfc3339_lenient(&text)
-                }
-            }
+            (None, "category") => if_some_then(handle_category(child)?, |category| entry.categories.push(category)),
+
+            (None, "contributor") => if_some_then(handle_person(child)?, |person| entry.contributors.push(person)),
+
+            (None, "published") => if_some_then(child.child_as_text()?, |text| entry.published = timestamp_rfc3339_lenient(&text)),
+
             (None, "rights") => entry.rights = handle_text(child)?,
+
+            // MediaRSS group creates a new object for this group of elements
+            (Some(NS::MediaRSS), "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
+
+            // MediaRSS tags that are not grouped are parsed into the default object
+            (Some(NS::MediaRSS), _) => handle_media_element(child, &mut media_obj)?,
 
             // Nothing required for unknown elements
             _ => {}
         }
+    }
+
+    // If a media:content item was found in this entry, then attach it
+    if media_obj.content.is_some() {
+        entry.media.push(media_obj);
     }
 
     Ok(Some(entry))
