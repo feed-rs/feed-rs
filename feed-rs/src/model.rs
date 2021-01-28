@@ -5,6 +5,7 @@ use mime::Mime;
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
+use std::time::Duration;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -841,9 +842,9 @@ pub struct MediaText {
     /// The text
     pub text: Text,
     /// The start time offset that the text starts being relevant to the media object.
-    pub start_time: Option<String>,
+    pub start_time: Option<Duration>,
     /// The end time that the text is relevant. If this attribute is not provided, and a start time is used, it is expected that the end time is either the end of the clip or the start of the next <media:text> element.
-    pub end_time: Option<String>,
+    pub end_time: Option<Duration>,
 }
 
 impl MediaText {
@@ -858,7 +859,7 @@ pub struct MediaThumbnail {
     /// The thumbnail image
     pub image: Image,
     /// The time this thumbnail represents
-    pub time: Option<String>,
+    pub time: Option<Duration>,
 }
 
 impl MediaThumbnail {
