@@ -1,4 +1,6 @@
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaThumbnail, Person, Text, MediaText};
+use crate::model::{
+    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaText, MediaThumbnail, Person, Text,
+};
 use crate::parser;
 use crate::util::test;
 

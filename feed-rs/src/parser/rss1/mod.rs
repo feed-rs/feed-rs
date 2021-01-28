@@ -3,7 +3,7 @@ use std::io::BufRead;
 use chrono::{DateTime, Utc};
 
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::util::{timestamp_rfc2822_lenient, if_some_then};
+use crate::parser::util::{if_some_then, timestamp_rfc2822_lenient};
 use crate::parser::{util, ParseFeedResult};
 use crate::xml::{Element, NS};
 

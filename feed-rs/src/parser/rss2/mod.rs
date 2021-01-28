@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
-use crate::parser::util::{timestamp_rfc2822_lenient, if_some_then, if_ok_then_some};
+use crate::parser::util::{if_ok_then_some, if_some_then, timestamp_rfc2822_lenient};
 use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 
@@ -142,15 +142,19 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 
             (None, "link") => if_some_then(child.child_as_text()?, |uri| image.link = Some(Link::new(uri))),
 
-            (None, "width") => if_some_then(child.child_as_text()?, |width| if let Ok(width) = width.parse::<u32>() {
-                if width > 0 && width <= 144 {
-                    image.width = Some(width)
+            (None, "width") => if_some_then(child.child_as_text()?, |width| {
+                if let Ok(width) = width.parse::<u32>() {
+                    if width > 0 && width <= 144 {
+                        image.width = Some(width)
+                    }
                 }
             }),
 
-            (None, "height") => if_some_then(child.child_as_text()?, |height| if let Ok(height) = height.parse::<u32>() {
-                if height > 0 && height <= 400 {
-                    image.height = Some(height)
+            (None, "height") => if_some_then(child.child_as_text()?, |height| {
+                if let Ok(height) = height.parse::<u32>() {
+                    if height > 0 && height <= 400 {
+                        image.height = Some(height)
+                    }
                 }
             }),
 
@@ -180,7 +184,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
         match child.ns_and_tag() {
             (None, "title") => entry.title = handle_text(child)?,
 
-            (None, "link") => if_some_then(handle_link(child)?, |link| entry.links.push(link) ),
+            (None, "link") => if_some_then(handle_link(child)?, |link| entry.links.push(link)),
 
             (None, "description") => entry.summary = util::handle_encoded(child)?,
 

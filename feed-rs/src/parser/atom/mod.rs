@@ -2,12 +2,12 @@ use std::io::BufRead;
 
 use mime::Mime;
 
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text, MediaObject};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaObject, Person, Text};
 use crate::parser::mediarss;
-use crate::parser::util::{timestamp_rfc3339_lenient, if_some_then};
+use crate::parser::mediarss::handle_media_element;
+use crate::parser::util::{if_some_then, timestamp_rfc3339_lenient};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
-use crate::parser::mediarss::handle_media_element;
 
 #[cfg(test)]
 mod tests;

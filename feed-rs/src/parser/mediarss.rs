@@ -1,13 +1,13 @@
 use std::io::BufRead;
 
-use crate::model::{Image, MediaCommunity, MediaContent, MediaObject, MediaThumbnail, Text, MediaCredit, MediaText};
+use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 use mime::Mime;
-use std::time::Duration;
-use regex::{Regex, Captures};
+use regex::{Captures, Regex};
 use std::ops::Add;
+use std::time::Duration;
 
 // TODO find an RSS feed with media tags in it
 // TODO When an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
@@ -131,8 +131,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
 
 // Handles the "media:credit" element
 fn handle_media_credit<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaCredit>> {
-    Ok(element.child_as_text()?
-        .map(MediaCredit::new))
+    Ok(element.child_as_text()?.map(MediaCredit::new))
 }
 
 // Handles the "media:text" element
@@ -145,30 +144,31 @@ fn handle_media_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<
             match attr.name.as_str() {
                 "start" => if_some_then(parse_npt(&attr.value), |npt| start_time = Some(npt)),
                 "end" => if_some_then(parse_npt(&attr.value), |npt| end_time = Some(npt)),
-                "type" => mime = match attr.value.as_str() {
-                    "plain" => Some(mime::TEXT_PLAIN),
-                    "html" => Some(mime::TEXT_HTML),
-                    _ => None
-                },
+                "type" => {
+                    mime = match attr.value.as_str() {
+                        "plain" => Some(mime::TEXT_PLAIN),
+                        "html" => Some(mime::TEXT_HTML),
+                        _ => None,
+                    }
+                }
 
                 // Nothing required for unknown attributes
                 _ => {}
             }
         }
 
-        element.child_as_text()?
-            .map(|t| {
-                // Parse out the actual text of this element
-                let mut text = Text::new(t);
-                text.content_type = mime.map_or(mime::TEXT_PLAIN, |m| m);
-                let mut media_text = MediaText::new(text);
+        element.child_as_text()?.map(|t| {
+            // Parse out the actual text of this element
+            let mut text = Text::new(t);
+            text.content_type = mime.map_or(mime::TEXT_PLAIN, |m| m);
+            let mut media_text = MediaText::new(text);
 
-                // Add the time boundaries if we found them
-                media_text.start_time = start_time;
-                media_text.end_time = end_time;
+            // Add the time boundaries if we found them
+            media_text.start_time = start_time;
+            media_text.end_time = end_time;
 
-                media_text
-            })
+            media_text
+        })
     };
 
     Ok(media_text)
@@ -233,7 +233,6 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
         // Need the text for a text element
         .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))
 }
-
 
 lazy_static! {
     // Initialise the set of regular expressions we use to parse the NPT format
@@ -310,7 +309,10 @@ mod tests {
     #[test]
     fn test_parse_npt() {
         assert_eq!(parse_npt("12:05:35").unwrap(), Duration::from_secs(12 * 3600 + 5 * 60 + 35));
-        assert_eq!(parse_npt("12:05:35.123").unwrap(), Duration::from_millis(12 * 3600000 + 5 * 60000 + 35 * 1000 + 123));
+        assert_eq!(
+            parse_npt("12:05:35.123").unwrap(),
+            Duration::from_millis(12 * 3600000 + 5 * 60000 + 35 * 1000 + 123)
+        );
         assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
     }
 }

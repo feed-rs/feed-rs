@@ -830,9 +830,7 @@ pub struct MediaCredit {
 
 impl MediaCredit {
     pub(crate) fn new(entity: String) -> MediaCredit {
-        MediaCredit {
-            entity
-        }
+        MediaCredit { entity }
     }
 }
 
@@ -849,7 +847,11 @@ pub struct MediaText {
 
 impl MediaText {
     pub(crate) fn new(text: Text) -> MediaText {
-        MediaText { text, start_time: None, end_time: None }
+        MediaText {
+            text,
+            start_time: None,
+            end_time: None,
+        }
     }
 }
 
