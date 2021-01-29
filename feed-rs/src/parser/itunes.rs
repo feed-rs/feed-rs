@@ -1,4 +1,4 @@
-use crate::model::{Image, MediaCredit, MediaContent, MediaObject, MediaThumbnail};
+use crate::model::{Image, MediaContent, MediaCredit, MediaObject, MediaThumbnail};
 use crate::parser::atom::handle_text;
 use crate::parser::util::{if_some_then, parse_npt};
 use crate::parser::ParseFeedResult;

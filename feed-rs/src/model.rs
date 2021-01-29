@@ -390,6 +390,11 @@ impl Entry {
         self.updated = timestamp_rfc3339_lenient(updated);
         self
     }
+
+    pub fn media(mut self, media: MediaObject) -> Self {
+        self.media.push(media);
+        self
+    }
 }
 
 /// Represents the category of a feed or entry

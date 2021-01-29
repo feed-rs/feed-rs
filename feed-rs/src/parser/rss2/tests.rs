@@ -1,4 +1,4 @@
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
+use crate::model::*;
 use crate::parser;
 use crate::util::test;
 
@@ -64,7 +64,11 @@ fn test_example_2() {
                 .content_type("image/jpeg"))
             .id("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ")
             .published_rfc2822("Thu, 01 Aug 2019 16:15 EDT")
-            .updated(actual.updated));
+            .updated(actual.updated)
+            .media(MediaObject::new()
+                .content(MediaContent::new()
+                    .url("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
+                    .content_type("image/jpeg"))));
 
     // Check
     assert_eq!(actual, expected);
