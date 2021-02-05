@@ -9,8 +9,8 @@ jobs:
       matrix:
         rust:
           - stable
-          - beta
-          - nightly
+#          - beta
+#          - nightly
           - 1.48.0  # Used in freedesktop sdk - tracks https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/components/rust.bst#L114
 
     steps:
