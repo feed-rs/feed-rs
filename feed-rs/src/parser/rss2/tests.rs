@@ -283,3 +283,12 @@ fn test_encoding_1() {
     let feed = parser::parse(test_data.as_slice()).unwrap();
     assert_eq!(feed.title.unwrap().content, "RSS Feed do Site Inovação Tecnológica");
 }
+
+// Verifies we extract the content:encoded element
+#[test]
+fn test_heated() {
+    let test_data = test::fixture_as_raw("rss_2.0_heated.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+    let content = &feed.entries[0].content.as_ref().unwrap();
+    assert!(content.body.as_ref().unwrap().contains("I have some good news and some bad news"));
+}
