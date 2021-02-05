@@ -390,6 +390,11 @@ impl Entry {
         self.updated = timestamp_rfc3339_lenient(updated);
         self
     }
+
+    pub fn media(mut self, media: MediaObject) -> Self {
+        self.media.push(media);
+        self
+    }
 }
 
 /// Represents the category of a feed or entry
@@ -785,6 +790,8 @@ pub struct MediaContent {
     /// Height and width
     pub height: Option<u32>,
     pub width: Option<u32>,
+    /// Duration the media plays
+    pub duration: Option<Duration>,
 }
 
 #[cfg(test)]
@@ -808,6 +815,11 @@ impl MediaContent {
         self.width = Some(width);
         self
     }
+
+    pub fn duration(mut self, duration: Duration) -> Self {
+        self.duration = Some(duration);
+        self
+    }
 }
 
 impl MediaContent {
@@ -817,6 +829,7 @@ impl MediaContent {
             content_type: None,
             height: None,
             width: None,
+            duration: None,
         }
     }
 }

@@ -322,6 +322,8 @@ pub(crate) enum NS {
     DublinCore,
     // http://search.yahoo.com/mrss/
     MediaRSS,
+    // http://www.itunes.com/dtds/podcast-1.0.dtd
+    Itunes,
 }
 
 impl NS {
@@ -330,6 +332,7 @@ impl NS {
             "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
             "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
             "http://search.yahoo.com/mrss/" => Some(NS::MediaRSS),
+            "http://www.itunes.com/dtds/podcast-1.0.dtd" => Some(NS::Itunes),
             _ => None,
         }
     }

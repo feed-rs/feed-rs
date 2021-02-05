@@ -2,9 +2,11 @@ use crate::model::Text;
 use crate::parser::ParseFeedResult;
 use crate::xml::Element;
 use chrono::{DateTime, Utc};
-use regex::Regex;
+use regex::{Captures, Regex};
 use std::error::Error;
 use std::io::BufRead;
+use std::ops::Add;
+use std::time::Duration;
 use uuid::Uuid;
 
 lazy_static! {
@@ -96,6 +98,73 @@ pub(crate) fn uuid_gen() -> String {
     Uuid::new_v4().to_string()
 }
 
+lazy_static! {
+    // Initialise the set of regular expressions we use to parse the NPT format
+    // See "3.6 Normal Play Time" in https://www.ietf.org/rfc/rfc2326.txt
+    static ref NPT_HHMMSS: Regex = {
+        // Extract hours (h), minutes (m), seconds (s) and fractional seconds (f)
+        Regex::new(r#"(?P<h>\d+):(?P<m>\d{2}):(?P<s>\d{2})(\.(?P<f>\d+))?"#).unwrap()
+    };
+    static ref NPT_SEC: Regex = {
+        // Extract seconds (s) and fractional seconds (f)
+        Regex::new(r#"(?P<s>\d+)(\.(?P<f>\d+))?"#).unwrap()
+    };
+}
+
+/// Parses "normal play time" per the RSS media spec
+/// NPT has a second or sub-second resolution. It is specified as H:M:S.h (npt-hhmmss) or S.h (npt-sec), where H=hours, M=minutes, S=second and h=fractions of a second.
+pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
+    // Try npt-hhmmss format first
+    if let Some(captures) = NPT_HHMMSS.captures(text) {
+        let h = captures.name("h");
+        let m = captures.name("m");
+        let s = captures.name("s");
+
+        if let (Some(h), Some(m), Some(s)) = (h, m, s) {
+            // Parse the hours, minutes and seconds
+            let mut seconds = s.as_str().parse::<u64>().unwrap();
+            seconds += m.as_str().parse::<u64>().unwrap() * 60;
+            seconds += h.as_str().parse::<u64>().unwrap() * 3600;
+            let mut duration = Duration::from_secs(seconds);
+
+            // Add fractional seconds if present
+            duration = parse_npt_add_frac_sec(duration, captures);
+
+            return Some(duration);
+        }
+    }
+
+    // Next try npt-sec
+    if let Some(captures) = NPT_SEC.captures(text) {
+        if let Some(s) = captures.name("s") {
+            // Parse the seconds
+            let seconds = s.as_str().parse::<u64>().unwrap();
+            let mut duration = Duration::from_secs(seconds);
+
+            // Add fractional seconds if present
+            duration = parse_npt_add_frac_sec(duration, captures);
+
+            return Some(duration);
+        }
+    }
+
+    // Just drop it
+    None
+}
+
+// Adds the fractional seconds if present
+fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
+    if let Some(frac) = captures.name("f") {
+        let frac = frac.as_str();
+        let denom = 10f32.powi(frac.len() as i32);
+        let num = frac.parse::<f32>().unwrap();
+        let millis = (1000f32 * (num / denom)) as u64;
+        duration.add(Duration::from_millis(millis))
+    } else {
+        duration
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use chrono::{TimeZone, Utc};
@@ -145,5 +214,16 @@ mod tests {
             let parsed = timestamp_rfc3339_lenient(source).expect(&format!("failed to parse {}", source));
             assert_eq!(parsed, expected);
         }
+    }
+
+    // Verify we can parse NPT times
+    #[test]
+    fn test_parse_npt() {
+        assert_eq!(parse_npt("12:05:35").unwrap(), Duration::from_secs(12 * 3600 + 5 * 60 + 35));
+        assert_eq!(
+            parse_npt("12:05:35.123").unwrap(),
+            Duration::from_millis(12 * 3600000 + 5 * 60000 + 35 * 1000 + 123)
+        );
+        assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
     }
 }

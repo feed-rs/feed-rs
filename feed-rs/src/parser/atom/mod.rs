@@ -272,7 +272,7 @@ fn handle_person<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Pers
 }
 
 // Directly handles an Atom <title>, <summary>, <rights> or <subtitle> element
-fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
+pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     // Find type, defaulting to "text" if not present
     let type_attr = element.attributes.iter().find(|a| &a.name == "type").map_or("text", |a| a.value.as_str());
 

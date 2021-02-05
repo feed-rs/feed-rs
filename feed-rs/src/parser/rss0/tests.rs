@@ -1,4 +1,4 @@
-use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
+use crate::model::*;
 use crate::parser;
 use crate::util::test;
 
@@ -95,7 +95,11 @@ fn test_0_92_spec_1() {
                 .length(6666097)
                 .content_type("audio/mpeg"))
             .id(entry1.id.as_ref())     // not in source data
-            .updated(entry1.updated))   // not in source data
+            .updated(entry1.updated)   // not in source data
+            .media(MediaObject::new()
+                .content(MediaContent::new()
+                    .url("http://www.scripting.com/mp3s/theOtherOne.mp3")
+                    .content_type("audio/mpeg"))))
         .entry(Entry::default()
             .summary(Text::new("This is a test of a change I just made. Still diggin..".into()))
             .id(entry2.id.as_ref())     // not in source data
