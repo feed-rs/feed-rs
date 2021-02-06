@@ -213,8 +213,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
         }
     }
 
-    // If we have an enclosure insert a media element based on (optional)
-    // itunes data.
+    // If we have an enclosure insert a media element based on (optional) itunes data.
     if let Some(ref content) = entry.content {
         if let Some(ref src) = content.src {
             let media_content = media_obj.content.get_or_insert_with(MediaContent::new);
@@ -222,16 +221,16 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
             media_content.url = Some(src.clone().href);
             entry.media.push(media_obj);
         }
-    } else {
-        // Use content_encoded if we didn't find an enclosure above
-        if let Some(ce) = content_encoded {
-            entry.content = Some(Content {
-                body: Some(ce.content),
-                content_type: ce.content_type,
-                length: None,
-                src: ce.src.map(Link::new),
-            });
-        }
+    }
+
+    // Use content_encoded if we didn't find an enclosure above
+    if let Some(ce) = content_encoded {
+        entry.content = Some(Content {
+            body: Some(ce.content),
+            content_type: ce.content_type,
+            length: None,
+            src: ce.src.map(Link::new),
+        });
     }
 
     Ok(Some(entry))
