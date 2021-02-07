@@ -792,6 +792,8 @@ pub struct MediaContent {
     pub width: Option<u32>,
     /// Duration the media plays
     pub duration: Option<Duration>,
+    /// Size of media in bytes
+    pub size: Option<u64>,
 }
 
 #[cfg(test)]
@@ -820,6 +822,11 @@ impl MediaContent {
         self.duration = Some(duration);
         self
     }
+
+    pub fn size(mut self, size: u64) -> Self {
+        self.size = Some(size);
+        self
+    }
 }
 
 impl MediaContent {
@@ -830,6 +837,7 @@ impl MediaContent {
             height: None,
             width: None,
             duration: None,
+            size: None,
         }
     }
 }

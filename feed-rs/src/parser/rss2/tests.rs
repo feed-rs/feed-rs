@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::model::*;
 use crate::parser;
 use crate::util::test;
@@ -68,7 +70,8 @@ fn test_example_2() {
             .media(MediaObject::new()
                 .content(MediaContent::new()
                     .url("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
-                    .content_type("image/jpeg"))));
+                    .content_type("image/jpeg")
+                    .size(892854))));
 
     // Check
     assert_eq!(actual, expected);
@@ -291,4 +294,56 @@ fn test_heated() {
     let feed = parser::parse(test_data.as_slice()).unwrap();
     let content = &feed.entries[0].content.as_ref().unwrap();
     assert!(content.body.as_ref().unwrap().contains("I have some good news and some bad news"));
+}
+
+// Verifies that we can handle mixed MediaRSS and itunes/enclosure
+#[test]
+fn test_spiegel() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("rss_2.0_spiegel.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Expected feed
+    let expected = Feed::new(FeedType::RSS2)
+        .id(actual.id.as_ref()) // not present in the test data
+        .title(Text::new("SPIEGEL Update – Die Nachrichten".into()))
+        .link(Link::new("https://www.spiegel.de/thema/spiegel-update/".into()))
+        .description(Text::new("<p>Die wichtigsten Nachrichten des Tages &ndash; erg&auml;nzt um Meinungen und Empfehlungen aus der SPIEGEL-Redaktion. Wochentags aktualisieren wir morgens, mittags und abends unsere Meldungen. Am Wochenende blicken wir zur&uuml;ck auf die vergangene Woche &ndash; und erkl&auml;ren, was in der n&auml;chsten Woche wichtig wird.</p>".into()))
+        .language("de")
+        .logo(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())
+                .title("SPIEGEL Update – Die Nachrichten")
+                .link("https://www.spiegel.de/thema/spiegel-update/")
+        )
+        .rights(Text::new("2021 DER SPIEGEL GmbH & Co. KG".into()))
+        .entry(
+            Entry::default()
+            .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into()))
+            .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri".into()))
+            .summary(Text::new("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
+            .content(Content::default()
+                .body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#))
+            .published_rfc3339("2021-02-06T23:01:00Z")
+            .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
+            .media(MediaObject::new()
+                .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into())
+                .content(MediaContent::new()
+                    .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510")
+                    .content_type("audio/mpeg")
+                    .duration(Duration::from_secs(312))
+                    .size(2519606)
+                )
+                .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())))
+                .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into())
+                .credit("DER SPIEGEL")
+            )
+            .media(MediaObject::new()
+                .content(MediaContent::new()
+                    .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())
+                    .content_type("image/jpeg")
+                )
+            )
+        );
+
+    // Check
+    assert_eq!(actual, expected);
 }
