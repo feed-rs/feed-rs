@@ -1,4 +1,5 @@
 use std::io::BufRead;
+use std::time::Duration;
 
 use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
@@ -102,6 +103,10 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
 
             "width" => if_ok_then_some(attr.value.parse::<u32>(), |v| content.width = v),
             "height" => if_ok_then_some(attr.value.parse::<u32>(), |v| content.height = v),
+
+            "fileSize" => if_ok_then_some(attr.value.parse::<u64>(), |v| content.size = v),
+
+            "duration" => if_ok_then_some(attr.value.parse::<u64>(), |v| content.duration = v.map(Duration::from_secs)),
 
             // Nothing required for unknown elements
             _ => {}

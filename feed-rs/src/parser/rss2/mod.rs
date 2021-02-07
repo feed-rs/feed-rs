@@ -5,6 +5,8 @@ use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person, Text};
 use crate::parser::itunes::handle_itunes_element;
+use crate::parser::mediarss;
+use crate::parser::mediarss::handle_media_element;
 use crate::parser::util::{if_ok_then_some, if_some_then, timestamp_rfc2822_lenient};
 use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
@@ -111,15 +113,15 @@ fn handle_generator<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<G
 }
 
 // Handles <enclosure>
-fn handle_enclosure<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
-    let mut content = Content::default();
+fn handle_enclosure<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaContent>> {
+    let mut content = MediaContent::new();
 
     for attr in element.attributes {
         let tag_name = attr.name.as_str();
         match tag_name {
-            "url" => content.src = Some(Link::new(attr.value.clone())),
-            "length" => content.length = attr.value.parse::<u64>().ok(),
-            "type" => if_ok_then_some(attr.value.parse::<Mime>(), |mime| content.content_type = mime.unwrap()),
+            "url" => content.url = Some(attr.value),
+            "length" => content.size = attr.value.parse::<u64>().ok(),
+            "type" => if_ok_then_some(attr.value.parse::<Mime>(), |mime| content.content_type = mime),
 
             // Nothing required for unknown elements
             _ => {}
@@ -127,7 +129,7 @@ fn handle_enclosure<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<C
     }
 
     // No point returning the enclosure if we don't have a URL
-    Ok(if content.src.is_some() { Some(content) } else { None })
+    Ok(if content.url.is_some() { Some(content) } else { None })
 }
 
 // Handles <image>
@@ -170,18 +172,27 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
     Ok(if !image.uri.is_empty() { Some(image) } else { None })
 }
 
+// Handles <content:encoded>
+fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
+    Ok(element.children_as_string()?.map(|string| Content {
+        body: Some(string),
+        content_type: mime::TEXT_PLAIN,
+        ..Default::default()
+    }))
+}
+
 // Handles <item>
 fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
-    // Per https://www.rssboard.org/rss-profile#namespace-elements-content-encoded:
-    //   The content:encoded element can be used in conjunction with the description element to provide an item's full content along with a shorter summary. Under this approach, the complete text of the item is presented in content:encoded and the summary in description.
-    // But the standard also allows an enclosure, which is the content of the item
-    // So we will keep content:encoded aside during the parse, and use it as the content if we didn't find an enclosure
-    let mut content_encoded: Option<Text> = None;
+    // Create a default media content object for <itunes> elements.
+    let mut media_itunes = MediaObject::new();
 
-    // Create a default MediaRSS content object for <itunes> elements.
-    let mut media_obj = MediaObject::new();
+    // Create another default object for actual MediaRSS elements.
+    let mut media_rss = MediaObject::new();
+
+    // <enclosure> is used as media element and content fallback.
+    let mut enclosure = None;
 
     for child in element.children() {
         let child = child?;
@@ -198,39 +209,49 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (None, "guid") => if_some_then(child.child_as_text()?, |guid| entry.id = guid),
 
-            (None, "enclosure") => entry.content = handle_enclosure(child)?,
+            (None, "enclosure") => enclosure = handle_enclosure(child)?,
 
             (None, "pubDate") => entry.published = handle_timestamp(child),
 
-            (Some(NS::Content), "encoded") => content_encoded = util::handle_encoded(child)?,
+            (Some(NS::Content), "encoded") => entry.content = handle_content(child)?,
 
             (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text()?, |name| entry.authors.push(Person::new(&name))),
 
-            (Some(NS::Itunes), _) => handle_itunes_element(child, &mut media_obj)?,
+            (Some(NS::Itunes), _) => handle_itunes_element(child, &mut media_itunes)?,
+
+            // MediaRSS group creates a new object for this group of elements
+            (Some(NS::MediaRSS), "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
+
+            // MediaRSS tags that are not grouped are parsed into the default object
+            (Some(NS::MediaRSS), _) => handle_media_element(child, &mut media_rss)?,
 
             // Nothing required for unknown elements
             _ => {}
         }
     }
 
-    // If we have an enclosure insert a media element based on (optional) itunes data.
-    if let Some(ref content) = entry.content {
-        if let Some(ref src) = content.src {
-            let media_content = media_obj.content.get_or_insert_with(MediaContent::new);
-            media_content.content_type = Some(content.content_type.clone());
-            media_content.url = Some(src.clone().href);
-            entry.media.push(media_obj);
+    // If we have an enclosure insert it as media with optional additonal itunes data.
+    if let Some(enclosure) = enclosure {
+        let content = media_itunes.content.get_or_insert_with(MediaContent::new);
+        content.content_type = enclosure.content_type.clone();
+        content.url = enclosure.url.clone();
+        content.size = enclosure.size;
+        entry.media.push(media_itunes);
+
+        // Also use the enclosue as content when none exist so far.
+        if entry.content.is_none() {
+            entry.content = Some(Content {
+                src: Some(Link::new(enclosure.url.unwrap())),
+                content_type: enclosure.content_type.unwrap_or(mime::TEXT_PLAIN),
+                length: enclosure.size,
+                ..Default::default()
+            });
         }
     }
 
-    // Use content_encoded if we didn't find an enclosure above
-    if let Some(ce) = content_encoded {
-        entry.content = Some(Content {
-            body: Some(ce.content),
-            content_type: ce.content_type,
-            length: None,
-            src: ce.src.map(Link::new),
-        });
+    // If a media:content item with content exists, then attach it as well.
+    if media_rss.content.is_some() {
+        entry.media.push(media_rss);
     }
 
     Ok(Some(entry))
