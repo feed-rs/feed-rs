@@ -259,7 +259,7 @@ pub struct Entry {
     pub authors: Vec<Person>,
     /// The content of the item
     /// * Atom (recommended): Contains or links to the complete content of the entry.
-    /// * RSS 2 (optional) "enclosure": Describes a media object that is attached to the item.
+    /// * RSS 2 (optional) "content:encoded": The HTML form of the content
     /// * JSON Feed: the html content of the item, or the text content if no html is specified
     pub content: Option<Content>,
     /// Links associated with this item
@@ -670,8 +670,10 @@ impl Link {
 pub struct MediaObject {
     /// Title of the object (from the media:title element)
     pub title: Option<Text>,
-    /// The media:content element
-    pub content: Option<MediaContent>,
+    /// Collection of the media content elements
+    pub content: Vec<MediaContent>,
+    /// Duration of the object
+    pub duration: Option<Duration>,
     /// Representative images for the object (from media:thumbnail elements)
     pub thumbnails: Vec<MediaThumbnail>,
     /// A text transcript, closed captioning or lyrics of the media content.
@@ -684,11 +686,12 @@ pub struct MediaObject {
     pub credits: Vec<MediaCredit>,
 }
 
-impl MediaObject {
-    pub(crate) fn new() -> MediaObject {
+impl Default for MediaObject {
+    fn default() -> Self {
         MediaObject {
             title: None,
-            content: None,
+            content: Vec::new(),
+            duration: None,
             thumbnails: Vec::new(),
             texts: Vec::new(),
             description: None,
@@ -706,7 +709,7 @@ impl MediaObject {
     }
 
     pub fn content(mut self, content: MediaContent) -> Self {
-        self.content = Some(content);
+        self.content.push(content);
         self
     }
 
@@ -717,6 +720,11 @@ impl MediaObject {
 
     pub fn description(mut self, description: &str) -> Self {
         self.description = Some(Text::new(description.to_string()));
+        self
+    }
+
+    pub fn duration(mut self, duration: Duration) -> Self {
+        self.duration = Some(duration);
         self
     }
 

@@ -1,4 +1,4 @@
-use crate::model::{Image, MediaContent, MediaCredit, MediaObject, MediaThumbnail};
+use crate::model::{Image, MediaCredit, MediaObject, MediaThumbnail};
 use crate::parser::atom::handle_text;
 use crate::parser::util::{if_some_then, parse_npt};
 use crate::parser::ParseFeedResult;
@@ -42,7 +42,6 @@ fn handle_itunes_author<R: BufRead>(element: Element<R>) -> ParseFeedResult<Opti
 }
 
 // Process <itunes> elements and turn them into something that looks like MediaRSS objects.
-// This is used to enrich <content:enclosure> in the RSS2 feed.
 pub(crate) fn handle_itunes_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
     match element.ns_and_tag() {
         (Some(NS::Itunes), "title") => media_obj.title = handle_text(element)?,
@@ -50,7 +49,7 @@ pub(crate) fn handle_itunes_element<R: BufRead>(element: Element<R>, media_obj: 
         (Some(NS::Itunes), "image") => if_some_then(handle_itunes_image(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
 
         (Some(NS::Itunes), "duration") => if_some_then(handle_itunes_duration(element)?, |duration| {
-            media_obj.content.get_or_insert_with(MediaContent::new).duration = Some(duration)
+            media_obj.duration = Some(duration)
         }),
 
         (Some(NS::Itunes), "author") => if_some_then(handle_itunes_author(element)?, |credit| media_obj.credits.push(credit)),

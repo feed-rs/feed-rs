@@ -1,8 +1,7 @@
-use std::time::Duration;
-
 use crate::model::*;
 use crate::parser;
 use crate::util::test;
+use std::time::Duration;
 
 // Basic example from various sources (Wikipedia etc).
 #[test]
@@ -60,14 +59,10 @@ fn test_example_2() {
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
                 depart the orbiting laboratory Tuesday, Aug. 6.
             "#.to_owned()))
-            .content(Content::default()
-                .src("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
-                .length(892854)
-                .content_type("image/jpeg"))
             .id("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ")
             .published_rfc2822("Thu, 01 Aug 2019 16:15 EDT")
             .updated(actual.updated)
-            .media(MediaObject::new()
+            .media(MediaObject::default()
                 .content(MediaContent::new()
                     .url("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
                     .content_type("image/jpeg")
@@ -246,7 +241,7 @@ fn test_spec_1() {
                     r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>
             "#
-                    .to_owned(),
+                        .to_owned(),
                 ))
                 .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
@@ -259,7 +254,7 @@ fn test_spec_1() {
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation."
             "#
-                    .to_owned(),
+                        .to_owned(),
                 ))
                 .published_rfc2822("Mon, 30 Sep 2002 01:52:02 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
@@ -306,42 +301,47 @@ fn test_spiegel() {
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref()) // not present in the test data
+        .language("de")
         .title(Text::new("SPIEGEL Update – Die Nachrichten".into()))
         .link(Link::new("https://www.spiegel.de/thema/spiegel-update/".into()))
         .description(Text::new("<p>Die wichtigsten Nachrichten des Tages &ndash; erg&auml;nzt um Meinungen und Empfehlungen aus der SPIEGEL-Redaktion. Wochentags aktualisieren wir morgens, mittags und abends unsere Meldungen. Am Wochenende blicken wir zur&uuml;ck auf die vergangene Woche &ndash; und erkl&auml;ren, was in der n&auml;chsten Woche wichtig wird.</p>".into()))
-        .language("de")
-        .logo(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())
-                .title("SPIEGEL Update – Die Nachrichten")
-                .link("https://www.spiegel.de/thema/spiegel-update/")
-        )
         .rights(Text::new("2021 DER SPIEGEL GmbH & Co. KG".into()))
+        .logo(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())
+            .title("SPIEGEL Update – Die Nachrichten")
+            .link("https://www.spiegel.de/thema/spiegel-update/")
+        )
         .entry(
             Entry::default()
-            .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into()))
-            .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri".into()))
-            .summary(Text::new("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
-            .content(Content::default()
-                .body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#))
-            .published_rfc3339("2021-02-06T23:01:00Z")
-            .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
-            .media(MediaObject::new()
-                .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into())
-                .content(MediaContent::new()
-                    .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510")
-                    .content_type("audio/mpeg")
+                .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into()))
+                .content(Content::default().body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#))
+                .summary(Text::new("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
+                .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri".into()))
+                .published_rfc3339("2021-02-06T23:01:00Z")
+                .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
+                // <enclosure>
+                .media(MediaObject::default()
+                    .content(MediaContent::new()
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510".into())
+                        .size(2519606)
+                        .content_type("audio/mpeg")
+                    )
+                )
+                // media: and itunes: tags
+                .media(MediaObject::default()
+                    .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into())
+                    .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into())
+                    .credit("DER SPIEGEL")
+                    .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())))
+                    .content(MediaContent::new()
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510".into())
+                        .content_type("audio/mpeg")
+                    )
+                    .content(MediaContent::new()
+                        .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())
+                        .content_type("image/jpeg")
+                    )
                     .duration(Duration::from_secs(312))
-                    .size(2519606)
                 )
-                .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())))
-                .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into())
-                .credit("DER SPIEGEL")
-            )
-            .media(MediaObject::new()
-                .content(MediaContent::new()
-                    .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())
-                    .content_type("image/jpeg")
-                )
-            )
         );
 
     // Check

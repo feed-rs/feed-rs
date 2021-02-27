@@ -13,7 +13,7 @@ use mime::Mime;
 
 /// Handles the top-level "media:group", a collection of mediarss elements.
 pub(crate) fn handle_media_group<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaObject>> {
-    let mut media_obj = MediaObject::new();
+    let mut media_obj = MediaObject::default();
 
     for child in element.children() {
         let child = child?;
@@ -125,7 +125,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
         }
 
         // We will emit this parsed content
-        media_obj.content = Some(content);
+        media_obj.content.push(content);
     }
 
     Ok(())

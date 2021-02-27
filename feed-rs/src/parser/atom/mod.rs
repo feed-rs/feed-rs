@@ -145,7 +145,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
 // Handles an Atom <entry>
 fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     // Create a default MediaRSS content object for non-grouped elements
-    let mut media_obj = MediaObject::new();
+    let mut media_obj = MediaObject::default();
 
     // Parse the entry
     let mut entry = Entry::default();
@@ -187,7 +187,7 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
     }
 
     // If a media:content item was found in this entry, then attach it
-    if media_obj.content.is_some() {
+    if !media_obj.content.is_empty() {
         entry.media.push(media_obj);
     }
 
