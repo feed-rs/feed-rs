@@ -244,7 +244,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
     }
 
     // If a media:content item with content exists, then emit it
-    if !media_rss.content.is_empty() {
+    if media_rss.has_content() {
         entry.media.push(media_rss);
     }
 

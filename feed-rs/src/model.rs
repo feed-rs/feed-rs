@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
@@ -5,7 +7,6 @@ use mime::Mime;
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
-use std::time::Duration;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -684,6 +685,13 @@ pub struct MediaObject {
     pub community: Option<MediaCommunity>,
     /// Credits
     pub credits: Vec<MediaCredit>,
+}
+
+impl MediaObject {
+    // Checks if this object has been populated with content
+    pub(crate) fn has_content(&self) -> bool {
+        self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.thumbnails.is_empty() || !self.texts.is_empty()
+    }
 }
 
 impl Default for MediaObject {
