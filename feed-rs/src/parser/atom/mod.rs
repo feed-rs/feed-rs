@@ -18,25 +18,25 @@ pub(crate) fn parse_feed<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> 
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "id") => if_some_then(child.child_as_text()?, |id| feed.id = id),
+            (None, "id") => if_some_then(child.child_as_text(), |id| feed.id = id),
 
             (None, "title") => feed.title = handle_text(child)?,
 
-            (None, "updated") => if_some_then(child.child_as_text()?, |text| feed.updated = timestamp_rfc3339_lenient(&text)),
+            (None, "updated") => if_some_then(child.child_as_text(), |text| feed.updated = timestamp_rfc3339_lenient(&text)),
 
             (None, "author") => if_some_then(handle_person(child)?, |person| feed.authors.push(person)),
 
-            (None, "link") => if_some_then(handle_link(child)?, |link| feed.links.push(link)),
+            (None, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
 
-            (None, "category") => if_some_then(handle_category(child)?, |category| feed.categories.push(category)),
+            (None, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
             (None, "contributor") => if_some_then(handle_person(child)?, |person| feed.contributors.push(person)),
 
-            (None, "generator") => feed.generator = handle_generator(child)?,
+            (None, "generator") => feed.generator = handle_generator(child),
 
-            (None, "icon") => feed.icon = handle_image(child)?,
+            (None, "icon") => feed.icon = handle_image(child),
 
-            (None, "logo") => feed.logo = handle_image(child)?,
+            (None, "logo") => feed.logo = handle_image(child),
 
             (None, "rights") => feed.rights = handle_text(child)?,
 
@@ -64,7 +64,7 @@ pub(crate) fn parse_entry<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed>
 }
 
 // Handles an Atom <category>
-fn handle_category<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Category>> {
+fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
     // Always need a term
     if let Some(term) = element.attr_value("term") {
         let mut category = Category::new(&term);
@@ -79,10 +79,10 @@ fn handle_category<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Ca
             }
         }
 
-        Ok(Some(category))
+        Some(category)
     } else {
         // A missing category isn't fatal
-        Ok(None)
+        None
     }
 }
 
@@ -124,7 +124,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
         Some(ct) => {
             if let Ok(mime) = ct.parse::<Mime>() {
                 element
-                    .child_as_text()?
+                    .child_as_text()
                     .map(|body| {
                         let content = Content {
                             body: Some(body),
@@ -153,25 +153,25 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
         let child = child?;
         match child.ns_and_tag() {
             // Extract the fields from the spec
-            (None, "id") => if_some_then(child.child_as_text()?, |id| entry.id = id),
+            (None, "id") => if_some_then(child.child_as_text(), |id| entry.id = id),
 
             (None, "title") => entry.title = handle_text(child)?,
 
-            (None, "updated") => if_some_then(child.child_as_text()?, |text| entry.updated = timestamp_rfc3339_lenient(&text)),
+            (None, "updated") => if_some_then(child.child_as_text(), |text| entry.updated = timestamp_rfc3339_lenient(&text)),
 
             (None, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
 
             (None, "content") => entry.content = handle_content(child)?,
 
-            (None, "link") => if_some_then(handle_link(child)?, |link| entry.links.push(link)),
+            (None, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
 
             (None, "summary") => entry.summary = handle_text(child)?,
 
-            (None, "category") => if_some_then(handle_category(child)?, |category| entry.categories.push(category)),
+            (None, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
 
             (None, "contributor") => if_some_then(handle_person(child)?, |person| entry.contributors.push(person)),
 
-            (None, "published") => if_some_then(child.child_as_text()?, |text| entry.published = timestamp_rfc3339_lenient(&text)),
+            (None, "published") => if_some_then(child.child_as_text(), |text| entry.published = timestamp_rfc3339_lenient(&text)),
 
             (None, "rights") => entry.rights = handle_text(child)?,
 
@@ -195,8 +195,8 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
 }
 
 // Handles an Atom <generator>
-fn handle_generator<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Generator>> {
-    let generator = element.child_as_text()?.map(|content| {
+fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
+    element.child_as_text().map(|content| {
         let mut generator = Generator::new(&content);
 
         for attr in element.attributes {
@@ -209,20 +209,18 @@ fn handle_generator<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<G
         }
 
         generator
-    });
-
-    Ok(generator)
+    })
 }
 
 // Handles an Atom <icon> or <logo>
-fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image>> {
-    Ok(element.child_as_text()?.map(Image::new))
+fn handle_image<R: BufRead>(element: Element<R>) -> Option<Image> {
+    element.child_as_text().map(Image::new)
 }
 
 // Handles an Atom <link>
-fn handle_link<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
+fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
     // Always need an href
-    let link = element.attr_value("href").map(|href| {
+    element.attr_value("href").map(|href| {
         let mut link = Link::new(href);
 
         for attr in element.attributes {
@@ -244,9 +242,7 @@ fn handle_link<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Link>>
         }
 
         link
-    });
-
-    Ok(link)
+    })
 }
 
 // Handles an Atom <author> or <contributor>
@@ -256,7 +252,7 @@ fn handle_person<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Pers
     for child in element.children() {
         let child = child?;
         let tag_name = child.name.as_str();
-        let child_text = child.child_as_text()?;
+        let child_text = child.child_as_text();
         match (tag_name, child_text) {
             // Extract the fields from the spec
             ("name", Some(name)) => person.name = name,

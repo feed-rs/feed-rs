@@ -18,7 +18,7 @@ use std::time::Duration;
 /*
 // Handles <itunes:explicit>
 fn handle_itunes_explicit<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<bool>> {
-    Ok(element.child_as_text()?.and_then(|text| match text.as_ref() {
+    Ok(element.child_as_text().and_then(|text| match text.as_ref() {
         "yes" | "true" => Some(true),
         "no" | "false" | "clean" => Some(false),
         _ => None,
@@ -32,13 +32,13 @@ fn handle_itunes_image<R: BufRead>(element: Element<R>) -> Option<MediaThumbnail
 }
 
 // Handles <itunes:duration>
-fn handle_itunes_duration<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Duration>> {
-    Ok(element.child_as_text()?.and_then(|text| parse_npt(&text)))
+fn handle_itunes_duration<R: BufRead>(element: Element<R>) -> Option<Duration> {
+    element.child_as_text().and_then(|text| parse_npt(&text))
 }
 
 // Handles <itunes:author>
-fn handle_itunes_author<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaCredit>> {
-    Ok(element.child_as_text()?.map(MediaCredit::new))
+fn handle_itunes_author<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
+    element.child_as_text().map(MediaCredit::new)
 }
 
 // Process <itunes> elements and turn them into something that looks like MediaRSS objects.
@@ -48,11 +48,9 @@ pub(crate) fn handle_itunes_element<R: BufRead>(element: Element<R>, media_obj: 
 
         (Some(NS::Itunes), "image") => if_some_then(handle_itunes_image(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
 
-        (Some(NS::Itunes), "duration") => if_some_then(handle_itunes_duration(element)?, |duration| {
-            media_obj.duration = Some(duration)
-        }),
+        (Some(NS::Itunes), "duration") => if_some_then(handle_itunes_duration(element), |duration| media_obj.duration = Some(duration)),
 
-        (Some(NS::Itunes), "author") => if_some_then(handle_itunes_author(element)?, |credit| media_obj.credits.push(credit)),
+        (Some(NS::Itunes), "author") => if_some_then(handle_itunes_author(element), |credit| media_obj.credits.push(credit)),
 
         (Some(NS::Itunes), "summary") => media_obj.description = handle_text(element)?,
 

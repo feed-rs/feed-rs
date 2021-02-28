@@ -246,7 +246,7 @@ fn test_spec_1() {
                     r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>
             "#
-                        .to_owned(),
+                    .to_owned(),
                 ))
                 .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
@@ -259,7 +259,7 @@ fn test_spec_1() {
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation."
             "#
-                        .to_owned(),
+                    .to_owned(),
                 ))
                 .published_rfc2822("Mon, 30 Sep 2002 01:52:02 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
@@ -367,9 +367,10 @@ fn test_bbc() {
         .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl".into()))
         .description(Text::new("Melvyn Bragg and guests discuss the history of ideas".into()))
         .language("en")
-        .logo(Image::new("http://ichef.bbci.co.uk/images/ic/3000x3000/p087hyhs.jpg".into())
-            .title("In Our Time")
-            .link("http://www.bbc.co.uk/programmes/b006qykl")
+        .logo(
+            Image::new("http://ichef.bbci.co.uk/images/ic/3000x3000/p087hyhs.jpg".into())
+                .title("In Our Time")
+                .link("http://www.bbc.co.uk/programmes/b006qykl"),
         )
         .rights(Text::new("(C) BBC 2021".into()))
         .published_rfc2822("Thu, 25 Feb 2021 10:15:00 +0000")
@@ -381,25 +382,34 @@ fn test_bbc() {
                 .id("urn:bbc:podcast:m000sjxt")
                 .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt".into()))
                 // <enclosure>
-                .media(MediaObject::default()
-                    .content(MediaContent::new()
-                        .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3".into())
-                        .size(50496000)
-                        .content_type("audio/mpeg")
-                    )
+                .media(
+                    MediaObject::default().content(
+                        MediaContent::new()
+                            .url(
+                                "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3"
+                                    .into(),
+                            )
+                            .size(50496000)
+                            .content_type("audio/mpeg"),
+                    ),
                 )
                 // media: and itunes: tags
-                .media(MediaObject::default()
-                    .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...".into())
-                    .duration(Duration::from_secs(3156))
-                    .content(MediaContent::new()
-                        .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3".into())
-                        .size(50496000)
-                        .content_type("audio/mpeg")
+                .media(
+                    MediaObject::default()
+                        .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...".into())
                         .duration(Duration::from_secs(3156))
-                    )
-                    .credit("BBC Radio 4")
-                )
+                        .content(
+                            MediaContent::new()
+                                .url(
+                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3"
+                                        .into(),
+                                )
+                                .size(50496000)
+                                .content_type("audio/mpeg")
+                                .duration(Duration::from_secs(3156)),
+                        )
+                        .credit("BBC Radio 4"),
+                ),
         );
 
     // Check
@@ -417,11 +427,15 @@ fn test_ch9() {
     let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Azure Friday (HD) - Channel 9".into()))
-        .logo(Image::new("https://f.ch9.ms/thumbnail/4761e196-da48-4b41-abfe-e56e0509f04d.png".into())
-            .title("Azure Friday (HD) - Channel 9")
-            .link("https://s.ch9.ms/Shows/Azure-Friday")
+        .logo(
+            Image::new("https://f.ch9.ms/thumbnail/4761e196-da48-4b41-abfe-e56e0509f04d.png".into())
+                .title("Azure Friday (HD) - Channel 9")
+                .link("https://s.ch9.ms/Shows/Azure-Friday"),
         )
-        .description(Text::new("Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights. ".into()))
+        .description(Text::new(
+            "Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights. "
+                .into(),
+        ))
         .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday".into()))
         .language("en")
         .published_rfc2822("Sat, 27 Feb 2021 06:55:01 GMT")
@@ -431,7 +445,9 @@ fn test_ch9() {
             Entry::default()
                 .title(Text::new("Troubleshoot AKS cluster issues with AKS Diagnostics and AKS Periscope".into()))
                 .summary(Text::new("<p>Yun Jung Choi shows Scott Hanselman...".into()))
-                .link(Link::new("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope".into()))
+                .link(Link::new(
+                    "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope".into(),
+                ))
                 .published_rfc2822("Fri, 26 Feb 2021 20:00:00 GMT")
                 .updated_rfc2822("Sat, 27 Feb 2021 06:55:01 GMT")
                 .id("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope")
@@ -440,28 +456,86 @@ fn test_ch9() {
                 .category(Category::new("Kubernetes"))
                 .category(Category::new("aft"))
                 // <media:group>
-                .media(MediaObject::default()
-                    .content(MediaContent::new().url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4".into()).duration(Duration::from_secs(867)).size(1).content_type("video/mp4"))
-                    .content(MediaContent::new().url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp3".into()).duration(Duration::from_secs(867)).size(13878646).content_type("audio/mp3"))
-                    .content(MediaContent::new().url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp4".into()).duration(Duration::from_secs(867)).size(20450133).content_type("video/mp4"))
-                    .content(MediaContent::new().url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into()).duration(Duration::from_secs(867)).size(126659374).content_type("video/mp4"))
-                    .content(MediaContent::new().url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_mid.mp4".into()).duration(Duration::from_secs(867)).size(49241848).content_type("video/mp4"))
-                    .content(MediaContent::new().url("https://www.youtube-nocookie.com/embed/E-XqYb88hUY?enablejsapi=1".into()).duration(Duration::from_secs(867)).size(1))
+                .media(
+                    MediaObject::default()
+                        .content(
+                            MediaContent::new()
+                                .url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4".into())
+                                .duration(Duration::from_secs(867))
+                                .size(1)
+                                .content_type("video/mp4"),
+                        )
+                        .content(
+                            MediaContent::new()
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp3".into())
+                                .duration(Duration::from_secs(867))
+                                .size(13878646)
+                                .content_type("audio/mp3"),
+                        )
+                        .content(
+                            MediaContent::new()
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp4".into())
+                                .duration(Duration::from_secs(867))
+                                .size(20450133)
+                                .content_type("video/mp4"),
+                        )
+                        .content(
+                            MediaContent::new()
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into())
+                                .duration(Duration::from_secs(867))
+                                .size(126659374)
+                                .content_type("video/mp4"),
+                        )
+                        .content(
+                            MediaContent::new()
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_mid.mp4".into())
+                                .duration(Duration::from_secs(867))
+                                .size(49241848)
+                                .content_type("video/mp4"),
+                        )
+                        .content(
+                            MediaContent::new()
+                                .url("https://www.youtube-nocookie.com/embed/E-XqYb88hUY?enablejsapi=1".into())
+                                .duration(Duration::from_secs(867))
+                                .size(1),
+                        ),
                 )
                 // <enclosure>
-                .media(MediaObject::default()
-                    .content(MediaContent::new().url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into()).size(126659374).content_type("video/mp4"))
+                .media(
+                    MediaObject::default().content(
+                        MediaContent::new()
+                            .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into())
+                            .size(126659374)
+                            .content_type("video/mp4"),
+                    ),
                 )
                 // <media:*>
-                .media(MediaObject::default()
-                    .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
-                    .duration(Duration::from_secs(867))
-                    .thumbnail(MediaThumbnail::new(Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into()).height(56).width(100)))
-                    .thumbnail(MediaThumbnail::new(Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into()).height(123).width(220)))
-                    .thumbnail(MediaThumbnail::new(Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg".into()).height(288).width(512)))
-                    .thumbnail(MediaThumbnail::new(Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg".into()).height(540).width(960)))
-                    .credit("Scott Hanselman, Rob Caron")
-                )
+                .media(
+                    MediaObject::default()
+                        .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
+                        .duration(Duration::from_secs(867))
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into())
+                                .height(56)
+                                .width(100),
+                        ))
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into())
+                                .height(123)
+                                .width(220),
+                        ))
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg".into())
+                                .height(288)
+                                .width(512),
+                        ))
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg".into())
+                                .height(540)
+                                .width(960),
+                        ))
+                        .credit("Scott Hanselman, Rob Caron"),
+                ),
         );
 
     // Check

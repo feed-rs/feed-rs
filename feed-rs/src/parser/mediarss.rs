@@ -1,11 +1,12 @@
 use std::io::BufRead;
 use std::time::Duration;
 
+use mime::Mime;
+
 use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
-use mime::Mime;
 
 // TODO find an RSS feed with media tags in it
 // TODO When an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
@@ -34,15 +35,15 @@ pub(crate) fn handle_media_element<R: BufRead>(element: Element<R>, media_obj: &
 
         (Some(NS::MediaRSS), "content") => handle_media_content(element, media_obj)?,
 
-        (Some(NS::MediaRSS), "thumbnail") => if_some_then(handle_media_thumbnail(element)?, |thumbnail| media_obj.thumbnails.push(thumbnail)),
+        (Some(NS::MediaRSS), "thumbnail") => if_some_then(handle_media_thumbnail(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
 
         (Some(NS::MediaRSS), "description") => media_obj.description = handle_text(element)?,
 
         (Some(NS::MediaRSS), "community") => media_obj.community = handle_media_community(element)?,
 
-        (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(element)?, |credit| media_obj.credits.push(credit)),
+        (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(element), |credit| media_obj.credits.push(credit)),
 
-        (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(element)?, |text| media_obj.texts.push(text)),
+        (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(element), |text| media_obj.texts.push(text)),
 
         // Nothing required for unknown elements
         _ => {}
@@ -132,52 +133,48 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
 }
 
 // Handles the "media:credit" element
-fn handle_media_credit<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaCredit>> {
-    Ok(element.child_as_text()?.map(MediaCredit::new))
+fn handle_media_credit<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
+    element.child_as_text().map(MediaCredit::new)
 }
 
 // Handles the "media:text" element
-fn handle_media_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaText>> {
-    let media_text = {
-        let mut start_time = None;
-        let mut end_time = None;
-        let mut mime = None;
-        for attr in &element.attributes {
-            match attr.name.as_str() {
-                "start" => if_some_then(parse_npt(&attr.value), |npt| start_time = Some(npt)),
-                "end" => if_some_then(parse_npt(&attr.value), |npt| end_time = Some(npt)),
-                "type" => {
-                    mime = match attr.value.as_str() {
-                        "plain" => Some(mime::TEXT_PLAIN),
-                        "html" => Some(mime::TEXT_HTML),
-                        _ => None,
-                    }
+fn handle_media_text<R: BufRead>(element: Element<R>) -> Option<MediaText> {
+    let mut start_time = None;
+    let mut end_time = None;
+    let mut mime = None;
+    for attr in &element.attributes {
+        match attr.name.as_str() {
+            "start" => if_some_then(parse_npt(&attr.value), |npt| start_time = Some(npt)),
+            "end" => if_some_then(parse_npt(&attr.value), |npt| end_time = Some(npt)),
+            "type" => {
+                mime = match attr.value.as_str() {
+                    "plain" => Some(mime::TEXT_PLAIN),
+                    "html" => Some(mime::TEXT_HTML),
+                    _ => None,
                 }
-
-                // Nothing required for unknown attributes
-                _ => {}
             }
+
+            // Nothing required for unknown attributes
+            _ => {}
         }
+    }
 
-        element.child_as_text()?.map(|t| {
-            // Parse out the actual text of this element
-            let mut text = Text::new(t);
-            text.content_type = mime.map_or(mime::TEXT_PLAIN, |m| m);
-            let mut media_text = MediaText::new(text);
+    element.child_as_text().map(|t| {
+        // Parse out the actual text of this element
+        let mut text = Text::new(t);
+        text.content_type = mime.map_or(mime::TEXT_PLAIN, |m| m);
+        let mut media_text = MediaText::new(text);
 
-            // Add the time boundaries if we found them
-            media_text.start_time = start_time;
-            media_text.end_time = end_time;
+        // Add the time boundaries if we found them
+        media_text.start_time = start_time;
+        media_text.end_time = end_time;
 
-            media_text
-        })
-    };
-
-    Ok(media_text)
+        media_text
+    })
 }
 
 // Handles the "media:thumbnail" element
-fn handle_media_thumbnail<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaThumbnail>> {
+fn handle_media_thumbnail<R: BufRead>(element: Element<R>) -> Option<MediaThumbnail> {
     // Extract the attributes on the thumbnail element
     let mut url = None;
     let mut width = None;
@@ -206,9 +203,9 @@ fn handle_media_thumbnail<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
         let mut thumbnail = MediaThumbnail::new(image);
         thumbnail.time = time;
 
-        Ok(Some(thumbnail))
+        Some(thumbnail)
     } else {
-        Ok(None)
+        None
     }
 }
 

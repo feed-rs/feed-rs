@@ -14,17 +14,17 @@ fn handle_book<R: BufRead>(book: Element<R>) -> Result {
         match child.name.as_str() {
             "author" => {
                 count += 1;
-                assert_eq!(child.child_as_text()?.unwrap(), "Gambardella, Matthew");
+                assert_eq!(child.child_as_text().unwrap(), "Gambardella, Matthew");
             }
             "title" => {
                 count += 1;
-                assert_eq!(child.child_as_text()?.unwrap(), "XML Developer's Guide");
+                assert_eq!(child.child_as_text().unwrap(), "XML Developer's Guide");
             }
             "nest1" => {
                 handle_nest1(child)?;
             }
             "empty1" | "empty2" => {
-                assert!(child.child_as_text()?.is_none());
+                assert!(child.child_as_text().is_none());
             }
             _ => panic!("Unexpected child node: {}", child.name),
         }
@@ -67,7 +67,7 @@ fn handle_nest1<R: BufRead>(nest1: Element<R>) -> Result {
         assert_eq!(child.name, "nest2");
 
         // It should have the expected text
-        assert_eq!(child.child_as_text()?.unwrap(), "Nested");
+        assert_eq!(child.child_as_text().unwrap(), "Nested");
 
         // Should only have a single child at this level
         count += 1;

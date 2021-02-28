@@ -13,7 +13,7 @@ mod tests;
 pub(crate) fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
     let parsed = serde_json::from_reader(stream);
     if let Ok(json_feed) = parsed {
-        convert(json_feed)
+        Ok(convert(json_feed))
     } else {
         // Unable to parse the JSON
         Err(ParseFeedError::JsonSerde(parsed.err().unwrap()))
@@ -21,7 +21,7 @@ pub(crate) fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
 }
 
 // Convert the JSON Feed into our standard model
-fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
+fn convert(jf: JsonFeed) -> Feed {
     let mut feed = Feed::new(FeedType::JSON);
 
     // Convert feed level fields
@@ -41,12 +41,10 @@ fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
 
     // Convert items within the JSON feed
     jf.items.into_iter().for_each(|ji| {
-        if let Ok(entry) = handle_item(ji) {
-            feed.entries.push(entry);
-        }
+        feed.entries.push(handle_item(ji));
     });
 
-    Ok(feed)
+    feed
 }
 
 // Handles an attachment
@@ -71,7 +69,7 @@ fn handle_content(content: Option<String>, content_type: Mime) -> Option<Content
 }
 
 // Converts a JSON feed item into our model
-fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
+fn handle_item(ji: JsonItem) -> Entry {
     let mut entry = Entry {
         id: ji.id,
         ..Default::default()
@@ -111,7 +109,7 @@ fn handle_item(ji: JsonItem) -> ParseFeedResult<Entry> {
         attachments.into_iter().map(handle_attachment).for_each(|link| entry.links.push(link))
     });
 
-    Ok(entry)
+    entry
 }
 
 // Converts an author object into our model
