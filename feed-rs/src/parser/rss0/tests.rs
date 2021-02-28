@@ -90,16 +90,13 @@ fn test_0_92_spec_1() {
             .summary(Text::new("<a href=\"http://arts.ucsc.edu/GDead/AGDL/other1.html\">The Other One</a>,
                 live instrumental, One From The Vault. Very rhythmic very spacy, you can listen to it many times, and
                 enjoy something new every time.\n            ".into()))
-            .content(Content::default()
-                .src("http://www.scripting.com/mp3s/theOtherOne.mp3")
-                .length(6666097)
-                .content_type("audio/mpeg"))
             .id(entry1.id.as_ref())     // not in source data
             .updated(entry1.updated)   // not in source data
-            .media(MediaObject::new()
+            .media(MediaObject::default()
                 .content(MediaContent::new()
                     .url("http://www.scripting.com/mp3s/theOtherOne.mp3")
-                    .content_type("audio/mpeg"))))
+                    .content_type("audio/mpeg")
+                    .size(6666097))))
         .entry(Entry::default()
             .summary(Text::new("This is a test of a change I just made. Still diggin..".into()))
             .id(entry2.id.as_ref())     // not in source data

@@ -36,19 +36,19 @@ fn handle_channel<R: BufRead>(feed: &mut Feed, channel: Element<R>) -> ParseFeed
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "title") => feed.title = handle_text(child)?,
+            (None, "title") => feed.title = handle_text(child),
 
-            (None, "link") => if_some_then(handle_link(child)?, |link| feed.links.push(link)),
+            (None, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
 
-            (None, "description") => feed.description = handle_text(child)?,
+            (None, "description") => feed.description = handle_text(child),
 
-            (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text()?, |name| feed.authors.push(Person::new(&name))),
+            (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
 
             (Some(NS::DublinCore), "date") => feed.published = handle_timestamp(child),
 
-            (Some(NS::DublinCore), "language") => feed.language = child.child_as_text()?,
+            (Some(NS::DublinCore), "language") => feed.language = child.child_as_text(),
 
-            (Some(NS::DublinCore), "rights") => feed.rights = handle_text(child)?,
+            (Some(NS::DublinCore), "rights") => feed.rights = handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -65,11 +65,11 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "url") => if_some_then(child.child_as_text()?, |url| image.uri = url),
+            (None, "url") => if_some_then(child.child_as_text(), |url| image.uri = url),
 
-            (None, "title") => image.title = child.child_as_text()?,
+            (None, "title") => image.title = child.child_as_text(),
 
-            (None, "link") => if_some_then(child.child_as_text()?, |uri| image.link = Some(Link::new(uri))),
+            (None, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri))),
 
             // Nothing required for unknown elements
             _ => {}
@@ -92,25 +92,25 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "title") => entry.title = handle_text(child)?,
+            (None, "title") => entry.title = handle_text(child),
 
-            (None, "link") => if_some_then(handle_link(child)?, |link| entry.links.push(link)),
+            (None, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
 
-            (None, "description") => entry.summary = handle_text(child)?,
+            (None, "description") => entry.summary = handle_text(child),
 
             (Some(NS::Content), "encoded") => content_encoded = util::handle_encoded(child)?,
 
-            (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text()?, |name| entry.authors.push(Person::new(&name))),
+            (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
             (Some(NS::DublinCore), "date") => entry.published = handle_timestamp(child),
 
             (Some(NS::DublinCore), "description") => {
                 if entry.summary.is_none() {
-                    entry.summary = handle_text(child)?
+                    entry.summary = handle_text(child)
                 }
             }
 
-            (Some(NS::DublinCore), "rights") => entry.rights = handle_text(child)?,
+            (Some(NS::DublinCore), "rights") => entry.rights = handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -139,18 +139,18 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 }
 
 // Handles <link>
-fn handle_link<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Link>> {
-    Ok(element.child_as_text()?.map(Link::new))
+fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
+    element.child_as_text().map(Link::new)
 }
 
 // Handles <title>, <description>
-fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
-    Ok(element.child_as_text()?.map(Text::new))
+fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
+    element.child_as_text().map(Text::new)
 }
 
 // Handles date/time
 fn handle_timestamp<R: BufRead>(element: Element<R>) -> Option<DateTime<Utc>> {
-    if let Ok(Some(text)) = element.child_as_text() {
+    if let Some(text) = element.child_as_text() {
         timestamp_rfc2822_lenient(&text)
     } else {
         None

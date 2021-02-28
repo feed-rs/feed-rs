@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
@@ -5,7 +7,6 @@ use mime::Mime;
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
-use std::time::Duration;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -259,7 +260,7 @@ pub struct Entry {
     pub authors: Vec<Person>,
     /// The content of the item
     /// * Atom (recommended): Contains or links to the complete content of the entry.
-    /// * RSS 2 (optional) "enclosure": Describes a media object that is attached to the item.
+    /// * RSS 2 (optional) "content:encoded": The HTML form of the content
     /// * JSON Feed: the html content of the item, or the text content if no html is specified
     pub content: Option<Content>,
     /// Links associated with this item
@@ -670,8 +671,10 @@ impl Link {
 pub struct MediaObject {
     /// Title of the object (from the media:title element)
     pub title: Option<Text>,
-    /// The media:content element
-    pub content: Option<MediaContent>,
+    /// Collection of the media content elements
+    pub content: Vec<MediaContent>,
+    /// Duration of the object
+    pub duration: Option<Duration>,
     /// Representative images for the object (from media:thumbnail elements)
     pub thumbnails: Vec<MediaThumbnail>,
     /// A text transcript, closed captioning or lyrics of the media content.
@@ -685,10 +688,18 @@ pub struct MediaObject {
 }
 
 impl MediaObject {
-    pub(crate) fn new() -> MediaObject {
+    // Checks if this object has been populated with content
+    pub(crate) fn has_content(&self) -> bool {
+        self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.thumbnails.is_empty() || !self.texts.is_empty()
+    }
+}
+
+impl Default for MediaObject {
+    fn default() -> Self {
         MediaObject {
             title: None,
-            content: None,
+            content: Vec::new(),
+            duration: None,
             thumbnails: Vec::new(),
             texts: Vec::new(),
             description: None,
@@ -706,7 +717,7 @@ impl MediaObject {
     }
 
     pub fn content(mut self, content: MediaContent) -> Self {
-        self.content = Some(content);
+        self.content.push(content);
         self
     }
 
@@ -717,6 +728,11 @@ impl MediaObject {
 
     pub fn description(mut self, description: &str) -> Self {
         self.description = Some(Text::new(description.to_string()));
+        self
+    }
+
+    pub fn duration(mut self, duration: Duration) -> Self {
+        self.duration = Some(duration);
         self
     }
 
@@ -792,6 +808,8 @@ pub struct MediaContent {
     pub width: Option<u32>,
     /// Duration the media plays
     pub duration: Option<Duration>,
+    /// Size of media in bytes
+    pub size: Option<u64>,
 }
 
 #[cfg(test)]
@@ -820,6 +838,11 @@ impl MediaContent {
         self.duration = Some(duration);
         self
     }
+
+    pub fn size(mut self, size: u64) -> Self {
+        self.size = Some(size);
+        self
+    }
 }
 
 impl MediaContent {
@@ -830,6 +853,7 @@ impl MediaContent {
             height: None,
             width: None,
             duration: None,
+            size: None,
         }
     }
 }

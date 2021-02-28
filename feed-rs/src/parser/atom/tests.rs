@@ -433,7 +433,7 @@ fn test_mediarss_youtube() {
     let test_data = test::fixture_as_string("atom_mediarss_youtube_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::new()
+    let expected = MediaObject::default()
         .title("Navigating with Quantum Entanglement")
         .content(
             MediaContent::new()
@@ -462,7 +462,7 @@ fn test_mediarss_newscred() {
     let test_data = test::fixture_as_string("atom_mediarss_newscred_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::new()
+    let expected = MediaObject::default()
         .title("media title")
         .description("media description")
         .text(MediaText::new(Text::new("media text".to_string())))

@@ -141,19 +141,19 @@ impl<R: BufRead> ElementSource<R> {
     }
 
     // Extracts a text element
-    fn text_node(&self) -> Result<Option<String>> {
+    fn text_node(&self) -> Option<String> {
         let mut state = self.state.borrow_mut();
 
         // If the next event is characters, we have found our text
         if let Ok(Some(XmlEvent::Text(_text))) = state.peek() {
             // Grab the next event - we know its a Text event from the above
             match state.next() {
-                Ok(Some(XmlEvent::Text(text))) => return Ok(Some(text)),
+                Ok(Some(XmlEvent::Text(text))) => return Some(text),
                 _ => unreachable!("state.next() did not return expected XmlEvent::Text"),
             }
         }
 
-        Ok(None)
+        None
     }
 }
 
@@ -190,12 +190,12 @@ impl<R: BufRead> SourceState<R> {
             match event {
                 // Start of an element
                 Event::Start(ref e) => {
-                    return XmlEvent::start(ns, e, &reader);
+                    return Ok(Some(XmlEvent::start(ns, e, &reader)));
                 }
 
                 // End of an element
                 Event::End(ref e) => {
-                    return XmlEvent::end(e, &reader);
+                    return Ok(Some(XmlEvent::end(e, &reader)));
                 }
 
                 // Text
@@ -209,7 +209,7 @@ impl<R: BufRead> SourceState<R> {
 
                 // CData
                 Event::CData(ref t) => {
-                    return XmlEvent::text_from_cdata(t, &reader);
+                    return Ok(Some(XmlEvent::text_from_cdata(t, &reader)));
                 }
 
                 // The end of the document
@@ -262,7 +262,7 @@ impl<'a, R: BufRead> Element<'a, R> {
     }
 
     /// If the first child of the current node is XML characters, then it is returned as a `String` otherwise `None`.
-    pub(crate) fn child_as_text(&self) -> Result<Option<String>> {
+    pub(crate) fn child_as_text(&self) -> Option<String> {
         self.source.text_node()
     }
 
@@ -384,11 +384,11 @@ enum XmlEvent {
 
 impl XmlEvent {
     // Creates a new event corresponding to an XML end-tag
-    fn end<R: BufRead>(event: &BytesEnd, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
+    fn end<R: BufRead>(event: &BytesEnd, reader: &Reader<R>) -> XmlEvent {
         // Parse the name
         let name = XmlEvent::parse_name(event.name(), reader);
 
-        Ok(Some(XmlEvent::End { name }))
+        XmlEvent::End { name }
     }
 
     // Extracts the element name, dropping the namespace prefix if present
@@ -397,7 +397,7 @@ impl XmlEvent {
     }
 
     // Creates a new event corresponding to an XML start-tag
-    fn start<R: BufRead>(ns: Option<&[u8]>, event: &BytesStart, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
+    fn start<R: BufRead>(ns: Option<&[u8]>, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
         // Parse the namespace
         let namespace = ns.map(|bytes| reader.decode(bytes)).and_then(|s| NS::parse(s.as_ref()));
 
@@ -422,7 +422,7 @@ impl XmlEvent {
             })
             .collect::<Vec<NameValue>>();
 
-        Ok(Some(XmlEvent::Start { namespace, name, attributes }))
+        XmlEvent::Start { namespace, name, attributes }
     }
 
     // Creates a new event corresponding to an XML text node
@@ -436,9 +436,9 @@ impl XmlEvent {
     }
 
     // Creates a new event corresponding to an XML CData tag
-    fn text_from_cdata<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
+    fn text_from_cdata<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> XmlEvent {
         let text = reader.decode(text);
-        Ok(Some(XmlEvent::Text(text.into())))
+        XmlEvent::Text(text.into())
     }
 }
 
