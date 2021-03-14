@@ -108,7 +108,6 @@ fn test_example_2() {
 }
 
 // Real-life example from Akamai (includes categories and elements from a different namespace, along with locally declared namespaces on atom 1.0 elements)
-// TODO test we ignore elements with the same name as Atom element but in a different namespace
 #[test]
 fn test_example_3() {
     // Parse the feed

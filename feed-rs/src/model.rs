@@ -21,6 +21,9 @@ use crate::parser::util::timestamp_rfc3339_lenient;
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html
 /// [RSS 1 spec]: https://validator.w3.org/feed/docs/rss1.html
+/// [MediaRSS spec]: https://www.rssboard.org/media-rss
+/// [iTunes podcast spec]: https://help.apple.com/itc/podcasts_connect/#/itcb54353390
+/// [iTunes podcast guide]: https://www.feedforall.com/itune-tutorial-tags.htm
 ///
 /// Certain elements are not mapped given their limited utility:
 ///   * RSS 2:

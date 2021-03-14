@@ -192,7 +192,6 @@ mod tests {
             ("24 Sep 2013 1:27 PDT", Utc.ymd(2013, 9, 24).and_hms_milli(8, 27, 0, 0)),
             // Consider an invalid hour specification as start-of-day
             ("5 Jun 2017 24:05 PDT", Utc.ymd(2017, 6, 5).and_hms_milli(7, 5, 0, 0)),
-            // TODO what date format is this? https://feeds.feedburner.com/oshogbo : "Dec. 9, 2019, 6:11 p.m."
         ];
 
         for (source, expected) in tests {

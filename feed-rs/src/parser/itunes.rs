@@ -6,10 +6,6 @@ use crate::xml::{Element, NS};
 use std::io::BufRead;
 use std::time::Duration;
 
-// Ref:
-// https://help.apple.com/itc/podcasts_connect/#/itcb54353390
-// https://www.feedforall.com/itune-tutorial-tags.htm
-
 // TODO:
 // - Handle <itunes:> elements for the whole feed in <channel>
 // - Add rating/adult support to MediaObject
@@ -26,23 +22,8 @@ fn handle_itunes_explicit<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 }
 */
 
-// Handles <itunes:image>
-fn handle_itunes_image<R: BufRead>(element: Element<R>) -> Option<MediaThumbnail> {
-    element.attr_value("href").map(|url| MediaThumbnail::new(Image::new(url)))
-}
-
-// Handles <itunes:duration>
-fn handle_itunes_duration<R: BufRead>(element: Element<R>) -> Option<Duration> {
-    element.child_as_text().and_then(|text| parse_npt(&text))
-}
-
-// Handles <itunes:author>
-fn handle_itunes_author<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
-    element.child_as_text().map(MediaCredit::new)
-}
-
-// Process <itunes> elements and turn them into something that looks like MediaRSS objects.
-pub(crate) fn handle_itunes_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
+// Process <itunes> elements at item level and turn them into something that looks like MediaRSS objects.
+pub(crate) fn handle_itunes_item_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
     match element.ns_and_tag() {
         (Some(NS::Itunes), "title") => media_obj.title = handle_text(element)?,
 
@@ -59,4 +40,19 @@ pub(crate) fn handle_itunes_element<R: BufRead>(element: Element<R>, media_obj: 
     }
 
     Ok(())
+}
+
+// Handles <itunes:image>
+fn handle_itunes_image<R: BufRead>(element: Element<R>) -> Option<MediaThumbnail> {
+    element.attr_value("href").map(|url| MediaThumbnail::new(Image::new(url)))
+}
+
+// Handles <itunes:duration>
+fn handle_itunes_duration<R: BufRead>(element: Element<R>) -> Option<Duration> {
+    element.child_as_text().and_then(|text| parse_npt(&text))
+}
+
+// Handles <itunes:author>
+fn handle_itunes_author<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
+    element.child_as_text().map(MediaCredit::new)
 }
