@@ -171,7 +171,8 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
 
             (None, "contributor") => if_some_then(handle_person(child)?, |person| entry.contributors.push(person)),
 
-            (None, "published") => if_some_then(child.child_as_text(), |text| entry.published = timestamp_rfc3339_lenient(&text)),
+            // Some feeds have "pubDate" instead of "published"
+            (None, "published") | (None, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = timestamp_rfc3339_lenient(&text)),
 
             (None, "rights") => entry.rights = handle_text(child)?,
 
