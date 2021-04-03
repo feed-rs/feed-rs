@@ -17,6 +17,8 @@
 // TODO improve tests with Coverage analysis e.g. https://github.com/mozilla/grcov
 
 #![forbid(unsafe_code)]
+// Standard names like MediaRSS and JSON are used throughout this crate
+#![allow(clippy::upper_case_acronyms)]
 
 #[macro_use]
 extern crate lazy_static;

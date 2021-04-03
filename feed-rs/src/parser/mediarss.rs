@@ -3,12 +3,11 @@ use std::time::Duration;
 
 use mime::Mime;
 
-use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaText, MediaThumbnail, Text};
+use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaRating, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 
-// TODO find an RSS feed with media tags in it
 // TODO When an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
 // TODO Duplicated elements appearing at deeper levels of the document tree have higher priority over other levels. For example, <media:content> level elements are favored over <item> level elements. The priority level is listed from strongest to weakest: <media:content>, <media:group>, <item>, <channel>.
 
@@ -30,6 +29,9 @@ pub(crate) fn handle_media_group<R: BufRead>(element: Element<R>) -> ParseFeedRe
 /// This isn't the typical pattern, but MediaRSS has a strange shape (content within group, with other elements as peers...or no group and some elements as children)
 /// So this signature is used to parse into a media object from a group, or a default one created at the entry level
 pub(crate) fn handle_media_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
+    // Top level elements that should be propagated down to content items
+    let mut rating = None;
+
     match element.ns_and_tag() {
         (Some(NS::MediaRSS), "title") => media_obj.title = handle_text(element)?,
 
@@ -45,8 +47,19 @@ pub(crate) fn handle_media_element<R: BufRead>(element: Element<R>, media_obj: &
 
         (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(element), |text| media_obj.texts.push(text)),
 
+        (Some(NS::MediaRSS), "rating") => rating = handle_media_rating(element),
+
         // Nothing required for unknown elements
         _ => {}
+    }
+
+    // If we found a rating at this level it needs to be propagated down to all content items (that don't have a rating already)
+    if let Some(rating) = rating {
+        media_obj.content.iter_mut().for_each(|content| {
+            if content.rating.is_none() {
+                content.rating = Some(rating.clone());
+            }
+        })
     }
 
     Ok(())
@@ -92,7 +105,7 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
     Ok(Some(community))
 }
 
-// Handle the core attributes from "media:content"
+// Handle the core attributes and elements from "media:content"
 fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
     let mut content = MediaContent::new();
 
@@ -108,6 +121,31 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
             "fileSize" => if_ok_then_some(attr.value.parse::<u64>(), |v| content.size = v),
 
             "duration" => if_ok_then_some(attr.value.parse::<u64>(), |v| content.duration = v.map(Duration::from_secs)),
+
+            // Nothing required for unknown attributes
+            _ => {}
+        }
+    }
+    for child in element.children() {
+        let child = child?;
+        match child.ns_and_tag() {
+            (Some(NS::MediaRSS), "rating") => content.rating = handle_media_rating(child),
+
+            // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
+            (Some(NS::MediaRSS), "title") => {
+                if media_obj.title.is_none() {
+                    media_obj.title = handle_text(child)?
+                }
+            }
+            (Some(NS::MediaRSS), "description") => {
+                if media_obj.description.is_none() {
+                    media_obj.description = handle_text(child)?
+                }
+            }
+
+            // These elements are accumulated in the corresponding field of the parent MediaObject
+            (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
+            (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
 
             // Nothing required for unknown elements
             _ => {}
@@ -135,6 +173,14 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
 // Handles the "media:credit" element
 fn handle_media_credit<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
     element.child_as_text().map(MediaCredit::new)
+}
+
+// Handles the "media:rating" element
+fn handle_media_rating<R: BufRead>(element: Element<R>) -> Option<MediaRating> {
+    // Schema is "urn:simple" by default
+    let scheme = element.attr_value("scheme").unwrap_or_else(|| "urn:simple".into());
+
+    element.child_as_text().map(|rating| MediaRating::new(rating).urn(scheme.as_str()))
 }
 
 // Handles the "media:text" element
