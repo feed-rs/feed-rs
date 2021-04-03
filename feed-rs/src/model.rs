@@ -961,15 +961,15 @@ impl Person {
             email: None,
         }
     }
-}
 
-#[cfg(test)]
-impl Person {
     pub fn email(mut self, email: &str) -> Self {
         self.email = Some(email.to_owned());
         self
     }
+}
 
+#[cfg(test)]
+impl Person {
     pub fn uri(mut self, uri: &str) -> Self {
         self.uri = Some(uri.to_owned());
         self

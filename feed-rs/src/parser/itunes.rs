@@ -1,14 +1,10 @@
-use crate::model::{Image, MediaCredit, MediaObject, MediaThumbnail, Feed, Category, MediaRating};
+use crate::model::{Image, MediaCredit, MediaObject, MediaThumbnail, Feed, Category, MediaRating, Person};
 use crate::parser::atom::handle_text;
 use crate::parser::util::{if_some_then, parse_npt};
 use crate::parser::ParseFeedResult;
 use crate::xml::{Element, NS};
 use std::io::BufRead;
 use std::time::Duration;
-
-// TODO:
-// - Handle <itunes:> elements for the whole feed in <channel>
-// - More elements like itunes:subtitle, itunes:episode etc.
 
 // Process <itunes> elements at channel level updating the Feed object as required
 pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, feed: &mut Feed) -> ParseFeedResult<()> {
@@ -28,6 +24,9 @@ pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, fee
                 feed.rating = Some(rating);
             }
         }),
+
+        (Some(NS::Itunes), "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::new(&person))),
+        (Some(NS::Itunes), "owner") => if_some_then(handle_owner(element)?, |owner| feed.contributors.push(owner)),
 
         // Nothing required for unknown elements
         _ => {}
@@ -81,4 +80,27 @@ fn handle_explicit<R: BufRead>(element: Element<R>) -> Option<MediaRating> {
 // Handles <itunes:image>
 fn handle_image<R: BufRead>(element: Element<R>) -> Option<MediaThumbnail> {
     element.attr_value("href").map(|url| MediaThumbnail::new(Image::new(url)))
+}
+
+// Handles <itunes:owner>
+fn handle_owner<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Person>> {
+    let mut email = None;
+    let mut name = None;
+
+    for child in element.children() {
+        let child = child?;
+        match child.ns_and_tag() {
+            (Some(NS::Itunes), "email") => email = child.child_as_text(),
+            (Some(NS::Itunes), "name") => name = child.child_as_text(),
+
+            // Nothing required for unknown elements
+            _ => {}
+        }
+    }
+
+    Ok(if let (Some(email), Some(name)) = (email, name) {
+        Some(Person::new(&name).email(&email))
+    } else {
+        None
+    })
 }
