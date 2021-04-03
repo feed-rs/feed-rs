@@ -309,6 +309,7 @@ fn test_spiegel() {
         .language("de")
         .title(Text::new("SPIEGEL Update – Die Nachrichten".into()))
         .link(Link::new("https://www.spiegel.de/thema/spiegel-update/".into()))
+        .category(Category::new("News"))
         .description(Text::new("<p>Die wichtigsten Nachrichten des Tages &ndash; erg&auml;nzt um Meinungen und Empfehlungen aus der SPIEGEL-Redaktion. Wochentags aktualisieren wir morgens, mittags und abends unsere Meldungen. Am Wochenende blicken wir zur&uuml;ck auf die vergangene Woche &ndash; und erkl&auml;ren, was in der n&auml;chsten Woche wichtig wird.</p>".into()))
         .rights(Text::new("2021 DER SPIEGEL GmbH & Co. KG".into()))
         .logo(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())
@@ -365,6 +366,7 @@ fn test_bbc() {
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("In Our Time".into()))
         .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl".into()))
+        .category(Category::new("History"))
         .description(Text::new("Melvyn Bragg and guests discuss the history of ideas".into()))
         .language("en")
         .logo(
@@ -437,6 +439,7 @@ fn test_ch9() {
                 .into(),
         ))
         .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday".into()))
+        .category(Category::new("Technology"))
         .language("en")
         .published_rfc2822("Sat, 27 Feb 2021 06:55:01 GMT")
         .updated_rfc2822("Sat, 27 Feb 2021 06:55:01 GMT")

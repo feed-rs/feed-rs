@@ -90,6 +90,9 @@ pub struct Feed {
     pub logo: Option<Image>,
     /// RSS 2 (optional): The publication date for the content in the channel.
     pub published: Option<DateTime<Utc>>,
+    /// Rating for the content
+    /// * Populated from the media or itunes namespaces
+    pub rating: Option<MediaRating>,
     /// Rights restricting content within the feed
     /// * Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
     /// * RSS 2 (optional) "copyright": Copyright notice for content in the channel.
@@ -120,6 +123,7 @@ impl Feed {
             language: None,
             logo: None,
             published: None,
+            rating: None,
             rights: None,
             ttl: None,
             entries: Vec::new(),
@@ -813,6 +817,8 @@ pub struct MediaContent {
     pub duration: Option<Duration>,
     /// Size of media in bytes
     pub size: Option<u64>,
+    /// Rating
+    pub rating: Option<MediaRating>,
 }
 
 #[cfg(test)]
@@ -857,6 +863,7 @@ impl MediaContent {
             width: None,
             duration: None,
             size: None,
+            rating: None,
         }
     }
 }
@@ -871,6 +878,26 @@ pub struct MediaCredit {
 impl MediaCredit {
     pub(crate) fn new(entity: String) -> MediaCredit {
         MediaCredit { entity }
+    }
+}
+
+/// Rating of the feed, item or media within the content
+#[derive(Clone, Debug, PartialEq)]
+pub struct MediaRating {
+    // The scheme (defaults to "simple" per the spec)
+    pub urn: String,
+    // The rating text
+    pub value: String,
+}
+
+impl MediaRating {
+    pub(crate) fn new(value: String) -> MediaRating {
+        MediaRating { urn: "simple".into(), value }
+    }
+
+    pub fn urn(mut self, urn: &str) -> Self {
+        self.urn = urn.to_string();
+        self
     }
 }
 

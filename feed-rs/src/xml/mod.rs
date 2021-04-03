@@ -48,7 +48,6 @@ impl<R: BufRead> ElementSource<R> {
 
         loop {
             // A strange construction, but we need to throw an error if we cannot consume all the children (e.g. malformed XML)
-            // TODO idiomatic
             let peeked = state.peek();
             if peeked.is_err() {
                 return Err(state.next().err().unwrap());
@@ -200,7 +199,6 @@ impl<R: BufRead> SourceState<R> {
 
                 // Text
                 Event::Text(ref t) => {
-                    // TODO idiomatic
                     let event = XmlEvent::text(t, &reader);
                     if let Ok(Some(ref _t)) = event {
                         return event;
