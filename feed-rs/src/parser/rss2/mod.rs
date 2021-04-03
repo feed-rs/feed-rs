@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person, Text};
-use crate::parser::itunes::{handle_itunes_item_element, handle_itunes_channel_element};
+use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::mediarss;
 use crate::parser::mediarss::handle_media_element;
 use crate::parser::util::{if_ok_then_some, if_some_then, timestamp_rfc2822_lenient};

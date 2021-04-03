@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use mime::Mime;
 
-use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaText, MediaThumbnail, Text, MediaRating};
+use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaRating, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
@@ -132,8 +132,16 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
             (Some(NS::MediaRSS), "rating") => content.rating = handle_media_rating(child),
 
             // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
-            (Some(NS::MediaRSS), "title") => if media_obj.title.is_none() { media_obj.title = handle_text(child)? },
-            (Some(NS::MediaRSS), "description") => if media_obj.description.is_none() { media_obj.description = handle_text(child)? },
+            (Some(NS::MediaRSS), "title") => {
+                if media_obj.title.is_none() {
+                    media_obj.title = handle_text(child)?
+                }
+            }
+            (Some(NS::MediaRSS), "description") => {
+                if media_obj.description.is_none() {
+                    media_obj.description = handle_text(child)?
+                }
+            }
 
             // These elements are accumulated in the corresponding field of the parent MediaObject
             (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
@@ -170,8 +178,7 @@ fn handle_media_credit<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
 // Handles the "media:rating" element
 fn handle_media_rating<R: BufRead>(element: Element<R>) -> Option<MediaRating> {
     // Schema is "urn:simple" by default
-    let scheme = element.attr_value("scheme")
-        .unwrap_or("urn:simple".into());
+    let scheme = element.attr_value("scheme").unwrap_or_else(|| "urn:simple".into());
 
     element.child_as_text().map(|rating| MediaRating::new(rating).urn(scheme.as_str()))
 }

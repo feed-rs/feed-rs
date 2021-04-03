@@ -1,4 +1,4 @@
-use crate::model::{Image, MediaCredit, MediaObject, MediaThumbnail, Feed, Category, MediaRating, Person};
+use crate::model::{Category, Feed, Image, MediaCredit, MediaObject, MediaRating, MediaThumbnail, Person};
 use crate::parser::atom::handle_text;
 use crate::parser::util::{if_some_then, parse_npt};
 use crate::parser::ParseFeedResult;
@@ -72,7 +72,8 @@ fn handle_duration<R: BufRead>(element: Element<R>) -> Option<Duration> {
 
 // Handles <itunes:explicit> by mapping to {true|false} and wrapping in MediaRating instance
 fn handle_explicit<R: BufRead>(element: Element<R>) -> Option<MediaRating> {
-    element.child_as_text()
+    element
+        .child_as_text()
         .filter(|v| v.to_lowercase() == "true")
         .map(|v| MediaRating::new(v).urn("itunes"))
 }
