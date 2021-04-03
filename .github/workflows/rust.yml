@@ -21,7 +21,6 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-          components: rustfmt, clippy
 
       - uses: actions-rs/cargo@v1
         with:
@@ -30,6 +29,23 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+          components: rustfmt, clippy
 
       - uses: actions-rs/cargo@v1
         with:
