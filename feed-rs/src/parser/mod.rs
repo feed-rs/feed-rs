@@ -190,7 +190,7 @@ fn parse_json<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
 // Handles XML content
 fn parse_xml<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
     // Set up the source of XML elements from the input
-    let element_source = xml::ElementSource::new(source);
+    let element_source = xml::ElementSource::new(source)?;
     if let Ok(Some(root)) = element_source.root() {
         // Dispatch to the correct parser
         let version = root.attr_value("version");

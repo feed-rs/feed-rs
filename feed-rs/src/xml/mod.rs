@@ -7,12 +7,13 @@ use std::mem;
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Reader;
+use url::Url;
 
 #[cfg(test)]
 mod tests;
 
 /// Iteration over the XML elements may return an error (malformed content etc)
-pub(crate) type Result<T> = std::result::Result<T, XmlError>;
+pub(crate) type XmlResult<T> = Result<T, XmlError>;
 
 /// Produces elements from the provided source
 pub(crate) struct ElementSource<R: BufRead> {
@@ -26,22 +27,32 @@ impl<R: BufRead> ElementSource<R> {
     /// # Arguments
     ///
     /// * `xml_data` - the data you wish to parse
-    pub(crate) fn new(xml_data: R) -> ElementSource<R> {
+    pub(crate) fn new(xml_data: R) -> XmlResult<ElementSource<R>> {
+        ElementSource::new_with_base_uri(xml_data, None)
+    }
+
+    /// Parses the XML stream and emits elements
+    ///
+    /// # Arguments
+    ///
+    /// * `xml_data` - the data you wish to parse
+    /// * `xml_base_uri` - the base URI if known (e.g. Content-Location, feed URI etc)
+    pub(crate) fn new_with_base_uri(xml_data: R, xml_base_uri: Option<&str>) -> XmlResult<ElementSource<R>> {
         // Create the XML parser
         let mut reader = quick_xml::Reader::from_reader(xml_data);
         reader.expand_empty_elements(true).trim_markup_names_in_closing_tags(true).trim_text(false);
 
-        let state = RefCell::new(SourceState::new(reader));
-        ElementSource { state }
+        let state = RefCell::new(SourceState::new(reader, xml_base_uri)?);
+        Ok(ElementSource { state })
     }
 
     /// Returns the first element in the source
-    pub(crate) fn root(&self) -> Result<Option<Element<R>>> {
+    pub(crate) fn root(&self) -> XmlResult<Option<Element<R>>> {
         self.next_element_at_depth(1)
     }
 
     // Return the raw XML of all children at or below the nominated depth
-    fn children_as_string(&self, depth: u32, buffer: &mut String) -> Result<()> {
+    fn children_as_string(&self, depth: u32, buffer: &mut String) -> XmlResult<()> {
         // Read nodes at the current depth or greater
         let mut state = self.state.borrow_mut();
         let mut current_depth = depth;
@@ -93,7 +104,7 @@ impl<R: BufRead> ElementSource<R> {
     }
 
     // Returns the next element at the nominated depth
-    fn next_element_at_depth(&self, iter_depth: u32) -> Result<Option<Element<R>>> {
+    fn next_element_at_depth(&self, iter_depth: u32) -> XmlResult<Option<Element<R>>> {
         // Read nodes until we arrive at the correct depth
         let mut state = self.state.borrow_mut();
         while let Some(node) = state.next()? {
@@ -103,12 +114,16 @@ impl<R: BufRead> ElementSource<R> {
                     // Starting an element increases our depth
                     state.current_depth += 1;
 
+                    // Update the xml-base if required
+                    ElementSource::xml_base_push(&mut state, &attributes)?;
+
                     // If we are at the correct depth we found a node of interest
                     if state.current_depth == iter_depth {
                         let element = Element {
                             namespace,
                             name,
                             attributes,
+                            xml_base: ElementSource::xml_base_fetch(&state),
                             source: &self,
                             depth: state.current_depth,
                         };
@@ -117,7 +132,12 @@ impl<R: BufRead> ElementSource<R> {
                 }
 
                 // The end of an element moves back up the hierarchy
-                XmlEvent::End { .. } => state.current_depth -= 1,
+                XmlEvent::End { .. } => {
+                    state.current_depth -= 1;
+
+                    // Update the xml-base if required
+                    ElementSource::xml_base_pop(&mut state);
+                }
 
                 // Not interested in other events when looking for elements
                 _ => {}
@@ -154,6 +174,55 @@ impl<R: BufRead> ElementSource<R> {
 
         None
     }
+
+    // Fetches the currently active xml-base
+    fn xml_base_fetch(state: &SourceState<R>) -> Option<Url> {
+        // Return the last entry on the stack if it exists
+        state.base_uris.last()
+            .map(|(_, uri)| uri.clone())
+    }
+
+    // Pops xml-base entries off the stack as required
+    fn xml_base_pop(state: &mut SourceState<R>) {
+        // Pop any URIs off the stack if they are deeper than our new depth
+        while !state.base_uris.is_empty() {
+            let (depth, _) = state.base_uris.last().unwrap();
+            if depth > &state.current_depth {
+                state.base_uris.pop();
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Pushes an updated xml-base on to the stack as required
+    fn xml_base_push(state: &mut SourceState<R>, attributes: &Vec<NameValue>) -> XmlResult<()> {
+        // Find the xml-base attribute
+        let xml_base = attributes.iter()
+            .find(|nv| nv.name == "xml:base")
+            .map(|nv| &nv.value);
+
+        if let Some(xml_base) = xml_base {
+            match Url::parse(xml_base) {
+                Ok(uri) => {
+                    // It is an absolute URI so push it straight on to the stack
+                    state.base_uris.push((state.current_depth, uri));
+                }
+                Err(url::ParseError::RelativeUrlWithoutBase) => {
+                    // Try and form a new URL and push it to the stack
+                    if let Some((_, last)) = state.base_uris.last() {
+                        if let Ok(with_base) = last.join(xml_base) {
+                            state.base_uris.push((state.current_depth, with_base));
+                        }
+                    }
+                }
+                Err(e) => return Err(XmlError::Url { e }),
+            }
+        }
+
+        // No xml-base found
+        Ok(())
+    }
 }
 
 // Wraps the XML source and current depth of iteration
@@ -161,13 +230,21 @@ struct SourceState<R: BufRead> {
     reader: Reader<R>,
     buf_event: Vec<u8>,
     buf_ns: Vec<u8>,
-    next: Result<Option<XmlEvent>>,
+    next: XmlResult<Option<XmlEvent>>,
     current_depth: u32,
+    base_uris: Vec<(u32, Url)>,
 }
 
 impl<R: BufRead> SourceState<R> {
     // Wrap the reader in additional state (buffers, tree depth etc)
-    fn new(reader: Reader<R>) -> SourceState<R> {
+    fn new(reader: Reader<R>, xml_base_uri: Option<&str>) -> XmlResult<SourceState<R>> {
+        // If we have a base URI, parse it and init at the root
+        let mut base_uris = Vec::new();
+        if let Some(xml_base_uri) = xml_base_uri {
+            let uri = Url::parse(xml_base_uri)?;
+            base_uris.push((0, uri));
+        }
+
         let buf_event = Vec::with_capacity(512);
         let buf_ns = Vec::with_capacity(128);
         let mut state = SourceState {
@@ -176,13 +253,14 @@ impl<R: BufRead> SourceState<R> {
             buf_ns,
             next: Ok(None),
             current_depth: 0,
+            base_uris,
         };
         state.next = state.fetch_next();
-        state
+        Ok(state)
     }
 
     // Returns the next event
-    fn fetch_next(&mut self) -> Result<Option<XmlEvent>> {
+    fn fetch_next(&mut self) -> XmlResult<Option<XmlEvent>> {
         let reader = &mut self.reader;
         loop {
             let (ns, event) = reader.read_namespaced_event(&mut self.buf_event, &mut self.buf_ns)?;
@@ -222,7 +300,7 @@ impl<R: BufRead> SourceState<R> {
     }
 
     // Returns the next interesting event or None if no more events are found
-    fn next(&mut self) -> Result<Option<XmlEvent>> {
+    fn next(&mut self) -> XmlResult<Option<XmlEvent>> {
         let next = mem::replace(&mut self.next, Ok(None));
         self.next = self.fetch_next();
         next
@@ -230,7 +308,7 @@ impl<R: BufRead> SourceState<R> {
 
     // Peeks the next event (does not advance)
     // Callers should call next() to consume the event to move on
-    fn peek(&mut self) -> &Result<Option<XmlEvent>> {
+    fn peek(&mut self) -> &XmlResult<Option<XmlEvent>> {
         &self.next
     }
 }
@@ -245,6 +323,9 @@ pub(crate) struct Element<'a, R: BufRead> {
 
     /// A list of attributes associated with the element.
     pub attributes: Vec<NameValue>,
+
+    /// The base URL for this element per the xml:base specification (https://www.w3.org/TR/xmlbase/)
+    pub xml_base: Option<Url>,
 
     // Depth of this element
     depth: u32,
@@ -275,7 +356,7 @@ impl<'a, R: BufRead> Element<'a, R> {
     /// Concatenates the children of this node into a string
     ///
     /// NOTE: the input stream is parsed then re-serialised so the output will not be identical to the input
-    pub(crate) fn children_as_string(&self) -> Result<Option<String>> {
+    pub(crate) fn children_as_string(&self) -> XmlResult<Option<String>> {
         // Fill the buffer with the XML content below this element
         let mut buffer = String::new();
         self.source.children_as_string(self.depth + 1, &mut buffer)?;
@@ -304,7 +385,7 @@ pub(crate) struct ElementIter<'a, R: BufRead> {
 }
 
 impl<'a, R: BufRead> Iterator for ElementIter<'a, R> {
-    type Item = Result<Element<'a, R>>;
+    type Item = XmlResult<Element<'a, R>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.source.next_element_at_depth(self.depth).transpose()
@@ -346,12 +427,14 @@ pub(crate) struct NameValue {
 #[derive(Debug)]
 pub enum XmlError {
     Parser { e: quick_xml::Error },
+    Url { e: url::ParseError },
 }
 
 impl fmt::Display for XmlError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             XmlError::Parser { e } => write!(f, "Parser error: {}", e),
+            XmlError::Url { e } => write!(f, "Url error: {}", e),
         }
     }
 }
@@ -362,6 +445,10 @@ impl From<quick_xml::Error> for XmlError {
     fn from(e: quick_xml::Error) -> Self {
         XmlError::Parser { e }
     }
+}
+
+impl From<url::ParseError> for XmlError {
+    fn from(e: url::ParseError) -> Self { XmlError::Url { e } }
 }
 
 // Abstraction over the underlying XML reader event model
@@ -424,7 +511,7 @@ impl XmlEvent {
     }
 
     // Creates a new event corresponding to an XML text node
-    fn text<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> Result<Option<XmlEvent>> {
+    fn text<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> XmlResult<Option<XmlEvent>> {
         let text = text.unescape_and_decode(reader)?;
         if text.is_empty() {
             Ok(None)
