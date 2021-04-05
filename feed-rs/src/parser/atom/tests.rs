@@ -329,7 +329,7 @@ fn test_example_7() {
     let feed = parser::parse(test_data.as_bytes()).unwrap();
     let body = feed
         .entries
-        .get(3)
+        .get(0)
         .map(|e| e.content.as_ref())
         .unwrap()
         .map(|c| c.body.as_ref())
