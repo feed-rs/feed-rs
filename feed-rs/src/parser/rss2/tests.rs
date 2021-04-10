@@ -551,14 +551,28 @@ fn test_ch9() {
     assert_eq!(actual, expected);
 }
 
+// Verifies that we handle relative URLs for links on the <content:encoded> element
+#[test]
+fn test_relurl_1() {
+    // This example feed uses the xml:base standard so we don't need to pass the source URI
+    let test_data = test::fixture_as_string("rss_2.0_relurl_1.xml");
+    let actual = parser::parse_with_uri(test_data.as_bytes(), None).unwrap();
+
+    // Check the links in the feed
+    let content = actual.entries[0].content.as_ref().unwrap();
+    assert_eq!(content.src, Some(Link::new("https://insanity.industries/post/pareto-optimal-compression/".into())));
+    let content = actual.entries[1].content.as_ref().unwrap();
+    assert_eq!(content.src, Some(Link::new("https://insanity.industries/post/pacman-tracking-leftover-packages/".into())));
+}
+
 // Verifies that we handle relative URLs for links on the enclosure element
 #[test]
 fn test_relurl_2() {
-    // Parse the feed
+    // This example feed does not use the xml:base standard so we test using a provided feed URI
     let test_data = test::fixture_as_string("rss_2.0_relurl_2.xml");
     let actual = parser::parse_with_uri(test_data.as_bytes(), Some("http://example.com")).unwrap();
 
     // The link for the enclosure should be absolute
     let content = &actual.entries[0].media[0].content[0];
-    assert_eq!(content.url, Url::parse("http://example.com/images/me/hackergotchi-simpler.png").ok())
+    assert_eq!(content.url, Url::parse("http://example.com/images/me/hackergotchi-simpler.png").ok());
 }

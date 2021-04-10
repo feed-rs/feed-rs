@@ -187,7 +187,7 @@ impl<R: BufRead> ElementSource<R> {
     }
 
     // Pushes an updated xml-base on to the stack as required
-    fn xml_base_push(state: &mut SourceState<R>, attributes: &Vec<NameValue>) -> XmlResult<()> {
+    fn xml_base_push(state: &mut SourceState<R>, attributes: &[NameValue]) -> XmlResult<()> {
         // Find the xml-base attribute
         let xml_base = attributes.iter()
             .find(|nv| nv.name == "xml:base")
