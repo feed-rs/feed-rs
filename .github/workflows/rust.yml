@@ -6,12 +6,19 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        rust:
-          - stable
-#          - beta
-#          - nightly
-          - 1.48.0  # Used in freedesktop sdk - tracks https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/components/rust.bst#L114
+        # 1.48.0 is used in freedesktop sdk - tracks https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/components/rust.bst#L114
+        rust: [stable, 1.48.0]
+        experimental: [false]
+
+        # also test on beta + nightly for advance warning of breakage
+        include:
+          - rust: beta
+            experimental: true
+          - rust: nightly
+            experimental: true
+    continue-on-error: ${{ matrix.experimental }}
 
     steps:
       - uses: actions/checkout@v2
