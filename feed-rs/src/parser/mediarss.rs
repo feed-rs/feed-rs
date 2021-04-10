@@ -111,7 +111,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
 
     for attr in &element.attributes {
         match attr.name.as_str() {
-            "url" => content.url = util::parse_uri(&attr.value, &element),
+            "url" => content.url = util::parse_uri(&attr.value, element.xml_base.as_ref()),
 
             "type" => if_ok_then_some(attr.value.parse::<Mime>(), |v| content.content_type = v),
 

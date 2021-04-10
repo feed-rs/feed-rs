@@ -8,6 +8,7 @@ use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
 use url::Url;
+use crate::parser::util;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -500,7 +501,7 @@ impl Content {
     }
 
     pub fn src(mut self, url: &str) -> Self {
-        self.src = Some(Link::new(url.to_owned()));
+        self.src = Some(Link::new(url, None));
         self
     }
 }
@@ -594,7 +595,7 @@ impl Image {
     }
 
     pub fn link(mut self, link: &str) -> Self {
-        self.link = Some(Link::new(link.to_owned()));
+        self.link = Some(Link::new(link, None));
         self
     }
 
@@ -633,7 +634,12 @@ pub struct Link {
 }
 
 impl Link {
-    pub(crate) fn new(href: String) -> Link {
+    pub(crate) fn new<S: AsRef<str>>(href: S, base: Option<&Url>) -> Link {
+        let href = match util::parse_uri(href.as_ref(), base) {
+            Some(uri) => uri.to_string(),
+            None => href.as_ref().to_string()
+        };
+
         Link {
             href,
             rel: None,

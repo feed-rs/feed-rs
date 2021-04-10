@@ -27,9 +27,9 @@ fn convert(jf: JsonFeed) -> Feed {
     // Convert feed level fields
     feed.title = Some(Text::new(jf.title));
 
-    if_some_then(jf.home_page_url, |uri| feed.links.push(Link::new(uri)));
+    if_some_then(jf.home_page_url, |uri| feed.links.push(Link::new(&uri, None)));
 
-    if_some_then(jf.feed_url, |uri| feed.links.push(Link::new(uri)));
+    if_some_then(jf.feed_url, |uri| feed.links.push(Link::new(&uri, None)));
 
     if_some_then(jf.description, |text| feed.description = Some(Text::new(text)));
 
@@ -49,7 +49,7 @@ fn convert(jf: JsonFeed) -> Feed {
 
 // Handles an attachment
 fn handle_attachment(attachment: JsonAttachment) -> Link {
-    let mut link = Link::new(attachment.url);
+    let mut link = Link::new(&attachment.url, None);
 
     link.media_type = Some(attachment.mime_type);
     link.title = attachment.title;
@@ -75,9 +75,9 @@ fn handle_item(ji: JsonItem) -> Entry {
         ..Default::default()
     };
 
-    if_some_then(ji.url, |uri| entry.links.push(Link::new(uri)));
+    if_some_then(ji.url, |uri| entry.links.push(Link::new(uri, None)));
 
-    if_some_then(ji.external_url, |uri| entry.links.push(Link::new(uri)));
+    if_some_then(ji.external_url, |uri| entry.links.push(Link::new(uri, None)));
 
     if_some_then(ji.title, |text| entry.title = Some(Text::new(text)));
 

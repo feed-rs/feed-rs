@@ -69,7 +69,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 
             (None, "title") => image.title = child.child_as_text(),
 
-            (None, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri))),
+            (None, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
 
             // Nothing required for unknown elements
             _ => {}
@@ -124,7 +124,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
                 body: Some(ce.content),
                 content_type: ce.content_type,
                 length: None,
-                src: ce.src.map(Link::new),
+                src: ce.src.map(|s| Link::new(s, element.xml_base.as_ref())),
             });
         }
     }
@@ -140,7 +140,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
 // Handles <link>
 fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(Link::new)
+    element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))
 }
 
 // Handles <title>, <description>

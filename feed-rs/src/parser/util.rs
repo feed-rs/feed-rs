@@ -66,14 +66,14 @@ pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>,
 }
 
 // Parses a URI, potentially resolving relative URIs against the base if provided
-pub(crate) fn parse_uri<R: BufRead>(uri: &str, element: &Element<R>) -> Option<Url> {
+pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
     match Url::parse(uri) {
         // Absolute URIs will parse correctly
         Ok(uri) => Some(uri),
 
         // If its a relative URL we need to add the base
         Err(url::ParseError::RelativeUrlWithoutBase) => {
-            if let Some(base) = &element.xml_base {
+            if let Some(base) = base {
                 if let Ok(with_base) = base.join(uri) {
                     return Some(with_base)
                 }

@@ -18,11 +18,11 @@ fn test_example_1() {
             .content_type("text/html"))
         .updated_rfc3339("2005-07-31T12:29:29Z")
         .id("tag:example.org,2003:3")
-        .link(Link::new("http://example.org/".into())
+        .link(Link::new("http://example.org/", None)
             .rel("alternate")
             .media_type("text/html")
             .href_lang("en"))
-        .link(Link::new("http://example.org/feed.atom".into())
+        .link(Link::new("http://example.org/feed.atom", None)
             .rel("self")
             .media_type("application/atom+xml"))
         .rights(Text::new("Copyright (c) 2003, Mark Pilgrim".into()))
@@ -36,10 +36,10 @@ fn test_example_1() {
             .author(Person::new("Mark Pilgrim")
                 .uri("http://example.org/")
                 .email("f8dy@example.com"))
-            .link(Link::new("http://example.org/2005/04/02/atom".into())
+            .link(Link::new("http://example.org/2005/04/02/atom", None)
                 .rel("alternate")
                 .media_type("text/html"))
-            .link(Link::new("http://example.org/audio/ph34r_my_podcast.mp3".into())
+            .link(Link::new("http://example.org/audio/ph34r_my_podcast.mp3", None)
                 .rel("enclosure")
                 .media_type("audio/mpeg")
                 .length(1337))
@@ -64,10 +64,10 @@ fn test_example_2() {
     let expected = Feed::new(FeedType::Atom)
         .id("tag:theregister.co.uk,2005:feed/theregister.co.uk/science/")
         .title(Text::new("The Register - Science".into()))
-        .link(Link::new("https://www.theregister.co.uk/science/headlines.atom".into())
+        .link(Link::new("https://www.theregister.co.uk/science/headlines.atom", None)
             .rel("self")
             .media_type("application/atom+xml"))
-        .link(Link::new("https://www.theregister.co.uk/science/".into())
+        .link(Link::new("https://www.theregister.co.uk/science/", None)
             .rel("alternate")
             .media_type("text/html"))
         .rights(Text::new("Copyright © 2019, Situation Publishing".into()))
@@ -83,7 +83,7 @@ fn test_example_2() {
             .updated_rfc3339("2019-07-31T11:54:28Z")
             .author(Person::new("Richard Speed")
                 .uri("https://search.theregister.co.uk/?author=Richard%20Speed"))
-            .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/31/orbitbeyond_drops_nasa_moon_contract/".into())
+            .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/31/orbitbeyond_drops_nasa_moon_contract/", None)
                 .rel("alternate")
                 .media_type("text/html"))
             .title(Text::new("Will someone plz dump our shizz on the Moon, NASA begs as one of the space biz vendors drops out".into())
@@ -95,7 +95,7 @@ fn test_example_2() {
             .updated_rfc3339("2019-07-30T05:41:09Z")
             .author(Person::new("Kieren McCarthy")
                 .uri("https://search.theregister.co.uk/?author=Kieren%20McCarthy"))
-            .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/30/french_arming_satellites/".into())
+            .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/30/french_arming_satellites/", None)
                 .rel("alternate")
                 .media_type("text/html"))
             .title(Text::new("Satellites with lasers and machine guns coming! China's new plans? Trump's Space Force? Nope, the French".into())
@@ -116,21 +116,21 @@ fn test_example_3() {
 
     let expected = Feed::new(FeedType::Atom)
         .title(Text::new("The Akamai Blog".into()))
-        .link(Link::new("https://blogs.akamai.com/".into())
+        .link(Link::new("https://blogs.akamai.com/", None)
             .rel("alternate")
             .media_type("text/html"))
         .id("tag:blogs.akamai.com,2019-07-30://2")
         .updated_rfc3339("2019-07-30T15:02:05Z")
         .generator(Generator::new("Movable Type Pro 5.2.13")
             .uri("http://www.sixapart.com/movabletype/"))
-        .link(Link::new("http://feeds.feedburner.com/TheAkamaiBlog".into())
+        .link(Link::new("http://feeds.feedburner.com/TheAkamaiBlog", None)
             .rel("self")
             .media_type("application/atom+xml"))
-        .link(Link::new("http://pubsubhubbub.appspot.com/".into())
+        .link(Link::new("http://pubsubhubbub.appspot.com/", None)
             .rel("hub"))
         .entry(Entry::default()
             .title(Text::new("Time to Transfer Risk: Why Security Complexity & VPNs Are No Longer Sustainable".into()))
-            .link(Link::new("http://feedproxy.google.com/~r/TheAkamaiBlog/~3/NnQEuqRSyug/time-to-transfer-risk-why-security-complexity-vpns-are-no-longer-sustainable.html".into())
+            .link(Link::new("http://feedproxy.google.com/~r/TheAkamaiBlog/~3/NnQEuqRSyug/time-to-transfer-risk-why-security-complexity-vpns-are-no-longer-sustainable.html", None)
                 .rel("alternate")
                 .media_type("text/html"))
             .id("tag:blogs.akamai.com,2019://2.3337")
@@ -165,7 +165,7 @@ fn test_example_4() {
 
     let expected = Feed::new(FeedType::Atom)
         .author(Person::new("ebm-papst"))
-        .link(Link::new("http://www.ebmpapst.com/en/ebmpapst_productnews_atom_feed.xml".into())
+        .link(Link::new("http://www.ebmpapst.com/en/ebmpapst_productnews_atom_feed.xml", None)
             .rel("self")
             .media_type("application/atom+xml"))
         .title(Text::new("ebm-papst product news".into()))
@@ -173,7 +173,7 @@ fn test_example_4() {
         .updated_rfc3339("2019-07-29T09:41:09Z")
         .entry(Entry::default()
             .title(Text::new(" Connection with future".into()))
-            .link(Link::new("https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html".into())
+            .link(Link::new("https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html", None)
                 .rel("alternate"))
             .id("tag:ebmpapst.com,2019-07-17:0310161724098")
             .updated_rfc3339("2019-07-17T03:10:16Z")
@@ -197,14 +197,14 @@ fn test_example_5() {
         .author(Person::new("U.S. Geological Survey")
             .uri("https://earthquake.usgs.gov/"))
         .id("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_hour.atom")
-        .link(Link::new("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_hour.atom".into())
+        .link(Link::new("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_hour.atom", None)
             .rel("self"))
         .icon(Image::new("https://earthquake.usgs.gov/favicon.ico".into()))
         .entry(Entry::default()
             .id("urn:earthquake-usgs-gov:nc:73239366")
             .title(Text::new("M 3.6 - 15km W of Petrolia, CA".into()))
             .updated_rfc3339("2019-07-31T13:07:31.364Z")
-            .link(Link::new("https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366".into())
+            .link(Link::new("https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366", None)
                 .rel("alternate")
                 .media_type("text/html"))
             .summary(Text::new(r#"
@@ -233,12 +233,12 @@ fn test_example_6() {
     let expected = Feed::new(FeedType::Atom)
         .id("tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases")
         .link(
-            Link::new("https://github.com/feed-rs/feed-rs/releases".into())
+            Link::new("https://github.com/feed-rs/feed-rs/releases", None)
                 .rel("alternate")
                 .media_type("text/html"),
         )
         .link(
-            Link::new("https://github.com/feed-rs/feed-rs/releases.atom".into())
+            Link::new("https://github.com/feed-rs/feed-rs/releases.atom", None)
                 .rel("self")
                 .media_type("application/atom+xml"),
         )
@@ -249,7 +249,7 @@ fn test_example_6() {
                 .id("tag:github.com,2008:Repository/90976281/v0.2.0")
                 .updated_rfc3339("2020-01-19T16:08:59+11:00")
                 .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/v0.2.0".into())
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/v0.2.0", None)
                         .rel("alternate")
                         .media_type("text/html"),
                 )
@@ -276,7 +276,7 @@ fn test_example_6() {
                 .id("tag:github.com,2008:Repository/90976281/0.1.3")
                 .updated_rfc3339("2017-07-07T21:47:46+10:00")
                 .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.3".into())
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.3", None)
                         .rel("alternate")
                         .media_type("text/html"),
                 )
@@ -289,7 +289,7 @@ fn test_example_6() {
                 .id("tag:github.com,2008:Repository/90976281/0.1.1")
                 .updated_rfc3339("2017-06-16T18:49:36+10:00")
                 .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1".into())
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1", None)
                         .rel("alternate")
                         .media_type("text/html"),
                 )
@@ -306,7 +306,7 @@ fn test_example_6() {
                 .id("tag:github.com,2008:Repository/90976281/0.1.0")
                 .updated_rfc3339("2017-06-15T16:44:26+10:00")
                 .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0".into())
+                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0", None)
                         .rel("alternate")
                         .media_type("text/html"),
                 )
@@ -360,7 +360,7 @@ fn test_spec_1() {
     let expected = Feed::new(FeedType::Atom)
         .id("urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6")
         .title(Text::new("Example Feed".into()))
-        .link(Link::new("http://example.org/".into()).rel("alternate"))
+        .link(Link::new("http://example.org/", None).rel("alternate"))
         .updated_rfc3339("2003-12-13T18:30:02Z")
         .author(Person::new("John Doe"))
         .entry(
@@ -369,7 +369,7 @@ fn test_spec_1() {
                 .title(Text::new("Atom-Powered Robots Run Amok".into()))
                 .updated_rfc3339("2003-12-13T18:30:02Z")
                 .summary(Text::new("Some text.".into()))
-                .link(Link::new("http://example.org/2003/12/13/atom03".into()).rel("alternate")),
+                .link(Link::new("http://example.org/2003/12/13/atom03", None).rel("alternate")),
         );
 
     // Check

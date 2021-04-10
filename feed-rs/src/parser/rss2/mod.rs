@@ -119,7 +119,7 @@ fn handle_enclosure<R: BufRead>(element: Element<R>) -> Option<MediaObject> {
     for attr in &element.attributes {
         let tag_name = attr.name.as_str();
         match tag_name {
-            "url" => content.url = util::parse_uri(&attr.value, &element),
+            "url" => content.url = util::parse_uri(&attr.value, element.xml_base.as_ref()),
             "length" => content.size = attr.value.parse::<u64>().ok(),
             "type" => if_ok_then_some(attr.value.parse::<Mime>(), |mime| content.content_type = mime),
 
@@ -150,7 +150,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 
             (None, "title") => image.title = child.child_as_text(),
 
-            (None, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri))),
+            (None, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
 
             (None, "width") => if_some_then(child.child_as_text(), |width| {
                 if let Ok(width) = width.parse::<u32>() {
@@ -181,7 +181,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 
 // Handles <content:encoded>
 fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
-    let src = element.xml_base.as_ref().map(|xml_base| Link::new(xml_base.to_string()));
+    let src = element.xml_base.as_ref().map(|xml_base| Link::new(xml_base.to_string(), element.xml_base.as_ref()));
 
     Ok(element.children_as_string()?.map(|string| Content {
         body: Some(string),
@@ -256,7 +256,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
 // Handles <link>
 fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(Link::new)
+    element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))
 }
 
 // Handles <title>, <description> etc
