@@ -5,7 +5,7 @@ use mime::Mime;
 
 use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaRating, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
-use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 
 // TODO When an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
@@ -111,7 +111,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
 
     for attr in &element.attributes {
         match attr.name.as_str() {
-            "url" => content.url = Some(attr.value.clone()),
+            "url" => content.url = util::parse_uri(&attr.value, element.xml_base.as_ref()),
 
             "type" => if_ok_then_some(attr.value.parse::<Mime>(), |v| content.content_type = v),
 

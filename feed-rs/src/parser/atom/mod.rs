@@ -222,7 +222,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> Option<Image> {
 fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
     // Always need an href
     element.attr_value("href").map(|href| {
-        let mut link = Link::new(href);
+        let mut link = Link::new(&href, element.xml_base.as_ref());
 
         for attr in element.attributes {
             match attr.name.as_str() {

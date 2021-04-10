@@ -15,7 +15,7 @@ fn test_0_91_spec_1() {
     let expected = Feed::new(FeedType::RSS0)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("WriteTheWeb".into()))
-        .link(Link::new("http://writetheweb.com".into()))
+        .link(Link::new("http://writetheweb.com", None))
         .description(Text::new("News for web users that write back".into()))
         .language("en-us")
         .rights(Text::new("Copyright 2000, WriteTheWeb team.".into()))
@@ -30,13 +30,13 @@ fn test_0_91_spec_1() {
         .updated(actual.updated)        // not in source data
         .entry(Entry::default()
             .title(Text::new("Giving the world a pluggable Gnutella".into()))
-            .link(Link::new("http://writetheweb.com/read.php?item=24".into()))
+            .link(Link::new("http://writetheweb.com/read.php?item=24", None))
             .summary(Text::new("WorldOS is a framework on which to build programs that work like Freenet or Gnutella -allowing\n                distributed applications using peer-to-peer routing.\n            ".into()))
             .id(entry0.id.as_ref())     // not in source data
             .updated(entry0.updated))   // not in source data
         .entry(Entry::default()
             .title(Text::new("Syndication discussions hot up".into()))
-            .link(Link::new("http://writetheweb.com/read.php?item=23".into()))
+            .link(Link::new("http://writetheweb.com/read.php?item=23", None))
             .summary(Text::new("After a period of dormancy, the Syndication mailing list has become active again, with\n                contributions from leaders in traditional media and Web syndication.\n            ".into()))
             .id(entry1.id.as_ref())     // not in source data
             .updated(entry1.updated)); // not in source data
@@ -77,7 +77,7 @@ fn test_0_92_spec_1() {
     let expected = Feed::new(FeedType::RSS0)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Dave Winer: Grateful Dead".into()))
-        .link(Link::new("http://www.scripting.com/blog/categories/gratefulDead.html".into()))
+        .link(Link::new("http://www.scripting.com/blog/categories/gratefulDead.html", None))
         .description(Text::new("A high-fidelity Grateful Dead song every day. This is where we're experimenting with\n            enclosures on RSS news items that download when you're not using your computer. If it works (it will)\n            it will be the end of the Click-And-Wait multimedia experience on the Internet.\n        ".into()))
         .updated_rfc2822("Fri, 13 Apr 2001 19:23:02 GMT")
         .contributor(Person::new("managingEditor").email("dave@userland.com (Dave Winer)"))

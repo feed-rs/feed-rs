@@ -7,6 +7,7 @@ use std::error::Error;
 use std::io::BufRead;
 use std::ops::Add;
 use std::time::Duration;
+use url::Url;
 use uuid::Uuid;
 
 lazy_static! {
@@ -61,6 +62,28 @@ pub(crate) fn if_some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
 pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>, func: F) {
     if let Ok(v) = v {
         func(Some(v))
+    }
+}
+
+// Parses a URI, potentially resolving relative URIs against the base if provided
+pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
+    match Url::parse(uri) {
+        // Absolute URIs will parse correctly
+        Ok(uri) => Some(uri),
+
+        // If its a relative URL we need to add the base
+        Err(url::ParseError::RelativeUrlWithoutBase) => {
+            if let Some(base) = base {
+                if let Ok(with_base) = base.join(uri) {
+                    return Some(with_base);
+                }
+            }
+
+            None
+        }
+
+        // Nothing to do if we have a different error
+        _ => None,
     }
 }
 

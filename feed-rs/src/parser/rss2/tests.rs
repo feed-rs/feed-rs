@@ -3,6 +3,7 @@ use std::time::Duration;
 use crate::model::*;
 use crate::parser;
 use crate::util::test;
+use url::Url;
 
 // Basic example from various sources (Wikipedia etc).
 #[test]
@@ -16,7 +17,7 @@ fn test_example_1() {
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("RSS Title".into()))
         .description(Text::new("This is an example of an RSS feed".into()))
-        .link(Link::new("http://www.example.com/main.html".into()))
+        .link(Link::new("http://www.example.com/main.html", None))
         .updated_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000")
         .published_rfc2822("Sun, 06 Sep 2009 16:20:00 +0000")
         .ttl(1800)
@@ -24,7 +25,7 @@ fn test_example_1() {
             Entry::default()
                 .title(Text::new("Example entry".into()))
                 .summary(Text::new("Here is some text containing an interesting description.".into()))
-                .link(Link::new("http://www.example.com/blog/post/1".into()))
+                .link(Link::new("http://www.example.com/blog/post/1", None))
                 .id("7bd204c6-1655-4c27-aeee-53f933c5395f")
                 .published_rfc2822("Sun, 06 Sep 2009 16:20:00 +0000")
                 .updated_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000"),
@@ -47,7 +48,7 @@ fn test_example_2() {
         .updated(actual.updated)    // not present in the test data
         .title(Text::new("NASA Breaking News".into()))
         .description(Text::new("A RSS news feed containing the latest NASA news articles and press releases.".into()))
-        .link(Link::new("http://www.nasa.gov/".into()))
+        .link(Link::new("http://www.nasa.gov/", None))
         .language("en-us")
         .contributor(Person::new("managingEditor".into())
             .email("jim.wilson@nasa.gov"))
@@ -55,7 +56,7 @@ fn test_example_2() {
             .email("brian.dunbar@nasa.gov"))
         .entry(Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".into()))
-            .link(Link::new("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ".into()))
+            .link(Link::new("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ", None))
             .summary(Text::new(r#"More than three months after delivering several tons of supplies and scientific experiments to
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
                 depart the orbiting laboratory Tuesday, Aug. 6.
@@ -85,13 +86,13 @@ fn test_example_3() {
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("News, Politics, Opinion, Commentary, and Analysis".into()))
         .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.\n        ".into()))
-        .link(Link::new("https://www.newyorker.com/news".into()))
+        .link(Link::new("https://www.newyorker.com/news", None))
         .rights(Text::new("© Condé Nast 2019".into()))
         .language("en")
         .updated_rfc2822("Tue, 06 Aug 2019 10:46:05 +0000")
         .entry(Entry::default()
             .title(Text::new("How a Historian Uncovered Ronald Reagan’s Racist Remarks to Richard Nixon".into()))
-            .link(Link::new("\n                https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon\n            ".into()))
+            .link(Link::new("\n                https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon\n            ", None))
             .id("5d420f3abfe6c20008d5eaad")
             .author(Person::new("Isaac Chotiner".into()))
             .summary(Text::new("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
@@ -118,7 +119,7 @@ fn test_example_4() {
     let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Earthquakes today".into()))
-        .link(Link::new("http://www.earthquakenewstoday.com".into()))
+        .link(Link::new("http://www.earthquakenewstoday.com", None))
         .description(Text::new("Current and latest world earthquakes breaking news, activity and articles today".into()))
         .updated_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
         .language("en-us")
@@ -126,7 +127,7 @@ fn test_example_4() {
         .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
             .author(Person::new("admin".into()))
-            .link(Link::new("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ".into()))
+            .link(Link::new("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ", None))
             .published_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
             .category(Category::new("Earthquake breaking news"))
             .category(Category::new("Minor World Earthquakes Magnitude -3.9"))
@@ -152,7 +153,7 @@ fn test_example_5() {
     let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Ars Technica".into()))
-        .link(Link::new("https://arstechnica.com".into()))
+        .link(Link::new("https://arstechnica.com", None))
         .description(Text::new(
             "Serving the Technologist for more than a decade. IT news, reviews, and analysis.".into(),
         ))
@@ -171,7 +172,7 @@ fn test_example_5() {
                 .title(Text::new(
                     "Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter".into(),
                 ))
-                .link(Link::new("https://arstechnica.com/?p=1546121".into()))
+                .link(Link::new("https://arstechnica.com/?p=1546121", None))
                 .published_rfc2822("Mon, 05 Aug 2019 23:11:09 +0000")
                 .category(Category::new("Tech"))
                 .category(Category::new("alphabet"))
@@ -199,7 +200,7 @@ fn test_example_6() {
     let expected = Feed::new(FeedType::RSS2)
         .id("b2ef47d837e6c0d9d757e14852e5bde")     // hash of the link
         .title(Text::new("Latest Movie Trailers".into()))
-        .link(Link::new("https://trailers.apple.com/".into()))
+        .link(Link::new("https://trailers.apple.com/", None))
         .description(Text::new("Recently added Movie Trailers.".into()))
         .language("en-us")
         .updated_rfc3339("2020-02-07T15:30:28Z")
@@ -207,7 +208,7 @@ fn test_example_6() {
         .rights(Text::new("2020 Apple Inc.".into()))
         .entry(Entry::default()
             .title(Text::new("Vitalina Varela - Trailer".into()))
-            .link(Link::new("https://trailers.apple.com/trailers/independent/vitalina-varela".into()))
+            .link(Link::new("https://trailers.apple.com/trailers/independent/vitalina-varela", None))
             .summary(Text::new("A film of deeply concentrated beauty, acclaimed filmmaker Pedro Costa’s VITALINA VARELA stars nonprofessional actor Vitalina Varela in an extraordinary performance based on her own life. Vitalina plays a Cape Verdean woman who has travelled to Lisbon to reunite with her husband, after two decades of separation, only to arrive mere days after his funeral. Alone in a strange forbidding land, she perseveres and begins to establish a new life. Winner of the Golden Leopard for Best Film and Best Actress at the Locarno Film Festival, as well as an official selection of the Sundance Film Festival, VITALINA VARELA is a film of shadow and whisper, a profoundly moving and visually ravishing masterpiece.".into()))
             .content(Content::default()
                 .body(r#"<span style="font-size: 16px; font-weight: 900; text-decoration: underline;">Vitalina Varela - Trailer</span>"#))
@@ -230,7 +231,7 @@ fn test_spec_1() {
     let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Scripting News".into()))
-        .link(Link::new("http://www.scripting.com/".into()))
+        .link(Link::new("http://www.scripting.com/", None))
         .description(Text::new("A weblog about scripting and stuff like that.".into()))
         .language("en-us")
         .rights(Text::new("Copyright 1997-2002 Dave Winer".into()))
@@ -309,7 +310,7 @@ fn test_spiegel() {
         .language("de")
         .title(Text::new("SPIEGEL Update – Die Nachrichten".into()))
         .author(Person::new("DER SPIEGEL"))
-        .link(Link::new("https://www.spiegel.de/thema/spiegel-update/".into()))
+        .link(Link::new("https://www.spiegel.de/thema/spiegel-update/", None))
         .category(Category::new("News"))
         .contributor(Person::new("SPIEGEL Update – Die Nachrichten").email("charlotte.meyer-hamme@spiegel.de"))
         .description(Text::new("<p>Die wichtigsten Nachrichten des Tages &ndash; erg&auml;nzt um Meinungen und Empfehlungen aus der SPIEGEL-Redaktion. Wochentags aktualisieren wir morgens, mittags und abends unsere Meldungen. Am Wochenende blicken wir zur&uuml;ck auf die vergangene Woche &ndash; und erkl&auml;ren, was in der n&auml;chsten Woche wichtig wird.</p>".into()))
@@ -323,7 +324,7 @@ fn test_spiegel() {
                 .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into()))
                 .content(Content::default().body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#))
                 .summary(Text::new("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
-                .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri".into()))
+                .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri", None))
                 .published_rfc3339("2021-02-06T23:01:00Z")
                 .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
                 // <enclosure>
@@ -367,7 +368,7 @@ fn test_bbc() {
     let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("In Our Time".into()))
-        .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl".into()))
+        .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl", None))
         .category(Category::new("History"))
         .description(Text::new("Melvyn Bragg and guests discuss the history of ideas".into()))
         .author(Person::new("BBC Radio 4"))
@@ -386,7 +387,7 @@ fn test_bbc() {
                 .summary(Text::new("Melvyn Bragg and guests discuss...".into()))
                 .published_rfc2822("Thu, 25 Feb 2021 10:15:00 +0000")
                 .id("urn:bbc:podcast:m000sjxt")
-                .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt".into()))
+                .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt", None))
                 // <enclosure>
                 .media(
                     MediaObject::default().content(
@@ -442,7 +443,7 @@ fn test_ch9() {
             "Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights. "
                 .into(),
         ))
-        .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday".into()))
+        .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday", None))
         .category(Category::new("Technology"))
         .language("en")
         .published_rfc2822("Sat, 27 Feb 2021 06:55:01 GMT")
@@ -454,7 +455,8 @@ fn test_ch9() {
                 .title(Text::new("Troubleshoot AKS cluster issues with AKS Diagnostics and AKS Periscope".into()))
                 .summary(Text::new("<p>Yun Jung Choi shows Scott Hanselman...".into()))
                 .link(Link::new(
-                    "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope".into(),
+                    "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope",
+                    None,
                 ))
                 .published_rfc2822("Fri, 26 Feb 2021 20:00:00 GMT")
                 .updated_rfc2822("Sat, 27 Feb 2021 06:55:01 GMT")
@@ -548,4 +550,36 @@ fn test_ch9() {
 
     // Check
     assert_eq!(actual, expected);
+}
+
+// Verifies that we handle relative URLs for links on the <content:encoded> element
+#[test]
+fn test_relurl_1() {
+    // This example feed uses the xml:base standard so we don't need to pass the source URI
+    let test_data = test::fixture_as_string("rss_2.0_relurl_1.xml");
+    let actual = parser::parse_with_uri(test_data.as_bytes(), None).unwrap();
+
+    // Check the links in the feed
+    let content = actual.entries[0].content.as_ref().unwrap();
+    assert_eq!(
+        content.src,
+        Some(Link::new("https://insanity.industries/post/pareto-optimal-compression/", None))
+    );
+    let content = actual.entries[1].content.as_ref().unwrap();
+    assert_eq!(
+        content.src,
+        Some(Link::new("https://insanity.industries/post/pacman-tracking-leftover-packages/", None))
+    );
+}
+
+// Verifies that we handle relative URLs for links on the enclosure element
+#[test]
+fn test_relurl_2() {
+    // This example feed does not use the xml:base standard so we test using a provided feed URI
+    let test_data = test::fixture_as_string("rss_2.0_relurl_2.xml");
+    let actual = parser::parse_with_uri(test_data.as_bytes(), Some("http://example.com")).unwrap();
+
+    // The link for the enclosure should be absolute
+    let content = &actual.entries[0].media[0].content[0];
+    assert_eq!(content.url, Url::parse("http://example.com/images/me/hackergotchi-simpler.png").ok());
 }

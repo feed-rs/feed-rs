@@ -3,10 +3,12 @@ use std::time::Duration;
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
+use crate::parser::util;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
+use url::Url;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -499,7 +501,7 @@ impl Content {
     }
 
     pub fn src(mut self, url: &str) -> Self {
-        self.src = Some(Link::new(url.to_owned()));
+        self.src = Some(Link::new(url, None));
         self
     }
 }
@@ -593,7 +595,7 @@ impl Image {
     }
 
     pub fn link(mut self, link: &str) -> Self {
-        self.link = Some(Link::new(link.to_owned()));
+        self.link = Some(Link::new(link, None));
         self
     }
 
@@ -632,7 +634,12 @@ pub struct Link {
 }
 
 impl Link {
-    pub(crate) fn new(href: String) -> Link {
+    pub(crate) fn new<S: AsRef<str>>(href: S, base: Option<&Url>) -> Link {
+        let href = match util::parse_uri(href.as_ref(), base) {
+            Some(uri) => uri.to_string(),
+            None => href.as_ref().to_string(),
+        };
+
         Link {
             href,
             rel: None,
@@ -807,7 +814,7 @@ impl MediaCommunity {
 #[derive(Clone, Debug, PartialEq)]
 pub struct MediaContent {
     /// The direct URL
-    pub url: Option<String>,
+    pub url: Option<Url>,
     /// Standard MIME type
     pub content_type: Option<Mime>,
     /// Height and width
@@ -834,7 +841,7 @@ impl MediaContent {
     }
 
     pub fn url(mut self, url: &str) -> Self {
-        self.url = Some(url.to_string());
+        self.url = Some(Url::parse(url).unwrap());
         self
     }
 
