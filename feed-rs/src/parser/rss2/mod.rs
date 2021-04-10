@@ -4,11 +4,11 @@ use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person, Text};
-use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult, util};
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::mediarss;
 use crate::parser::mediarss::handle_media_element;
 use crate::parser::util::{if_ok_then_some, if_some_then, timestamp_rfc2822_lenient};
+use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
@@ -181,7 +181,10 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 
 // Handles <content:encoded>
 fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
-    let src = element.xml_base.as_ref().map(|xml_base| Link::new(xml_base.to_string(), element.xml_base.as_ref()));
+    let src = element
+        .xml_base
+        .as_ref()
+        .map(|xml_base| Link::new(xml_base.to_string(), element.xml_base.as_ref()));
 
     Ok(element.children_as_string()?.map(|string| Content {
         body: Some(string),

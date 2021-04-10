@@ -7,8 +7,8 @@ use std::error::Error;
 use std::io::BufRead;
 use std::ops::Add;
 use std::time::Duration;
-use uuid::Uuid;
 use url::Url;
+use uuid::Uuid;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -75,15 +75,15 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
         Err(url::ParseError::RelativeUrlWithoutBase) => {
             if let Some(base) = base {
                 if let Ok(with_base) = base.join(uri) {
-                    return Some(with_base)
+                    return Some(with_base);
                 }
             }
 
             None
-        },
+        }
 
         // Nothing to do if we have a different error
-        _ => None
+        _ => None,
     }
 }
 

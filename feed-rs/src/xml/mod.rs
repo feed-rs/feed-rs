@@ -169,8 +169,7 @@ impl<R: BufRead> ElementSource<R> {
     // Fetches the currently active xml-base
     fn xml_base_fetch(state: &SourceState<R>) -> Option<Url> {
         // Return the last entry on the stack if it exists
-        state.base_uris.last()
-            .map(|(_, uri)| uri.clone())
+        state.base_uris.last().map(|(_, uri)| uri.clone())
     }
 
     // Pops xml-base entries off the stack as required
@@ -189,9 +188,7 @@ impl<R: BufRead> ElementSource<R> {
     // Pushes an updated xml-base on to the stack as required
     fn xml_base_push(state: &mut SourceState<R>, attributes: &[NameValue]) -> XmlResult<()> {
         // Find the xml-base attribute
-        let xml_base = attributes.iter()
-            .find(|nv| nv.name == "xml:base")
-            .map(|nv| &nv.value);
+        let xml_base = attributes.iter().find(|nv| nv.name == "xml:base").map(|nv| &nv.value);
 
         if let Some(xml_base) = xml_base {
             match Url::parse(xml_base) {
@@ -439,7 +436,9 @@ impl From<quick_xml::Error> for XmlError {
 }
 
 impl From<url::ParseError> for XmlError {
-    fn from(e: url::ParseError) -> Self { XmlError::Url { e } }
+    fn from(e: url::ParseError) -> Self {
+        XmlError::Url { e }
+    }
 }
 
 // Abstraction over the underlying XML reader event model

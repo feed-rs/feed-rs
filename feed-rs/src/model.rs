@@ -3,12 +3,12 @@ use std::time::Duration;
 use chrono::{DateTime, Utc};
 use mime::Mime;
 
+use crate::parser::util;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
 use url::Url;
-use crate::parser::util;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -637,7 +637,7 @@ impl Link {
     pub(crate) fn new<S: AsRef<str>>(href: S, base: Option<&Url>) -> Link {
         let href = match util::parse_uri(href.as_ref(), base) {
             Some(uri) => uri.to_string(),
-            None => href.as_ref().to_string()
+            None => href.as_ref().to_string(),
         };
 
         Link {

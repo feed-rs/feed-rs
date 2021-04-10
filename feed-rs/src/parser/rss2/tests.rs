@@ -454,7 +454,10 @@ fn test_ch9() {
             Entry::default()
                 .title(Text::new("Troubleshoot AKS cluster issues with AKS Diagnostics and AKS Periscope".into()))
                 .summary(Text::new("<p>Yun Jung Choi shows Scott Hanselman...".into()))
-                .link(Link::new("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope", None))
+                .link(Link::new(
+                    "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope",
+                    None,
+                ))
                 .published_rfc2822("Fri, 26 Feb 2021 20:00:00 GMT")
                 .updated_rfc2822("Sat, 27 Feb 2021 06:55:01 GMT")
                 .id("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope")
@@ -558,9 +561,15 @@ fn test_relurl_1() {
 
     // Check the links in the feed
     let content = actual.entries[0].content.as_ref().unwrap();
-    assert_eq!(content.src, Some(Link::new("https://insanity.industries/post/pareto-optimal-compression/", None)));
+    assert_eq!(
+        content.src,
+        Some(Link::new("https://insanity.industries/post/pareto-optimal-compression/", None))
+    );
     let content = actual.entries[1].content.as_ref().unwrap();
-    assert_eq!(content.src, Some(Link::new("https://insanity.industries/post/pacman-tracking-leftover-packages/", None)));
+    assert_eq!(
+        content.src,
+        Some(Link::new("https://insanity.industries/post/pacman-tracking-leftover-packages/", None))
+    );
 }
 
 // Verifies that we handle relative URLs for links on the enclosure element

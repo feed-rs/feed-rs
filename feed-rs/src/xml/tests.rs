@@ -152,9 +152,7 @@ fn assert_title_bases<R: BufRead>(feed: Element<R>, expected: Vec<&str>) -> Test
     }
 
     // Verify the are as we expect
-    let expected = expected.iter()
-        .map(|uri| Url::parse(uri).unwrap())
-        .collect::<Vec<Url>>();
+    let expected = expected.iter().map(|uri| Url::parse(uri).unwrap()).collect::<Vec<Url>>();
     assert_eq!(expected, title_bases);
 
     Ok(())
@@ -181,7 +179,10 @@ fn test_xml_base() -> TestResult {
     let feed = source.root()?.unwrap();
     assert_eq!(&Url::parse("http://1.example.com/")?, feed.xml_base.as_ref().unwrap());
 
-    assert_title_bases(feed, vec!("http://1.example.com/test/", "http://2.example.com/test1/test2", "http://3.example.com/test3"))?;
+    assert_title_bases(
+        feed,
+        vec!["http://1.example.com/test/", "http://2.example.com/test1/test2", "http://3.example.com/test3"],
+    )?;
 
     Ok(())
 }
@@ -204,7 +205,7 @@ fn test_xml_base_header() -> TestResult {
     let feed = source.root()?.unwrap();
     assert_eq!(&Url::parse("http://example.com/feed/base/")?, feed.xml_base.as_ref().unwrap());
 
-    assert_title_bases(feed, vec!("http://example.com/feed/", "http://example.com/feed2/entry/"))?;
+    assert_title_bases(feed, vec!["http://example.com/feed/", "http://example.com/feed2/entry/"])?;
 
     Ok(())
 }
