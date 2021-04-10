@@ -27,17 +27,8 @@ impl<R: BufRead> ElementSource<R> {
     /// # Arguments
     ///
     /// * `xml_data` - the data you wish to parse
-    pub(crate) fn new(xml_data: R) -> XmlResult<ElementSource<R>> {
-        ElementSource::new_with_base_uri(xml_data, None)
-    }
-
-    /// Parses the XML stream and emits elements
-    ///
-    /// # Arguments
-    ///
-    /// * `xml_data` - the data you wish to parse
     /// * `xml_base_uri` - the base URI if known (e.g. Content-Location, feed URI etc)
-    pub(crate) fn new_with_base_uri(xml_data: R, xml_base_uri: Option<&str>) -> XmlResult<ElementSource<R>> {
+    pub(crate) fn new(xml_data: R, xml_base_uri: Option<&str>) -> XmlResult<ElementSource<R>> {
         // Create the XML parser
         let mut reader = quick_xml::Reader::from_reader(xml_data);
         reader.expand_empty_elements(true).trim_markup_names_in_closing_tags(true).trim_text(false);

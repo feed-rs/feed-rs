@@ -7,6 +7,7 @@ use mime::Mime;
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
+use url::Url;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -807,7 +808,7 @@ impl MediaCommunity {
 #[derive(Clone, Debug, PartialEq)]
 pub struct MediaContent {
     /// The direct URL
-    pub url: Option<String>,
+    pub url: Option<Url>,
     /// Standard MIME type
     pub content_type: Option<Mime>,
     /// Height and width
@@ -834,7 +835,7 @@ impl MediaContent {
     }
 
     pub fn url(mut self, url: &str) -> Self {
-        self.url = Some(url.to_string());
+        self.url = Some(Url::parse(url).unwrap());
         self
     }
 

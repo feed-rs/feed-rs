@@ -3,6 +3,7 @@ use std::time::Duration;
 use crate::model::*;
 use crate::parser;
 use crate::util::test;
+use url::Url;
 
 // Basic example from various sources (Wikipedia etc).
 #[test]
@@ -548,4 +549,16 @@ fn test_ch9() {
 
     // Check
     assert_eq!(actual, expected);
+}
+
+// Verifies that we handle relative URLs for links on the enclosure element
+#[test]
+fn test_relurl_2() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("rss_2.0_relurl_2.xml");
+    let actual = parser::parse_with_uri(test_data.as_bytes(), Some("http://example.com")).unwrap();
+
+    // The link for the enclosure should be absolute
+    let content = &actual.entries[0].media[0].content[0];
+    assert_eq!(content.url, Url::parse("http://example.com/images/me/hackergotchi-simpler.png").ok())
 }

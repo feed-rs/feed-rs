@@ -83,7 +83,7 @@ fn test_iterate_stream() -> TestResult {
     let test_data = test::fixture_as_string("xml_sample_1.xml");
 
     // Root element should be "catalog"
-    let source = ElementSource::new(test_data.as_bytes())?;
+    let source = ElementSource::new(test_data.as_bytes(), None)?;
     let catalog = source.root()?.unwrap();
     assert_eq!(catalog.name, "catalog");
     handle_catalog(catalog)?;
@@ -97,7 +97,7 @@ fn test_children_as_string() -> TestResult {
     let test_data = test::fixture_as_string("xml_sample_2.xml");
 
     // Root element should be "catalog"
-    let source = ElementSource::new(test_data.as_bytes())?;
+    let source = ElementSource::new(test_data.as_bytes(), None)?;
     let catalog = source.root()?.unwrap();
     assert_eq!(catalog.name, "catalog");
 
@@ -131,7 +131,7 @@ fn test_rss_decoding() -> TestResult {
         ("<title>Nice &#x3C;gorilla&#x3E;, what's he weigh?</title>", "Nice <gorilla>, what's he weigh?"),
     ];
     for (xml, expected) in tests {
-        let source = ElementSource::new(xml.as_bytes())?;
+        let source = ElementSource::new(xml.as_bytes(), None)?;
         let title = source.root()?.unwrap();
         let parsed = title.children_as_string()?.unwrap();
         assert_eq!(expected, parsed);
@@ -177,7 +177,7 @@ fn test_xml_base() -> TestResult {
         </feed>
     "#;
 
-    let source = ElementSource::new(xml.as_bytes())?;
+    let source = ElementSource::new(xml.as_bytes(), None)?;
     let feed = source.root()?.unwrap();
     assert_eq!(&Url::parse("http://1.example.com/")?, feed.xml_base.as_ref().unwrap());
 
@@ -200,7 +200,7 @@ fn test_xml_base_header() -> TestResult {
         </feed>
     "#;
 
-    let source = ElementSource::new_with_base_uri(xml.as_bytes(), Some("http://example.com"))?;
+    let source = ElementSource::new(xml.as_bytes(), Some("http://example.com"))?;
     let feed = source.root()?.unwrap();
     assert_eq!(&Url::parse("http://example.com/feed/base/")?, feed.xml_base.as_ref().unwrap());
 

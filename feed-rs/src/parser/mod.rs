@@ -94,11 +94,17 @@ impl fmt::Display for ParseErrorKind {
     }
 }
 
+/// Convenience for `parse_with_uri()` with `None` as the base_uri
+pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
+    parse_with_uri(source, None)
+}
+
 /// Parse the input (Atom, a flavour of RSS or JSON Feed) into our model
 ///
 /// # Arguments
 ///
 /// * `input` - A source of content such as a string, file etc.
+/// * `uri` - Source of the content, used to resolve relative URLs in XML based feeds
 ///
 /// NOTE: feed-rs uses the encoding attribute in the XML prolog to decode content.
 /// HTTP libraries (such as reqwest) provide a `text()` method which applies the content-encoding header and decodes the source into UTF-8.
@@ -124,7 +130,7 @@ impl fmt::Display for ParseErrorKind {
 ///
 ///
 /// ```
-pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
+pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<model::Feed> {
     // Buffer the reader for performance (e.g. when streaming from a network) and so we can peek to determine the type of content
     let mut input = BufReader::new(source);
 
@@ -132,7 +138,7 @@ pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
     input.fill_buf()?;
     let first_char = input.buffer().iter().find(|b| **b == b'<' || **b == b'{').map(|b| *b as char);
     let result = match first_char {
-        Some('<') => parse_xml(input),
+        Some('<') => parse_xml(input, uri),
 
         Some('{') => parse_json(input),
 
@@ -188,9 +194,9 @@ fn parse_json<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
 }
 
 // Handles XML content
-fn parse_xml<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
+fn parse_xml<R: BufRead>(source: R, uri: Option<&str>) -> ParseFeedResult<model::Feed> {
     // Set up the source of XML elements from the input
-    let element_source = xml::ElementSource::new(source)?;
+    let element_source = xml::ElementSource::new(source, uri)?;
     if let Ok(Some(root)) = element_source.root() {
         // Dispatch to the correct parser
         let version = root.attr_value("version");

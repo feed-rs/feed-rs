@@ -8,6 +8,7 @@ use std::io::BufRead;
 use std::ops::Add;
 use std::time::Duration;
 use uuid::Uuid;
+use url::Url;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -61,6 +62,28 @@ pub(crate) fn if_some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
 pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>, func: F) {
     if let Ok(v) = v {
         func(Some(v))
+    }
+}
+
+// Parses a URI, potentially resolving relative URIs against the base if provided
+pub(crate) fn parse_uri<R: BufRead>(uri: &str, element: &Element<R>) -> Option<Url> {
+    match Url::parse(uri) {
+        // Absolute URIs will parse correctly
+        Ok(uri) => Some(uri),
+
+        // If its a relative URL we need to add the base
+        Err(url::ParseError::RelativeUrlWithoutBase) => {
+            if let Some(base) = &element.xml_base {
+                if let Ok(with_base) = base.join(uri) {
+                    return Some(with_base)
+                }
+            }
+
+            None
+        },
+
+        // Nothing to do if we have a different error
+        _ => None
     }
 }
 
