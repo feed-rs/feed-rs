@@ -113,7 +113,7 @@ fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
 }
 
 // Handles <enclosure>
-fn handle_enclosure<R: BufRead>(element: Element<R>) -> Option<MediaObject> {
+fn handle_enclosure<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) {
     let mut content = MediaContent::new();
 
     for attr in &element.attributes {
@@ -130,12 +130,7 @@ fn handle_enclosure<R: BufRead>(element: Element<R>) -> Option<MediaObject> {
 
     // Wrap in a media object if we have a sufficient definition of a media object
     if content.url.is_some() {
-        Some(MediaObject {
-            content: vec![content],
-            ..Default::default()
-        })
-    } else {
-        None
+        media_obj.content.push(content);
     }
 }
 
@@ -227,7 +222,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (None, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid),
 
-            (None, "enclosure") => if_some_then(handle_enclosure(child), |obj| entry.media.push(obj)),
+            (None, "enclosure") => handle_enclosure(child, &mut media_rss),
 
             (None, "pubDate") => entry.published = handle_timestamp(child),
 
