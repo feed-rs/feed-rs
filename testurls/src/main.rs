@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print!("{}  ... ", line);
         let xml = reqwest::blocking::get(&line)?.bytes()?;
 
-        match parser::parse(xml.as_ref()) {
+        match parser::parse_with_uri(xml.as_ref(), Some(&line)) {
             Ok(_feed) => println!("ok"),
             Err(error) => println!("failed: {:?}\n{:?}\n-------------------------------------------------------------", error, xml),
         }
