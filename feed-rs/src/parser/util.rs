@@ -7,8 +7,12 @@ use std::error::Error;
 use std::io::BufRead;
 use std::ops::Add;
 use std::time::Duration;
-use url::Url;
 use uuid::Uuid;
+use url::{Url, ParseError};
+#[cfg(feature = "parse-html")]
+use kuchiki::traits::TendrilSink;
+#[cfg(feature = "parse-html")]
+use html5ever::{LocalName, Namespace, QualName};
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -185,6 +189,48 @@ fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
         duration.add(Duration::from_millis(millis))
     } else {
         duration
+    }
+}
+
+pub(crate) fn parse_html(text: &Text, xml_base: Option<Url>) -> Option<String> {
+    // optional feature to parse the html content and complete relative URLs
+    if cfg!(feature = "parse-html")
+    && text.content_type == mime::TEXT_HTML {
+        if let Some(xml_base) = xml_base {
+            let ctx_name = QualName::new(None, Namespace::from("feed-rs"), LocalName::from("content"));
+            let document = kuchiki::parse_fragment(ctx_name, vec![]).one(text.content.clone());
+
+            let a_selections = document.select("a").unwrap();
+            for a_selection in a_selections {
+                if let Some(href) = a_selection.attributes.borrow_mut().get_mut("href") {
+                    if Err(ParseError::RelativeUrlWithoutBase) == Url::parse(href) {
+                        *href = xml_base.join(href).unwrap().to_string();
+                        //println!("a.href: {}", href);
+                    }
+                }
+            }
+
+            let img_selections = document.select("img").unwrap();
+            for img_selection in img_selections {
+                if let Some(scr) = img_selection.attributes.borrow_mut().get_mut("src") {
+                    if Err(ParseError::RelativeUrlWithoutBase) == Url::parse(scr) {
+                        *scr = xml_base.join(scr).unwrap().to_string();
+                        //println!("img.src: {}", href);
+                    }
+                }
+            }
+            
+            let mut html = document.to_string();
+
+            // workaround: remove "<html></html>"
+            let len = html.len();
+            html.truncate(len-7);
+            Some(html.chars().skip(6).collect())
+        } else {
+            None
+        }
+    } else {
+        None
     }
 }
 

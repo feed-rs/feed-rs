@@ -90,6 +90,7 @@ fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
 fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     // Extract the content type so we can parse the body
     let content_type = element.attr_value("type");
+    let xml_base = element.xml_base.clone();
 
     // from http://www.atomenabled.org/developers/syndication/#contentElement
     match content_type.as_deref() {
@@ -98,7 +99,9 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
             handle_text(element)?
                 .map(|text| {
                     let mut content = Content::default();
-                    content.body = Some(text.content);
+                    content.body = if let Some(parsed_html) = crate::parser::util::parse_html(&text, xml_base) {
+                        Some(parsed_html)
+                    } else { Some(text.content) };
                     content.content_type = text.content_type;
                     Some(content)
                 })
