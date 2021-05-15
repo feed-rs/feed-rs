@@ -327,15 +327,7 @@ fn test_spiegel() {
                 .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri", None))
                 .published_rfc3339("2021-02-06T23:01:00Z")
                 .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
-                // <enclosure>
-                .media(MediaObject::default()
-                    .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510".into())
-                        .size(2519606)
-                        .content_type("audio/mpeg")
-                    )
-                )
-                // media: and itunes: tags
+                // <enclosure>, media: and itunes: tags
                 .media(MediaObject::default()
                     .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into())
                     .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into())
@@ -348,6 +340,11 @@ fn test_spiegel() {
                     .content(MediaContent::new()
                         .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())
                         .content_type("image/jpeg")
+                    )
+                    .content(MediaContent::new()
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510".into())
+                        .size(2519606)
+                        .content_type("audio/mpeg")
                     )
                     .duration(Duration::from_secs(312))
                 )
@@ -388,23 +385,20 @@ fn test_bbc() {
                 .published_rfc2822("Thu, 25 Feb 2021 10:15:00 +0000")
                 .id("urn:bbc:podcast:m000sjxt")
                 .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt", None))
-                // <enclosure>
-                .media(
-                    MediaObject::default().content(
-                        MediaContent::new()
-                            .url(
-                                "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3"
-                                    .into(),
-                            )
-                            .size(50496000)
-                            .content_type("audio/mpeg"),
-                    ),
-                )
-                // media: and itunes: tags
+                // <enclosure>,  media: and itunes: tags
                 .media(
                     MediaObject::default()
                         .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...".into())
                         .duration(Duration::from_secs(3156))
+                        .content(
+                            MediaContent::new()
+                                .url(
+                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3"
+                                        .into(),
+                                )
+                                .size(50496000)
+                                .content_type("audio/mpeg"),
+                        )
                         .content(
                             MediaContent::new()
                                 .url(
@@ -510,16 +504,7 @@ fn test_ch9() {
                                 .size(1),
                         ),
                 )
-                // <enclosure>
-                .media(
-                    MediaObject::default().content(
-                        MediaContent::new()
-                            .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into())
-                            .size(126659374)
-                            .content_type("video/mp4"),
-                    ),
-                )
-                // <media:*>
+                // <enclosure> and <media:*>
                 .media(
                     MediaObject::default()
                         .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
@@ -544,6 +529,12 @@ fn test_ch9() {
                                 .height(540)
                                 .width(960),
                         ))
+                        .content(
+                            MediaContent::new()
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into())
+                                .size(126659374)
+                                .content_type("video/mp4"),
+                        )
                         .credit("Scott Hanselman, Rob Caron"),
                 ),
         );
