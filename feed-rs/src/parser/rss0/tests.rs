@@ -71,7 +71,10 @@ fn test_0_91_missing_id() {
     assert_eq!(feed.id, "f17ff7bbd6c6bd74733bbf47cb8592d5");
     assert_eq!(feed.title.unwrap().content, "Servicio de Personal - Ingreso - Diputación de valencia");
     assert_eq!(feed.entries[0].id, "a30a565dde9ff8cb7063e0e8ad5db62");
-    assert_eq!(feed.entries[0].title.as_ref().unwrap().content, "Oferta de Empleo Público // 3 PROFESOR/A TÉCNICO/A (INGENIE. TÉC. FORESTAL) 17/17");
+    assert_eq!(
+        feed.entries[0].title.as_ref().unwrap().content,
+        "Oferta de Empleo Público // 3 PROFESOR/A TÉCNICO/A (INGENIE. TÉC. FORESTAL) 17/17"
+    );
 }
 
 // Trimmed example of RSS 0.92 from the specification at http://backend.userland.com/rss092

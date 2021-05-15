@@ -174,7 +174,6 @@ const LINK_HASH_KEY2: u64 = 0x90ee_ca4c_90a5_e228;
 // Creates a unique ID from the first link, or a UUID if no links are available
 fn create_id(links: &[model::Link], title: &Option<model::Text>, uri: Option<&str>) -> String {
     if let Some(link) = links.iter().next() {
-
         // Generate a stable ID for this item based on the first link
         let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
         hasher.write(link.href.as_bytes());
@@ -183,16 +182,13 @@ fn create_id(links: &[model::Link], title: &Option<model::Text>, uri: Option<&st
         }
         let hash = hasher.finish128();
         format!("{:x}{:x}", hash.h1, hash.h2)
-
     } else if let (Some(uri), Some(title)) = (uri, title) {
-
         // if no links were provided by the feed use the optional URI passed by the caller
         let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
         hasher.write(uri.as_bytes());
         hasher.write(title.content.as_bytes());
         let hash = hasher.finish128();
         format!("{:x}{:x}", hash.h1, hash.h2)
-
     } else {
         // Generate a UUID as last resort
         util::uuid_gen()
