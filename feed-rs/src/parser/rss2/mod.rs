@@ -204,8 +204,8 @@ fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
-    // Create a default object for MediaRSS elements that are not within a "<media:group>"
-    let mut media_rss = MediaObject::default();
+    // Create a default media object e.g. MediaRSS elements that are not within a "<media:group>", enclosures etc
+    let mut media_obj = MediaObject::default();
 
     for child in element.children() {
         let child = child?;
@@ -222,7 +222,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (None, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid),
 
-            (None, "enclosure") => handle_enclosure(child, &mut media_rss),
+            (None, "enclosure") => handle_enclosure(child, &mut media_obj),
 
             (None, "pubDate") => entry.published = handle_timestamp(child),
 
@@ -230,14 +230,14 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
-            // Itunes elements populate the MediaRSS MediaObject
-            (Some(NS::Itunes), _) => handle_itunes_item_element(child, &mut media_rss)?,
+            // Itunes elements populate the default MediaObject
+            (Some(NS::Itunes), _) => handle_itunes_item_element(child, &mut media_obj)?,
 
             // MediaRSS group creates a new object for this group of elements
             (Some(NS::MediaRSS), "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
 
             // MediaRSS tags that are not grouped are parsed into the default object
-            (Some(NS::MediaRSS), _) => handle_media_element(child, &mut media_rss)?,
+            (Some(NS::MediaRSS), _) => handle_media_element(child, &mut media_obj)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -245,8 +245,8 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
     }
 
     // If a media:content item with content exists, then emit it
-    if media_rss.has_content() {
-        entry.media.push(media_rss);
+    if media_obj.has_content() {
+        entry.media.push(media_obj);
     }
 
     Ok(Some(entry))
