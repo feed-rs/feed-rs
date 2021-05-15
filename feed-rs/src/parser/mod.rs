@@ -147,7 +147,7 @@ pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<
 
     // Post processing as required
     if let Ok(mut feed) = result {
-        assign_missing_ids(&mut feed);
+        assign_missing_ids(&mut feed, uri);
 
         Ok(feed)
     } else {
@@ -156,14 +156,14 @@ pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<
 }
 
 // Assigns IDs to missing feed + entries as required
-fn assign_missing_ids(feed: &mut model::Feed) {
+fn assign_missing_ids(feed: &mut model::Feed, uri: Option<&str>) {
     if feed.id.is_empty() {
-        feed.id = create_id(&feed.links, &feed.title);
+        feed.id = create_id(&feed.links, &feed.title, uri);
     }
 
     for entry in feed.entries.iter_mut() {
         if entry.id.is_empty() {
-            entry.id = create_id(&entry.links, &entry.title);
+            entry.id = create_id(&entry.links, &entry.title, uri);
         }
     }
 }
@@ -172,14 +172,21 @@ const LINK_HASH_KEY1: u64 = 0x5d78_4074_2887_2d60;
 const LINK_HASH_KEY2: u64 = 0x90ee_ca4c_90a5_e228;
 
 // Creates a unique ID from the first link, or a UUID if no links are available
-fn create_id(links: &[model::Link], title: &Option<model::Text>) -> String {
-    // Generate a stable ID for this item based on the first link
+fn create_id(links: &[model::Link], title: &Option<model::Text>, uri: Option<&str>) -> String {
     if let Some(link) = links.iter().next() {
+        // Generate a stable ID for this item based on the first link
         let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
         hasher.write(link.href.as_bytes());
         if let Some(title) = title {
             hasher.write(title.content.as_bytes());
         }
+        let hash = hasher.finish128();
+        format!("{:x}{:x}", hash.h1, hash.h2)
+    } else if let (Some(uri), Some(title)) = (uri, title) {
+        // if no links were provided by the feed use the optional URI passed by the caller
+        let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
+        hasher.write(uri.as_bytes());
+        hasher.write(title.content.as_bytes());
         let hash = hasher.finish128();
         format!("{:x}{:x}", hash.h1, hash.h2)
     } else {

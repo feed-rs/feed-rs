@@ -63,6 +63,20 @@ fn test_0_91_encoding_2() {
     assert!(feed.entries[0].summary.as_ref().unwrap().content.contains("prevenção"));
 }
 
+// Verifies that we can handle feeds without IDs and links
+#[test]
+fn test_0_91_missing_id() {
+    let test_data = test::fixture_as_raw("rss_0.91_missing_id.xml");
+    let feed = parser::parse_with_uri(test_data.as_slice(), Some("https://feeds.feedburner.com/ingreso_dival")).unwrap();
+    assert_eq!(feed.id, "f17ff7bbd6c6bd74733bbf47cb8592d5");
+    assert_eq!(feed.title.unwrap().content, "Servicio de Personal - Ingreso - Diputación de valencia");
+    assert_eq!(feed.entries[0].id, "a30a565dde9ff8cb7063e0e8ad5db62");
+    assert_eq!(
+        feed.entries[0].title.as_ref().unwrap().content,
+        "Oferta de Empleo Público // 3 PROFESOR/A TÉCNICO/A (INGENIE. TÉC. FORESTAL) 17/17"
+    );
+}
+
 // Trimmed example of RSS 0.92 from the specification at http://backend.userland.com/rss092
 #[test]
 fn test_0_92_spec_1() {
