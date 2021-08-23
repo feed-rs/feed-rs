@@ -115,7 +115,7 @@ impl<R: BufRead> ElementSource<R> {
                             name,
                             attributes,
                             xml_base: ElementSource::xml_base_fetch(&state),
-                            source: &self,
+                            source: self,
                             depth: state.current_depth,
                         };
                         return Ok(Some(element));
@@ -255,17 +255,17 @@ impl<R: BufRead> SourceState<R> {
             match event {
                 // Start of an element
                 Event::Start(ref e) => {
-                    return Ok(Some(XmlEvent::start(ns, e, &reader)));
+                    return Ok(Some(XmlEvent::start(ns, e, reader)));
                 }
 
                 // End of an element
                 Event::End(ref e) => {
-                    return Ok(Some(XmlEvent::end(e, &reader)));
+                    return Ok(Some(XmlEvent::end(e, reader)));
                 }
 
                 // Text
                 Event::Text(ref t) => {
-                    let event = XmlEvent::text(t, &reader);
+                    let event = XmlEvent::text(t, reader);
                     if let Ok(Some(ref _t)) = event {
                         return event;
                     }
@@ -273,7 +273,7 @@ impl<R: BufRead> SourceState<R> {
 
                 // CData
                 Event::CData(ref t) => {
-                    return Ok(Some(XmlEvent::text_from_cdata(t, &reader)));
+                    return Ok(Some(XmlEvent::text_from_cdata(t, reader)));
                 }
 
                 // The end of the document
@@ -336,7 +336,7 @@ impl<'a, R: BufRead> Element<'a, R> {
     /// Returns an iterator over children of this element (i.e. descends a level in the hierarchy)
     pub(crate) fn children(&self) -> ElementIter<R> {
         ElementIter {
-            source: &self.source,
+            source: self.source,
             depth: self.depth + 1,
         }
     }
