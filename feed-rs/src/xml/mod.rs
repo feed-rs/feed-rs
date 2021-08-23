@@ -263,17 +263,12 @@ impl<R: BufRead> SourceState<R> {
                     return Ok(Some(XmlEvent::end(e, reader)));
                 }
 
-                // Text
-                Event::Text(ref t) => {
+                // Text or CData
+                Event::Text(ref t) | Event::CData(ref t) => {
                     let event = XmlEvent::text(t, reader);
                     if let Ok(Some(ref _t)) = event {
                         return event;
                     }
-                }
-
-                // CData
-                Event::CData(ref t) => {
-                    return Ok(Some(XmlEvent::text_from_cdata(t, reader)));
                 }
 
                 // The end of the document
@@ -508,12 +503,6 @@ impl XmlEvent {
         } else {
             Ok(Some(XmlEvent::Text(text)))
         }
-    }
-
-    // Creates a new event corresponding to an XML CData tag
-    fn text_from_cdata<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> XmlEvent {
-        let text = reader.decode(text);
-        XmlEvent::Text(text.into())
     }
 }
 
