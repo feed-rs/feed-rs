@@ -297,6 +297,20 @@ fn test_heated() {
     assert!(content.body.as_ref().unwrap().contains("I have some good news and some bad news"));
 }
 
+// Check reported issue that RockPaperShotgun does not extract summary
+#[test]
+fn test_rockpapershotgun() {
+    let test_data = test::fixture_as_raw("rss_2.0_rps.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+
+    // Feed should have a description
+    assert!(!feed.description.unwrap().content.is_empty());
+
+    // Entry should too
+    let entry = &feed.entries[0];
+    assert!(!entry.summary.as_ref().unwrap().content.is_empty());
+}
+
 // Verifies that we can handle mixed MediaRSS and itunes/enclosure
 #[test]
 fn test_spiegel() {
