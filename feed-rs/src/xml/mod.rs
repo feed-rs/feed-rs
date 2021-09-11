@@ -378,24 +378,30 @@ impl<'a, R: BufRead> Iterator for ElementIter<'a, R> {
 /// Set of automatically recognised namespaces
 #[derive(Debug, PartialEq)]
 pub(crate) enum NS {
-    // http://purl.org/rss/1.0/modules/content/
+    // Namespaces we do not support are treated as this special case, to avoid processing content incorrectly
+    Unknown,
+    // Extensions
     Content,
-    // http://purl.org/dc/elements/1.1/
     DublinCore,
-    // http://search.yahoo.com/mrss/
     MediaRSS,
-    // http://www.itunes.com/dtds/podcast-1.0.dtd
     Itunes,
 }
 
 impl NS {
     fn parse(s: &str) -> Option<NS> {
         match s {
+            // Feed namespaces (Atom, RSS) are mapped on to None, since they are the base NS
+            // This handles documents where it is explicit, and implicit
+            "http://www.w3.org/2005/Atom" | "http://purl.org/rss/1.0/" => None,
+
+            // Extension namespaces
             "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
             "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
             "http://search.yahoo.com/mrss/" => Some(NS::MediaRSS),
             "http://www.itunes.com/dtds/podcast-1.0.dtd" => Some(NS::Itunes),
-            _ => None,
+
+            // Everything else is ignored
+            _ => Some(NS::Unknown),
         }
     }
 }
