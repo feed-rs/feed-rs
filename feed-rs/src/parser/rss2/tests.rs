@@ -368,6 +368,17 @@ fn test_spiegel() {
     assert_eq!(actual, expected);
 }
 
+// Check that we ignore tags in unknown namespaces
+// In the case of this feed, we ignore googleplay, and don't overwrite the RSS2 image
+#[test]
+fn test_spreaker_ignore_unknown_ns() {
+    let test_data = test::fixture_as_raw("rss_2.0_spreaker.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+
+    // Feed should have a logo
+    assert!(feed.logo.is_some());
+}
+
 // Verifies that we can handle mixed MediaRSS and itunes/enclosure
 #[test]
 fn test_bbc() {
