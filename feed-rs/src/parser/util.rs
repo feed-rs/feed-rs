@@ -48,7 +48,7 @@ lazy_static! {
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
-    Ok(element.children_as_string()?.map(Text::new))
+    Ok(element.children_as_string()?.map(Text::html))
 }
 
 /// Simplifies the "if let ... = parse ... assign" block

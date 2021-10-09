@@ -60,6 +60,13 @@ fn test_example_2() {
         .as_ref()
         .unwrap()
         .starts_with("This morning I saw two things that were Microsoft "));
+    // content media type should be text/html.
+    assert_eq!(feed.entries[0]
+        .content
+        .as_ref()
+        .unwrap()
+        .content_type,
+        "text/html");
 }
 
 // Example 1 from the spec at https://validator.w3.org/feed/docs/rss1.html
