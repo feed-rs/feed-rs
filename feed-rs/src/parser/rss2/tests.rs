@@ -602,3 +602,15 @@ fn test_relurl_2() {
     let content = &actual.entries[0].media[0].content[0];
     assert_eq!(content.url, Url::parse("http://example.com/images/me/hackergotchi-simpler.png").ok());
 }
+
+// Verify that valid XML with no whitespace separation is parsed correctly
+#[test]
+fn test_ghost_no_ws() {
+    let test_data = test::fixture_as_raw("rss_2.0_ghost.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+
+    // Entry should have content
+    for entry in feed.entries {
+        assert!(entry.content.is_some());
+    }
+}
