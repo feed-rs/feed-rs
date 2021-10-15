@@ -267,7 +267,7 @@ fn test_spec_1() {
                     r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>
             "#
-                    .to_owned(),
+                        .to_owned(),
                 ))
                 .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
@@ -280,7 +280,7 @@ fn test_spec_1() {
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation."
             "#
-                    .to_owned(),
+                        .to_owned(),
                 ))
                 .published_rfc2822("Mon, 30 Sep 2002 01:52:02 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
@@ -643,18 +643,6 @@ fn test_relurl_2() {
     assert_eq!(content.url, Url::parse("http://example.com/images/me/hackergotchi-simpler.png").ok());
 }
 
-// Verify that valid XML with no whitespace separation is parsed correctly
-#[test]
-fn test_ghost_no_ws() {
-    let test_data = test::fixture_as_raw("rss_2.0_ghost.xml");
-    let feed = parser::parse(test_data.as_slice()).unwrap();
-
-    // Entry should have content
-    for entry in feed.entries {
-        assert!(entry.content.is_some());
-    }
-}
-
 // Verify that attributes containing escaped characters are decoded correctly
 #[test]
 fn test_escaped_attributes() {
@@ -665,4 +653,28 @@ fn test_escaped_attributes() {
         feed.links[0].href,
         "https://www.reddit.com/search.rss?q=site%3Akevincox.ca&restrict_sr=&sort=new&t=all"
     );
+}
+
+// Verify that valid XML with no whitespace separation is parsed correctly
+#[test]
+fn test_ghost_no_ws() {
+    let test_data = test::fixture_as_raw("rss_2.0_ghost_1.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+
+    // Entry should have content
+    for entry in feed.entries {
+        assert!(entry.content.is_some());
+    }
+}
+// Verifies that we extract the 'content:encoded' element correctly from a variety of problematic feeds
+#[test]
+fn test_ghost_feeds() {
+    let files = vec!["rss_2.0_ghost_2.xml", "rss_2.0_cloudflare.xml", "rss_2.0_element_io.xml"];
+    for file in files {
+        let test_data = test::fixture_as_string(file);
+        let actual = parser::parse(test_data.as_bytes()).unwrap();
+        for entry in actual.entries {
+            assert!(entry.content.is_some());
+        }
+    }
 }
