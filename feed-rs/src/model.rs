@@ -282,6 +282,8 @@ pub struct Entry {
     /// * Atom (recommended): Conveys a short summary, abstract, or excerpt of the entry.
     /// * RSS 1+2 (optional): The item synopsis.
     /// * JSON Feed: the summary for the item, or the text content if no summary is provided and both text and html content are specified
+    ///
+    /// Warning: Some feeds (especially RSS) use significant whitespace in this field even in cases where it should be considered HTML. Consider rendering this field in a way that preserves whitespace-based formatting such as a double-newline to separate paragraphs.
     pub summary: Option<Text>,
 
     /// Structured classification of the item
@@ -996,6 +998,14 @@ impl Text {
     pub(crate) fn new(content: String) -> Text {
         Text {
             content_type: mime::TEXT_PLAIN,
+            src: None,
+            content,
+        }
+    }
+
+    pub(crate) fn html(content: String) -> Text {
+        Text {
+            content_type: mime::TEXT_HTML,
             src: None,
             content,
         }

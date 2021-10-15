@@ -24,7 +24,7 @@ fn test_example_1() {
         .entry(
             Entry::default()
                 .title(Text::new("Example entry".into()))
-                .summary(Text::new("Here is some text containing an interesting description.".into()))
+                .summary(Text::html("Here is some text containing an interesting description.".into()))
                 .link(Link::new("http://www.example.com/blog/post/1", None))
                 .id("7bd204c6-1655-4c27-aeee-53f933c5395f")
                 .published_rfc2822("Sun, 06 Sep 2009 16:20:00 +0000")
@@ -57,7 +57,7 @@ fn test_example_2() {
         .entry(Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".into()))
             .link(Link::new("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ", None))
-            .summary(Text::new(r#"More than three months after delivering several tons of supplies and scientific experiments to
+            .summary(Text::html(r#"More than three months after delivering several tons of supplies and scientific experiments to
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
                 depart the orbiting laboratory Tuesday, Aug. 6.
             "#.to_owned()))
@@ -95,7 +95,7 @@ fn test_example_3() {
             .link(Link::new("\n                https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon\n            ", None))
             .id("5d420f3abfe6c20008d5eaad")
             .author(Person::new("Isaac Chotiner".into()))
-            .summary(Text::new("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
+            .summary(Text::html("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
             .category(Category::new("News / Q. & A."))
             .published_rfc2822("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated(actual.updated)
@@ -133,9 +133,10 @@ fn test_example_4() {
             .category(Category::new("Minor World Earthquakes Magnitude -3.9"))
             .category(Category::new("Spárti"))
             .id("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ")
-            .summary(Text::new("\n                A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday.".into()))
+            .summary(Text::html("\n                A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday.".into()))
             .content(Content::default()
-                .body("<p><img class='size-full alignleft' title='Earthquake location 37.102S, 21.9072W' alt='Earthquake location 37.102S, 21.9072W' src='http://www.earthquakenewstoday.com/wp-content/uploads/35_20.jpg' width='146' height='146' />A minor earthquake with magnitude 3.5 (ml/mb) was detected on Tuesday, 8 kilometers (5 miles) from Aris in Greece.Exact location of event, depth 10 km, 21.9072&deg; East, 37.102&deg; North. </p>"))
+                .body("<p><img class='size-full alignleft' title='Earthquake location 37.102S, 21.9072W' alt='Earthquake location 37.102S, 21.9072W' src='http://www.earthquakenewstoday.com/wp-content/uploads/35_20.jpg' width='146' height='146' />A minor earthquake with magnitude 3.5 (ml/mb) was detected on Tuesday, 8 kilometers (5 miles) from Aris in Greece.Exact location of event, depth 10 km, 21.9072&deg; East, 37.102&deg; North. </p>")
+                .content_type("text/html"))
             .updated(actual.updated));
 
     // Check
@@ -180,8 +181,8 @@ fn test_example_5() {
                 .category(Category::new("google"))
                 .id("https://arstechnica.com/?p=1546121")
                 .author(Person::new("Samuel Axon".into()))
-                .summary(Text::new("Alphabet has $117 billion in cash on hand.".into()))
-                .content(Content::default().body("Google co-founder Larry Page is now CEO of Alphabet."))
+                .summary(Text::html("Alphabet has $117 billion in cash on hand.".into()))
+                .content(Content::default().body("Google co-founder Larry Page is now CEO of Alphabet.").content_type("text/html"))
                 .updated(actual.updated),
         );
 
@@ -209,9 +210,10 @@ fn test_example_6() {
         .entry(Entry::default()
             .title(Text::new("Vitalina Varela - Trailer".into()))
             .link(Link::new("https://trailers.apple.com/trailers/independent/vitalina-varela", None))
-            .summary(Text::new("A film of deeply concentrated beauty, acclaimed filmmaker Pedro Costa’s VITALINA VARELA stars nonprofessional actor Vitalina Varela in an extraordinary performance based on her own life. Vitalina plays a Cape Verdean woman who has travelled to Lisbon to reunite with her husband, after two decades of separation, only to arrive mere days after his funeral. Alone in a strange forbidding land, she perseveres and begins to establish a new life. Winner of the Golden Leopard for Best Film and Best Actress at the Locarno Film Festival, as well as an official selection of the Sundance Film Festival, VITALINA VARELA is a film of shadow and whisper, a profoundly moving and visually ravishing masterpiece.".into()))
+            .summary(Text::html("A film of deeply concentrated beauty, acclaimed filmmaker Pedro Costa’s VITALINA VARELA stars nonprofessional actor Vitalina Varela in an extraordinary performance based on her own life. Vitalina plays a Cape Verdean woman who has travelled to Lisbon to reunite with her husband, after two decades of separation, only to arrive mere days after his funeral. Alone in a strange forbidding land, she perseveres and begins to establish a new life. Winner of the Golden Leopard for Best Film and Best Actress at the Locarno Film Festival, as well as an official selection of the Sundance Film Festival, VITALINA VARELA is a film of shadow and whisper, a profoundly moving and visually ravishing masterpiece.".into()))
             .content(Content::default()
-                .body(r#"<span style="font-size: 16px; font-weight: 900; text-decoration: underline;">Vitalina Varela - Trailer</span>"#))
+                .body(r#"<span style="font-size: 16px; font-weight: 900; text-decoration: underline;">Vitalina Varela - Trailer</span>"#)
+                .content_type("text/html"))
             .published_rfc3339("2020-02-06T08:00:00Z")
             .id("73226f21f249d758bd97a1fac90897d2")        // hash of the link
             .updated(actual.updated));
@@ -243,7 +245,7 @@ fn test_spec_1() {
         .ttl(40)
         .entry(
             Entry::default()
-                .summary(Text::new(
+                .summary(Text::html(
                     r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>
             "#
@@ -255,7 +257,7 @@ fn test_spec_1() {
         ) // copy from feed
         .entry(
             Entry::default()
-                .summary(Text::new(
+                .summary(Text::html(
                     r#"<a href="http://www.docuverse.com/blog/donpark/2002/09/29.html#a68">Don Park</a>:
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation."
@@ -295,6 +297,7 @@ fn test_heated() {
     let feed = parser::parse(test_data.as_slice()).unwrap();
     let content = &feed.entries[0].content.as_ref().unwrap();
     assert!(content.body.as_ref().unwrap().contains("I have some good news and some bad news"));
+    assert_eq!(content.content_type, "text/html");
 }
 
 // Check reported issue that RockPaperShotgun does not extract summary
@@ -336,8 +339,8 @@ fn test_spiegel() {
         .entry(
             Entry::default()
                 .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into()))
-                .content(Content::default().body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#))
-                .summary(Text::new("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
+                .content(Content::default().body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#).content_type("text/html"))
+                .summary(Text::html("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
                 .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri", None))
                 .published_rfc3339("2021-02-06T23:01:00Z")
                 .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
@@ -406,7 +409,7 @@ fn test_bbc() {
         .entry(
             Entry::default()
                 .title(Text::new("Marcus Aurelius".into()))
-                .summary(Text::new("Melvyn Bragg and guests discuss...".into()))
+                .summary(Text::html("Melvyn Bragg and guests discuss...".into()))
                 .published_rfc2822("Thu, 25 Feb 2021 10:15:00 +0000")
                 .id("urn:bbc:podcast:m000sjxt")
                 .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt", None))
@@ -472,7 +475,7 @@ fn test_ch9() {
         .entry(
             Entry::default()
                 .title(Text::new("Troubleshoot AKS cluster issues with AKS Diagnostics and AKS Periscope".into()))
-                .summary(Text::new("<p>Yun Jung Choi shows Scott Hanselman...".into()))
+                .summary(Text::html("<p>Yun Jung Choi shows Scott Hanselman...".into()))
                 .link(Link::new(
                     "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope",
                     None,

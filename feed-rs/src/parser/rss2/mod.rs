@@ -183,7 +183,7 @@ fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 
     Ok(element.children_as_string()?.map(|string| Content {
         body: Some(string),
-        content_type: mime::TEXT_PLAIN,
+        content_type: mime::TEXT_HTML,
         src,
         ..Default::default()
     }))
