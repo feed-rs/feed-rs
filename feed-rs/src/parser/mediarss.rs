@@ -126,44 +126,40 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
             _ => {}
         }
     }
-    for child in element.children() {
-        let child = child?;
-        match child.ns_and_tag() {
-            (Some(NS::MediaRSS), "rating") => content.rating = handle_media_rating(child),
 
-            // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
-            (Some(NS::MediaRSS), "title") => {
-                if media_obj.title.is_none() {
-                    media_obj.title = handle_text(child)?
-                }
-            }
-            (Some(NS::MediaRSS), "description") => {
-                if media_obj.description.is_none() {
-                    media_obj.description = handle_text(child)?
-                }
-            }
-
-            // These elements are accumulated in the corresponding field of the parent MediaObject
-            (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
-            (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
-
-            // Nothing required for unknown elements
-            _ => {}
-        }
-    }
-
-    // If we found a URL, we consider this a valid element
-    // Note ... may have to handle media:player too
+    // If we found a URL, we consider this a valid content element, and need to parse its children for content related info (e.g. rating)
+    // or sub-elements from the media spec
     if content.url.is_some() {
-        // media:content elements can also contain other media:* items
         for child in element.children() {
             let child = child?;
-            if let Some(NS::MediaRSS) = child.ns_and_tag().0 {
-                handle_media_element(child, media_obj)?;
+            match child.ns_and_tag() {
+                (Some(NS::MediaRSS), "rating") => content.rating = handle_media_rating(child),
+
+                // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
+                (Some(NS::MediaRSS), "title") => {
+                    if media_obj.title.is_none() {
+                        media_obj.title = handle_text(child)?
+                    }
+                }
+                (Some(NS::MediaRSS), "description") => {
+                    if media_obj.description.is_none() {
+                        media_obj.description = handle_text(child)?
+                    }
+                }
+
+                // These elements are accumulated in the corresponding field of the parent MediaObject
+                (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
+                (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
+
+                // Other elements in the namespace are handled recursively
+                (Some(NS::MediaRSS), _) => handle_media_element(child, media_obj)?,
+
+                // Nothing required for unknown elements
+                _ => {}
             }
         }
 
-        // We will emit this parsed content
+        // Emit this parsed content
         media_obj.content.push(content);
     }
 
