@@ -182,7 +182,11 @@ fn test_example_5() {
                 .id("https://arstechnica.com/?p=1546121")
                 .author(Person::new("Samuel Axon".into()))
                 .summary(Text::html("Alphabet has $117 billion in cash on hand.".into()))
-                .content(Content::default().body("Google co-founder Larry Page is now CEO of Alphabet.").content_type("text/html"))
+                .content(
+                    Content::default()
+                        .body("Google co-founder Larry Page is now CEO of Alphabet.")
+                        .content_type("text/html"),
+                )
                 .updated(actual.updated),
         );
 
