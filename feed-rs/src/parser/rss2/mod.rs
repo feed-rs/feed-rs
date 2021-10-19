@@ -204,9 +204,6 @@ fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
-    // Create a default media object e.g. MediaRSS elements that are not within a "<media:group>", enclosures etc
-    let mut media_obj = MediaObject::default();
-
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
@@ -222,7 +219,13 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (None, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid),
 
-            (None, "enclosure") => handle_enclosure(child, &mut media_obj),
+            (None, "enclosure") => {
+                let mut media_obj = MediaObject::default();
+                handle_enclosure(child, &mut media_obj);
+                if media_obj.has_content() {
+                    entry.media.push(media_obj);
+                }
+            }
 
             (None, "pubDate") => entry.published = handle_timestamp(child),
 
@@ -231,22 +234,29 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
             (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
             // Itunes elements populate the default MediaObject
-            (Some(NS::Itunes), _) => handle_itunes_item_element(child, &mut media_obj)?,
+            (Some(NS::Itunes), _) => {
+                let mut media_obj = MediaObject::default();
+                handle_itunes_item_element(child, &mut media_obj)?;
+                if media_obj.has_content() {
+                    entry.media.push(media_obj);
+                }
+            }
 
             // MediaRSS group creates a new object for this group of elements
             (Some(NS::MediaRSS), "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
 
             // MediaRSS tags that are not grouped are parsed into the default object
-            (Some(NS::MediaRSS), _) => handle_media_element(child, &mut media_obj)?,
+            (Some(NS::MediaRSS), _) => {
+                let mut media_obj = MediaObject::default();
+                handle_media_element(child, &mut media_obj)?;
+                if media_obj.has_content() {
+                    entry.media.push(media_obj);
+                }
+            }
 
             // Nothing required for unknown elements
             _ => {}
         }
-    }
-
-    // If a media:content item with content exists, then emit it
-    if media_obj.has_content() {
-        entry.media.push(media_obj);
     }
 
     Ok(Some(entry))
