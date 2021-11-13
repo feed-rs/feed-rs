@@ -8,8 +8,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 1.53.0 is used in freedesktop sdk - tracks https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/components/rust.bst#L130
-        rust: [stable, 1.53.0]
+        # 1.55.0 is used in freedesktop sdk - tracks https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/components/rust.bst#L130
+        rust: [stable, 1.55.0]
         experimental: [false]
 
         # also test on beta + nightly for advance warning of breakage
