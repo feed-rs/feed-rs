@@ -353,17 +353,17 @@ fn test_spiegel() {
                     .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into())
                     .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into())
                     .credit("DER SPIEGEL")
-                    .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())))
+                    .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())))
                     .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510".into())
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510".into())
                         .content_type("audio/mpeg")
                     )
                     .content(MediaContent::new()
-                        .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&amp;size=Large".into())
+                        .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())
                         .content_type("image/jpeg")
                     )
                     .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&amp;in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&amp;t=1612652510".into())
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510".into())
                         .size(2519606)
                         .content_type("audio/mpeg")
                     )
@@ -617,4 +617,16 @@ fn test_ghost_no_ws() {
     for entry in feed.entries {
         assert!(entry.content.is_some());
     }
+}
+
+// Verify that attributes containing escaped characters are decoded correctly
+#[test]
+fn test_escaped_attributes() {
+    let test_data = test::fixture_as_raw("rss_2.0_reddit.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+
+    assert_eq!(
+        feed.links[0].href,
+        "https://www.reddit.com/search.rss?q=site%3Akevincox.ca&restrict_sr=&sort=new&t=all"
+    );
 }

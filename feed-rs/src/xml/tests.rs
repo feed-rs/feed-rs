@@ -209,3 +209,23 @@ fn test_xml_base_header() -> TestResult {
 
     Ok(())
 }
+
+// Verifies the XML parser handles the xml:base schema
+#[test]
+fn test_xml_unescape_attrib() -> TestResult {
+    let xml = r#"
+        <feed xmlns="http://www.w3.org/2005/Atom">
+            <link rel="self"
+                  href="https://www.reddit.com/search.rss?q=site%3Akevincox.ca&amp;restrict_sr=&amp;sort=new&amp;t=all"
+                  type="application/atom+xml"/>
+        </feed>
+    "#;
+
+    let source = ElementSource::new(xml.as_bytes(), None)?;
+    let root = source.root()?.unwrap();
+    let link = root.children().next().unwrap()?;
+    let href = link.attributes.iter().find(|a| a.name == "href").unwrap();
+    assert_eq!(href.value, "https://www.reddit.com/search.rss?q=site%3Akevincox.ca&restrict_sr=&sort=new&t=all");
+
+    Ok(())
+}

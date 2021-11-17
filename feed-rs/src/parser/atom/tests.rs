@@ -474,7 +474,7 @@ fn test_mediarss_newscred() {
                 .height(1365),
         )
         .thumbnail(MediaThumbnail::new(
-            Image::new("https://www.example.com/Zz1hNjRiMWFjMzdhYWIzNTEwNjk2YjIzYjc5NWQxNWFlMA==?width=75&amp;height=75".to_string())
+            Image::new("https://www.example.com/Zz1hNjRiMWFjMzdhYWIzNTEwNjk2YjIzYjc5NWQxNWFlMA==?width=75&height=75".to_string())
                 .width(2048)
                 .height(1365),
         ));

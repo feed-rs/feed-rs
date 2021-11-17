@@ -6,7 +6,7 @@ use std::io::BufRead;
 use std::mem;
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
-use quick_xml::Reader;
+use quick_xml::{escape, Reader};
 use url::Url;
 
 #[cfg(test)]
@@ -486,12 +486,13 @@ impl XmlEvent {
             .filter_map(|a| {
                 if let Ok(a) = a {
                     let name = reader.decode(a.key);
-                    let value = reader.decode(a.value.as_ref());
 
-                    Some(NameValue {
-                        name: name.into(),
-                        value: value.into(),
-                    })
+                    // Unescape the XML attribute, or use the original value if this fails (broken escape sequence etc)
+                    let value = escape::unescape(a.value.as_ref())
+                        .map(|v| String::from_utf8_lossy(v.as_ref()).to_string())
+                        .unwrap_or_else(|_| reader.decode(a.value.as_ref()).to_string());
+
+                    Some(NameValue { name: name.into(), value })
                 } else {
                     None
                 }
