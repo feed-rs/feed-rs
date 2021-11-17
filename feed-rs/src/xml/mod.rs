@@ -492,10 +492,7 @@ impl XmlEvent {
                         .map(|v| String::from_utf8_lossy(v.as_ref()).to_string())
                         .unwrap_or_else(|_| reader.decode(a.value.as_ref()).to_string());
 
-                    Some(NameValue {
-                        name: name.into(),
-                        value,
-                    })
+                    Some(NameValue { name: name.into(), value })
                 } else {
                     None
                 }

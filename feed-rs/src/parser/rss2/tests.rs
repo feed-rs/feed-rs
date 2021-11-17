@@ -625,5 +625,8 @@ fn test_escaped_attributes() {
     let test_data = test::fixture_as_raw("rss_2.0_reddit.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
 
-    assert_eq!(feed.links[0].href, "https://www.reddit.com/search.rss?q=site%3Akevincox.ca&restrict_sr=&sort=new&t=all");
+    assert_eq!(
+        feed.links[0].href,
+        "https://www.reddit.com/search.rss?q=site%3Akevincox.ca&restrict_sr=&sort=new&t=all"
+    );
 }
