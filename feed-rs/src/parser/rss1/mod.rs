@@ -17,11 +17,11 @@ pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "channel") => handle_channel(&mut feed, child)?,
+            (NS::RSS, "channel") => handle_channel(&mut feed, child)?,
 
-            (None, "image") => feed.logo = handle_image(child)?,
+            (NS::RSS, "image") => feed.logo = handle_image(child)?,
 
-            (None, "item") => if_some_then(handle_item(child)?, |entry| feed.entries.push(entry)),
+            (NS::RSS, "item") => if_some_then(handle_item(child)?, |entry| feed.entries.push(entry)),
 
             // Nothing required for unknown elements
             _ => {}
@@ -36,19 +36,19 @@ fn handle_channel<R: BufRead>(feed: &mut Feed, channel: Element<R>) -> ParseFeed
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "title") => feed.title = handle_text(child),
+            (NS::RSS, "title") => feed.title = handle_text(child),
 
-            (None, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
+            (NS::RSS, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
 
-            (None, "description") => feed.description = handle_text(child),
+            (NS::RSS, "description") => feed.description = handle_text(child),
 
-            (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
 
-            (Some(NS::DublinCore), "date") => feed.published = handle_timestamp(child),
+            (NS::DublinCore, "date") => feed.published = handle_timestamp(child),
 
-            (Some(NS::DublinCore), "language") => feed.language = child.child_as_text(),
+            (NS::DublinCore, "language") => feed.language = child.child_as_text(),
 
-            (Some(NS::DublinCore), "rights") => feed.rights = handle_text(child),
+            (NS::DublinCore, "rights") => feed.rights = handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -65,11 +65,11 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "url") => if_some_then(child.child_as_text(), |url| image.uri = url),
+            (NS::RSS, "url") => if_some_then(child.child_as_text(), |url| image.uri = url),
 
-            (None, "title") => image.title = child.child_as_text(),
+            (NS::RSS, "title") => image.title = child.child_as_text(),
 
-            (None, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
+            (NS::RSS, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
 
             // Nothing required for unknown elements
             _ => {}
@@ -92,25 +92,25 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "title") => entry.title = handle_text(child),
+            (NS::RSS, "title") => entry.title = handle_text(child),
 
-            (None, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
+            (NS::RSS, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
 
-            (None, "description") => entry.summary = handle_text(child),
+            (NS::RSS, "description") => entry.summary = handle_text(child),
 
-            (Some(NS::Content), "encoded") => content_encoded = util::handle_encoded(child)?,
+            (NS::Content, "encoded") => content_encoded = util::handle_encoded(child)?,
 
-            (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
-            (Some(NS::DublinCore), "date") => entry.published = handle_timestamp(child),
+            (NS::DublinCore, "date") => entry.published = handle_timestamp(child),
 
-            (Some(NS::DublinCore), "description") => {
+            (NS::DublinCore, "description") => {
                 if entry.summary.is_none() {
                     entry.summary = handle_text(child)
                 }
             }
 
-            (Some(NS::DublinCore), "rights") => entry.rights = handle_text(child),
+            (NS::DublinCore, "rights") => entry.rights = handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}

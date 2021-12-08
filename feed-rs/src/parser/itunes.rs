@@ -9,24 +9,24 @@ use std::time::Duration;
 // Process <itunes> elements at channel level updating the Feed object as required
 pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, feed: &mut Feed) -> ParseFeedResult<()> {
     match element.ns_and_tag() {
-        (Some(NS::Itunes), "image") => if_some_then(handle_image(element), |image| {
+        (NS::Itunes, "image") => if_some_then(handle_image(element), |image| {
             // Assign to feed logo if not already set
             if feed.logo.is_none() {
                 feed.logo = Some(image.image);
             }
         }),
 
-        (Some(NS::Itunes), "category") => if_some_then(handle_category(element), |category| feed.categories.push(category)),
+        (NS::Itunes, "category") => if_some_then(handle_category(element), |category| feed.categories.push(category)),
 
-        (Some(NS::Itunes), "explicit") => if_some_then(handle_explicit(element), |rating| {
+        (NS::Itunes, "explicit") => if_some_then(handle_explicit(element), |rating| {
             // Assign if not already set from media
             if feed.rating.is_none() {
                 feed.rating = Some(rating);
             }
         }),
 
-        (Some(NS::Itunes), "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::new(&person))),
-        (Some(NS::Itunes), "owner") => if_some_then(handle_owner(element)?, |owner| feed.contributors.push(owner)),
+        (NS::Itunes, "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::new(&person))),
+        (NS::Itunes, "owner") => if_some_then(handle_owner(element)?, |owner| feed.contributors.push(owner)),
 
         // Nothing required for unknown elements
         _ => {}
@@ -38,15 +38,15 @@ pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, fee
 // Process <itunes> elements at item level and turn them into something that looks like MediaRSS objects.
 pub(crate) fn handle_itunes_item_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
     match element.ns_and_tag() {
-        (Some(NS::Itunes), "title") => media_obj.title = handle_text(element)?,
+        (NS::Itunes, "title") => media_obj.title = handle_text(element)?,
 
-        (Some(NS::Itunes), "image") => if_some_then(handle_image(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
+        (NS::Itunes, "image") => if_some_then(handle_image(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
 
-        (Some(NS::Itunes), "duration") => if_some_then(handle_duration(element), |duration| media_obj.duration = Some(duration)),
+        (NS::Itunes, "duration") => if_some_then(handle_duration(element), |duration| media_obj.duration = Some(duration)),
 
-        (Some(NS::Itunes), "author") => if_some_then(handle_author(element), |credit| media_obj.credits.push(credit)),
+        (NS::Itunes, "author") => if_some_then(handle_author(element), |credit| media_obj.credits.push(credit)),
 
-        (Some(NS::Itunes), "summary") => media_obj.description = handle_text(element)?,
+        (NS::Itunes, "summary") => media_obj.description = handle_text(element)?,
 
         // Nothing required for unknown elements
         _ => {}
@@ -91,8 +91,8 @@ fn handle_owner<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Perso
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (Some(NS::Itunes), "email") => email = child.child_as_text(),
-            (Some(NS::Itunes), "name") => name = child.child_as_text(),
+            (NS::Itunes, "email") => email = child.child_as_text(),
+            (NS::Itunes, "name") => name = child.child_as_text(),
 
             // Nothing required for unknown elements
             _ => {}

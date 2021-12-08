@@ -17,7 +17,7 @@ pub(crate) fn handle_media_group<R: BufRead>(element: Element<R>) -> ParseFeedRe
 
     for child in element.children() {
         let child = child?;
-        if let Some(NS::MediaRSS) = child.ns_and_tag().0 {
+        if child.ns_and_tag().0 == NS::MediaRSS {
             handle_media_element(child, &mut media_obj)?;
         }
     }
@@ -33,21 +33,21 @@ pub(crate) fn handle_media_element<R: BufRead>(element: Element<R>, media_obj: &
     let mut rating = None;
 
     match element.ns_and_tag() {
-        (Some(NS::MediaRSS), "title") => media_obj.title = handle_text(element)?,
+        (NS::MediaRSS, "title") => media_obj.title = handle_text(element)?,
 
-        (Some(NS::MediaRSS), "content") => handle_media_content(element, media_obj)?,
+        (NS::MediaRSS, "content") => handle_media_content(element, media_obj)?,
 
-        (Some(NS::MediaRSS), "thumbnail") => if_some_then(handle_media_thumbnail(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
+        (NS::MediaRSS, "thumbnail") => if_some_then(handle_media_thumbnail(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
 
-        (Some(NS::MediaRSS), "description") => media_obj.description = handle_text(element)?,
+        (NS::MediaRSS, "description") => media_obj.description = handle_text(element)?,
 
-        (Some(NS::MediaRSS), "community") => media_obj.community = handle_media_community(element)?,
+        (NS::MediaRSS, "community") => media_obj.community = handle_media_community(element)?,
 
-        (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(element), |credit| media_obj.credits.push(credit)),
+        (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(element), |credit| media_obj.credits.push(credit)),
 
-        (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(element), |text| media_obj.texts.push(text)),
+        (NS::MediaRSS, "text") => if_some_then(handle_media_text(element), |text| media_obj.texts.push(text)),
 
-        (Some(NS::MediaRSS), "rating") => rating = handle_media_rating(element),
+        (NS::MediaRSS, "rating") => rating = handle_media_rating(element),
 
         // Nothing required for unknown elements
         _ => {}
@@ -72,7 +72,7 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (Some(NS::MediaRSS), "starRating") => {
+            (NS::MediaRSS, "starRating") => {
                 for attr in &child.attributes {
                     match attr.name.as_str() {
                         "average" => if_ok_then_some(attr.value.parse::<f64>(), |v| community.stars_avg = v),
@@ -85,7 +85,7 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
                     }
                 }
             }
-            (Some(NS::MediaRSS), "statistics") => {
+            (NS::MediaRSS, "statistics") => {
                 for attr in &child.attributes {
                     match attr.name.as_str() {
                         "views" => if_ok_then_some(attr.value.parse::<u64>(), |v| community.stats_views = v),
@@ -133,26 +133,26 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
         for child in element.children() {
             let child = child?;
             match child.ns_and_tag() {
-                (Some(NS::MediaRSS), "rating") => content.rating = handle_media_rating(child),
+                (NS::MediaRSS, "rating") => content.rating = handle_media_rating(child),
 
                 // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
-                (Some(NS::MediaRSS), "title") => {
+                (NS::MediaRSS, "title") => {
                     if media_obj.title.is_none() {
                         media_obj.title = handle_text(child)?
                     }
                 }
-                (Some(NS::MediaRSS), "description") => {
+                (NS::MediaRSS, "description") => {
                     if media_obj.description.is_none() {
                         media_obj.description = handle_text(child)?
                     }
                 }
 
                 // These elements are accumulated in the corresponding field of the parent MediaObject
-                (Some(NS::MediaRSS), "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
-                (Some(NS::MediaRSS), "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
+                (NS::MediaRSS, "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
+                (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
 
                 // Other elements in the namespace are handled recursively
-                (Some(NS::MediaRSS), _) => handle_media_element(child, media_obj)?,
+                (NS::MediaRSS, _) => handle_media_element(child, media_obj)?,
 
                 // Nothing required for unknown elements
                 _ => {}
