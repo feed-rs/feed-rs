@@ -18,31 +18,31 @@ pub(crate) fn parse_feed<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> 
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "id") => if_some_then(child.child_as_text(), |id| feed.id = id),
+            (NS::Atom, "id") => if_some_then(child.child_as_text(), |id| feed.id = id),
 
-            (None, "title") => feed.title = handle_text(child)?,
+            (NS::Atom, "title") => feed.title = handle_text(child)?,
 
-            (None, "updated") => if_some_then(child.child_as_text(), |text| feed.updated = timestamp_rfc3339_lenient(&text)),
+            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| feed.updated = timestamp_rfc3339_lenient(&text)),
 
-            (None, "author") => if_some_then(handle_person(child)?, |person| feed.authors.push(person)),
+            (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| feed.authors.push(person)),
 
-            (None, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
+            (NS::Atom, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
 
-            (None, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
+            (NS::Atom, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
-            (None, "contributor") => if_some_then(handle_person(child)?, |person| feed.contributors.push(person)),
+            (NS::Atom, "contributor") => if_some_then(handle_person(child)?, |person| feed.contributors.push(person)),
 
-            (None, "generator") => feed.generator = handle_generator(child),
+            (NS::Atom, "generator") => feed.generator = handle_generator(child),
 
-            (None, "icon") => feed.icon = handle_image(child),
+            (NS::Atom, "icon") => feed.icon = handle_image(child),
 
-            (None, "logo") => feed.logo = handle_image(child),
+            (NS::Atom, "logo") => feed.logo = handle_image(child),
 
-            (None, "rights") => feed.rights = handle_text(child)?,
+            (NS::Atom, "rights") => feed.rights = handle_text(child)?,
 
-            (None, "subtitle") => feed.description = handle_text(child)?,
+            (NS::Atom, "subtitle") => feed.description = handle_text(child)?,
 
-            (None, "entry") => if_some_then(handle_entry(child)?, |entry| feed.entries.push(entry)),
+            (NS::Atom, "entry") => if_some_then(handle_entry(child)?, |entry| feed.entries.push(entry)),
 
             // Nothing required for unknown elements
             _ => {}
@@ -153,34 +153,34 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
         let child = child?;
         match child.ns_and_tag() {
             // Extract the fields from the spec
-            (None, "id") => if_some_then(child.child_as_text(), |id| entry.id = id),
+            (NS::Atom, "id") => if_some_then(child.child_as_text(), |id| entry.id = id),
 
-            (None, "title") => entry.title = handle_text(child)?,
+            (NS::Atom, "title") => entry.title = handle_text(child)?,
 
-            (None, "updated") => if_some_then(child.child_as_text(), |text| entry.updated = timestamp_rfc3339_lenient(&text)),
+            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| entry.updated = timestamp_rfc3339_lenient(&text)),
 
-            (None, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
+            (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
 
-            (None, "content") => entry.content = handle_content(child)?,
+            (NS::Atom, "content") => entry.content = handle_content(child)?,
 
-            (None, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
+            (NS::Atom, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
 
-            (None, "summary") => entry.summary = handle_text(child)?,
+            (NS::Atom, "summary") => entry.summary = handle_text(child)?,
 
-            (None, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
+            (NS::Atom, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
 
-            (None, "contributor") => if_some_then(handle_person(child)?, |person| entry.contributors.push(person)),
+            (NS::Atom, "contributor") => if_some_then(handle_person(child)?, |person| entry.contributors.push(person)),
 
             // Some feeds have "pubDate" instead of "published"
-            (None, "published") | (None, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = timestamp_rfc3339_lenient(&text)),
+            (NS::Atom, "published") | (NS::Atom, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = timestamp_rfc3339_lenient(&text)),
 
-            (None, "rights") => entry.rights = handle_text(child)?,
+            (NS::Atom, "rights") => entry.rights = handle_text(child)?,
 
             // MediaRSS group creates a new object for this group of elements
-            (Some(NS::MediaRSS), "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
+            (NS::MediaRSS, "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
 
             // MediaRSS tags that are not grouped are parsed into the default object
-            (Some(NS::MediaRSS), _) => handle_media_element(child, &mut media_obj)?,
+            (NS::MediaRSS, _) => handle_media_element(child, &mut media_obj)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -219,7 +219,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> Option<Image> {
 }
 
 // Handles an Atom <link>
-fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
+pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
     // Always need an href
     element.attr_value("href").map(|href| {
         let mut link = Link::new(&href, element.xml_base.as_ref());

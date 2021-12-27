@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person, Text};
+use crate::parser::atom;
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::mediarss;
 use crate::parser::mediarss::handle_media_element;
@@ -35,36 +36,38 @@ fn handle_channel<R: BufRead>(channel: Element<R>) -> ParseFeedResult<Feed> {
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "title") => feed.title = handle_text(child),
+            (NS::RSS, "title") => feed.title = handle_text(child),
 
-            (None, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
+            (NS::RSS, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
 
-            (None, "description") => feed.description = handle_text(child),
+            (NS::Atom, "link") => if_some_then(atom::handle_link(child), |link| feed.links.push(link)),
 
-            (None, "language") => feed.language = child.child_as_text().map(|text| text.to_lowercase()),
+            (NS::RSS, "description") => feed.description = handle_text(child),
 
-            (None, "copyright") => feed.rights = handle_text(child),
+            (NS::RSS, "language") => feed.language = child.child_as_text().map(|text| text.to_lowercase()),
 
-            (None, "managingEditor") => if_some_then(handle_contact("managingEditor", child), |person| feed.contributors.push(person)),
+            (NS::RSS, "copyright") => feed.rights = handle_text(child),
 
-            (None, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
+            (NS::RSS, "managingEditor") => if_some_then(handle_contact("managingEditor", child), |person| feed.contributors.push(person)),
 
-            (None, "pubDate") => feed.published = handle_timestamp(child),
+            (NS::RSS, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
+
+            (NS::RSS, "pubDate") => feed.published = handle_timestamp(child),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            (None, "lastBuildDate") | (None, "updated") => feed.updated = handle_timestamp(child),
+            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = handle_timestamp(child),
 
-            (None, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
+            (NS::RSS, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
-            (None, "generator") => feed.generator = handle_generator(child),
+            (NS::RSS, "generator") => feed.generator = handle_generator(child),
 
-            (None, "ttl") => if_some_then(child.child_as_text(), |text| if_ok_then_some(text.parse::<u32>(), |ttl| feed.ttl = ttl)),
+            (NS::RSS, "ttl") => if_some_then(child.child_as_text(), |text| if_ok_then_some(text.parse::<u32>(), |ttl| feed.ttl = ttl)),
 
-            (None, "image") => feed.logo = handle_image(child)?,
+            (NS::RSS, "image") => feed.logo = handle_image(child)?,
 
-            (None, "item") => if_some_then(handle_item(child)?, |item| feed.entries.push(item)),
+            (NS::RSS, "item") => if_some_then(handle_item(child)?, |item| feed.entries.push(item)),
 
-            (Some(NS::Itunes), _) => handle_itunes_channel_element(child, &mut feed)?,
+            (NS::Itunes, _) => handle_itunes_channel_element(child, &mut feed)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -141,13 +144,13 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "url") => if_some_then(child.child_as_text(), |url| image.uri = url),
+            (NS::RSS, "url") => if_some_then(child.child_as_text(), |url| image.uri = url),
 
-            (None, "title") => image.title = child.child_as_text(),
+            (NS::RSS, "title") => image.title = child.child_as_text(),
 
-            (None, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
+            (NS::RSS, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
 
-            (None, "width") => if_some_then(child.child_as_text(), |width| {
+            (NS::RSS, "width") => if_some_then(child.child_as_text(), |width| {
                 if let Ok(width) = width.parse::<u32>() {
                     if width > 0 && width <= 144 {
                         image.width = Some(width)
@@ -155,7 +158,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
                 }
             }),
 
-            (None, "height") => if_some_then(child.child_as_text(), |height| {
+            (NS::RSS, "height") => if_some_then(child.child_as_text(), |height| {
                 if let Ok(height) = height.parse::<u32>() {
                     if height > 0 && height <= 400 {
                         image.height = Some(height)
@@ -163,7 +166,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
                 }
             }),
 
-            (None, "description") => image.description = child.child_as_text(),
+            (NS::RSS, "description") => image.description = child.child_as_text(),
 
             // Nothing required for unknown elements
             _ => {}
@@ -210,34 +213,34 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (None, "title") => entry.title = handle_text(child),
+            (NS::RSS, "title") => entry.title = handle_text(child),
 
-            (None, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
+            (NS::RSS, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
 
-            (None, "description") => entry.summary = util::handle_encoded(child)?,
+            (NS::RSS, "description") => entry.summary = util::handle_encoded(child)?,
 
-            (None, "author") => if_some_then(handle_contact("author", child), |person| entry.authors.push(person)),
+            (NS::RSS, "author") => if_some_then(handle_contact("author", child), |person| entry.authors.push(person)),
 
-            (None, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
+            (NS::RSS, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
 
-            (None, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid),
+            (NS::RSS, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid),
 
-            (None, "enclosure") => handle_enclosure(child, &mut media_obj),
+            (NS::RSS, "enclosure") => handle_enclosure(child, &mut media_obj),
 
-            (None, "pubDate") => entry.published = handle_timestamp(child),
+            (NS::RSS, "pubDate") => entry.published = handle_timestamp(child),
 
-            (Some(NS::Content), "encoded") => entry.content = handle_content_encoded(child)?,
+            (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
-            (Some(NS::DublinCore), "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
             // Itunes elements populate the default MediaObject
-            (Some(NS::Itunes), _) => handle_itunes_item_element(child, &mut media_obj)?,
+            (NS::Itunes, _) => handle_itunes_item_element(child, &mut media_obj)?,
 
             // MediaRSS group creates a new object for this group of elements
-            (Some(NS::MediaRSS), "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
+            (NS::MediaRSS, "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
 
             // MediaRSS tags that are not grouped are parsed into the default object
-            (Some(NS::MediaRSS), _) => handle_media_element(child, &mut media_obj)?,
+            (NS::MediaRSS, _) => handle_media_element(child, &mut media_obj)?,
 
             // Nothing required for unknown elements
             _ => {}

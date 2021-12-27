@@ -110,7 +110,7 @@ fn test_children_as_string() -> TestResult {
 
     // Next element should be "content:encoded"
     let encoded = children.next().unwrap()?;
-    assert_eq!(&NS::Content, encoded.namespace.as_ref().unwrap());
+    assert_eq!(NS::Content, encoded.namespace);
     assert_eq!(encoded.name, "encoded");
     let text = encoded.children_as_string()?.unwrap();
     assert_eq!(text, "<p>10 km, 21.9072&deg; East, 37.102&deg; North. </p>");

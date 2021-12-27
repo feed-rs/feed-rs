@@ -37,6 +37,14 @@ impl<R: BufRead> ElementSource<R> {
         Ok(ElementSource { state })
     }
 
+    /// Set default namespace if not set explicitly by the document.
+    pub(crate) fn set_default_default_namespace(&self, namespace: NS) {
+        let mut state = self.state.borrow_mut();
+        if state.default_namespace == NS::Unknown {
+            state.default_namespace = namespace;
+        }
+    }
+
     /// Returns the first element in the source
     pub(crate) fn root(&self) -> XmlResult<Option<Element<R>>> {
         self.next_element_at_depth(1)
@@ -221,6 +229,7 @@ struct SourceState<R: BufRead> {
     next: XmlResult<Option<XmlEvent>>,
     current_depth: u32,
     base_uris: Vec<(u32, Url)>,
+    default_namespace: NS,
 }
 
 impl<R: BufRead> SourceState<R> {
@@ -242,6 +251,7 @@ impl<R: BufRead> SourceState<R> {
             next: Ok(None),
             current_depth: 0,
             base_uris,
+            default_namespace: NS::Unknown,
         };
         state.next = state.fetch_next();
         Ok(state)
@@ -252,10 +262,16 @@ impl<R: BufRead> SourceState<R> {
         let reader = &mut self.reader;
         loop {
             let (ns, event) = reader.read_namespaced_event(&mut self.buf_event, &mut self.buf_ns)?;
+
             match event {
                 // Start of an element
                 Event::Start(ref e) => {
-                    return Ok(Some(XmlEvent::start(ns, e, reader)));
+                    // Parse the namespace
+                    let namespace = ns.map(|bytes| reader.decode(bytes))
+                        .map(|s| NS::parse(s.as_ref()))
+                        .unwrap_or(self.default_namespace);
+
+                    return Ok(Some(XmlEvent::start(namespace, e, reader)));
                 }
 
                 // End of an element
@@ -302,7 +318,7 @@ pub(crate) struct Element<'a, R: BufRead> {
     pub name: String,
 
     /// The namespace mapping at this point of the document.
-    pub namespace: Option<NS>,
+    pub namespace: NS,
 
     /// A list of attributes associated with the element.
     pub attributes: Vec<NameValue>,
@@ -348,8 +364,8 @@ impl<'a, R: BufRead> Element<'a, R> {
     }
 
     /// Returns the namespace + tag name for this element
-    pub(crate) fn ns_and_tag(&self) -> (&Option<NS>, &str) {
-        (&self.namespace, &self.name)
+    pub(crate) fn ns_and_tag(&self) -> (NS, &str) {
+        (self.namespace, &self.name)
     }
 }
 
@@ -376,8 +392,10 @@ impl<'a, R: BufRead> Iterator for ElementIter<'a, R> {
 }
 
 /// Set of automatically recognised namespaces
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum NS {
+    Atom,
+    RSS,
     // Namespaces we do not support are treated as this special case, to avoid processing content incorrectly
     Unknown,
     // Extensions
@@ -388,20 +406,19 @@ pub(crate) enum NS {
 }
 
 impl NS {
-    fn parse(s: &str) -> Option<NS> {
+    fn parse(s: &str) -> NS {
         match s {
-            // Feed namespaces (Atom, RSS) are mapped on to None, since they are the base NS
-            // This handles documents where it is explicit, and implicit
-            "http://www.w3.org/2005/Atom" | "http://purl.org/rss/1.0/" => None,
+            "http://purl.org/rss/1.0/" => NS::RSS,
+            "http://www.w3.org/2005/Atom" => NS::Atom,
 
             // Extension namespaces
-            "http://purl.org/rss/1.0/modules/content/" => Some(NS::Content),
-            "http://purl.org/dc/elements/1.1/" => Some(NS::DublinCore),
-            "http://search.yahoo.com/mrss/" => Some(NS::MediaRSS),
-            "http://www.itunes.com/dtds/podcast-1.0.dtd" => Some(NS::Itunes),
+            "http://purl.org/rss/1.0/modules/content/" => NS::Content,
+            "http://purl.org/dc/elements/1.1/" => NS::DublinCore,
+            "http://search.yahoo.com/mrss/" => NS::MediaRSS,
+            "http://www.itunes.com/dtds/podcast-1.0.dtd" => NS::Itunes,
 
             // Everything else is ignored
-            _ => Some(NS::Unknown),
+            _ => NS::Unknown,
         }
     }
 }
@@ -446,7 +463,7 @@ impl From<url::ParseError> for XmlError {
 enum XmlEvent {
     // An XML start tag
     Start {
-        namespace: Option<NS>,
+        namespace: NS,
         name: String,
         attributes: Vec<NameValue>,
     },
@@ -473,10 +490,7 @@ impl XmlEvent {
     }
 
     // Creates a new event corresponding to an XML start-tag
-    fn start<R: BufRead>(ns: Option<&[u8]>, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
-        // Parse the namespace
-        let namespace = ns.map(|bytes| reader.decode(bytes)).and_then(|s| NS::parse(s.as_ref()));
-
+    fn start<R: BufRead>(namespace: NS, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
         // Parse the name
         let name = XmlEvent::parse_name(event.name(), reader);
 

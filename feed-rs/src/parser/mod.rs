@@ -7,6 +7,7 @@ use siphasher::sip128::{Hasher128, SipHasher};
 
 use crate::model;
 use crate::xml;
+use crate::xml::NS;
 
 mod atom;
 mod json;
@@ -208,11 +209,26 @@ fn parse_xml<R: BufRead>(source: R, uri: Option<&str>) -> ParseFeedResult<model:
         // Dispatch to the correct parser
         let version = root.attr_value("version");
         match (root.name.as_str(), version.as_deref()) {
-            ("feed", _) => return atom::parse_feed(root),
-            ("entry", _) => return atom::parse_entry(root),
-            ("rss", Some("2.0")) => return rss2::parse(root),
-            ("rss", Some("0.91")) | ("rss", Some("0.92")) => return rss0::parse(root),
-            ("RDF", _) => return rss1::parse(root),
+            ("feed", _) => {
+                element_source.set_default_default_namespace(NS::Atom);
+                return atom::parse_feed(root)
+            }
+            ("entry", _) => {
+                element_source.set_default_default_namespace(NS::Atom);
+                return atom::parse_entry(root)
+            }
+            ("rss", Some("2.0")) => {
+                element_source.set_default_default_namespace(NS::RSS);
+                return rss2::parse(root)
+            }
+            ("rss", Some("0.91")) | ("rss", Some("0.92")) => {
+                element_source.set_default_default_namespace(NS::RSS);
+                return rss0::parse(root)
+            }
+            ("RDF", _) => {
+                element_source.set_default_default_namespace(NS::RSS);
+                return rss1::parse(root)
+            }
             _ => {}
         };
     }
