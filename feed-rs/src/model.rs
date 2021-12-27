@@ -683,7 +683,7 @@ impl Link {
 
 /// The top-level representation of a media object
 /// i.e. combines "media:*" elements from the RSS Media spec such as those under a media:group
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct MediaObject {
     /// Title of the object (from the media:title element)
     pub title: Option<Text>,
@@ -707,21 +707,6 @@ impl MediaObject {
     // Checks if this object has been populated with content
     pub(crate) fn has_content(&self) -> bool {
         self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.thumbnails.is_empty() || !self.texts.is_empty()
-    }
-}
-
-impl Default for MediaObject {
-    fn default() -> Self {
-        MediaObject {
-            title: None,
-            content: Vec::new(),
-            duration: None,
-            thumbnails: Vec::new(),
-            texts: Vec::new(),
-            description: None,
-            community: None,
-            credits: Vec::new(),
-        }
     }
 }
 
