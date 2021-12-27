@@ -30,6 +30,8 @@ pub enum ParseFeedError {
     IoError(std::io::Error),
     // Underlying issue with JSON (poorly formatted etc)
     JsonSerde(serde_json::error::Error),
+    // Unsupported version of the JSON feed
+    JsonUnsupportedVersion(String),
     // Underlying issue with XML (poorly formatted etc)
     XmlReader(xml::XmlError),
 }
@@ -58,6 +60,7 @@ impl fmt::Display for ParseFeedError {
             ParseFeedError::ParseError(pe) => write!(f, "unable to parse feed: {}", pe),
             ParseFeedError::IoError(ie) => write!(f, "unable to read feed: {}", ie),
             ParseFeedError::JsonSerde(je) => write!(f, "unable to parse JSON: {}", je),
+            ParseFeedError::JsonUnsupportedVersion(version) => write!(f, "unsupported version: {}", version),
             ParseFeedError::XmlReader(xe) => write!(f, "unable to parse XML: {}", xe),
         }
     }
@@ -211,23 +214,23 @@ fn parse_xml<R: BufRead>(source: R, uri: Option<&str>) -> ParseFeedResult<model:
         match (root.name.as_str(), version.as_deref()) {
             ("feed", _) => {
                 element_source.set_default_default_namespace(NS::Atom);
-                return atom::parse_feed(root)
+                return atom::parse_feed(root);
             }
             ("entry", _) => {
                 element_source.set_default_default_namespace(NS::Atom);
-                return atom::parse_entry(root)
+                return atom::parse_entry(root);
             }
             ("rss", Some("2.0")) => {
                 element_source.set_default_default_namespace(NS::RSS);
-                return rss2::parse(root)
+                return rss2::parse(root);
             }
             ("rss", Some("0.91")) | ("rss", Some("0.92")) => {
                 element_source.set_default_default_namespace(NS::RSS);
-                return rss0::parse(root)
+                return rss0::parse(root);
             }
             ("RDF", _) => {
                 element_source.set_default_default_namespace(NS::RSS);
-                return rss1::parse(root)
+                return rss1::parse(root);
             }
             _ => {}
         };

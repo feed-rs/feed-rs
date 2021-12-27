@@ -163,11 +163,12 @@ fn test_example_5() {
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Ars Technica".into()))
         .link(Link::new("https://arstechnica.com", None))
-        .link(Link::new("http://feeds.arstechnica.com/arstechnica/index", None)
-            .rel("self")
-            .media_type("application/rss+xml"))
-        .link(Link::new("http://pubsubhubbub.appspot.com/", None)
-            .rel("hub"))
+        .link(
+            Link::new("http://feeds.arstechnica.com/arstechnica/index", None)
+                .rel("self")
+                .media_type("application/rss+xml"),
+        )
+        .link(Link::new("http://pubsubhubbub.appspot.com/", None).rel("hub"))
         .description(Text::new(
             "Serving the Technologist for more than a decade. IT news, reviews, and analysis.".into(),
         ))
@@ -423,9 +424,11 @@ fn test_bbc() {
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("In Our Time".into()))
         .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl", None))
-        .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl/episodes/downloads.rss", None)
-            .rel("self")
-            .media_type("application/rss+xml"))
+        .link(
+            Link::new("http://www.bbc.co.uk/programmes/b006qykl/episodes/downloads.rss", None)
+                .rel("self")
+                .media_type("application/rss+xml"),
+        )
         .category(Category::new("History"))
         .description(Text::new("Melvyn Bragg and guests discuss the history of ideas".into()))
         .author(Person::new("BBC Radio 4"))
@@ -497,9 +500,11 @@ fn test_ch9() {
             "Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights. "
                 .into(),
         ))
-        .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday/feed/mp4high", None)
-            .rel("self")
-            .media_type("application/rss+xml"))
+        .link(
+            Link::new("https://s.ch9.ms/Shows/Azure-Friday/feed/mp4high", None)
+                .rel("self")
+                .media_type("application/rss+xml"),
+        )
         .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday", None))
         .category(Category::new("Technology"))
         .language("en")

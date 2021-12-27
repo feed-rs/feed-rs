@@ -13,7 +13,7 @@ mod tests;
 pub(crate) fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
     let parsed = serde_json::from_reader(stream);
     if let Ok(json_feed) = parsed {
-        Ok(convert(json_feed))
+        convert(json_feed)
     } else {
         // Unable to parse the JSON
         Err(ParseFeedError::JsonSerde(parsed.err().unwrap()))
@@ -21,8 +21,13 @@ pub(crate) fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
 }
 
 // Convert the JSON Feed into our standard model
-fn convert(jf: JsonFeed) -> Feed {
+fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::JSON);
+
+    // If the version exists, it should be something we support
+    if !jf.version.starts_with("https://jsonfeed.org/version/1") {
+        return ParseFeedResult::Err(ParseFeedError::JsonUnsupportedVersion(jf.version));
+    }
 
     // Convert feed level fields
     feed.title = Some(Text::new(jf.title));
@@ -44,7 +49,7 @@ fn convert(jf: JsonFeed) -> Feed {
         feed.entries.push(handle_item(ji));
     });
 
-    feed
+    Ok(feed)
 }
 
 // Handles an attachment

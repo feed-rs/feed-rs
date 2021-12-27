@@ -267,7 +267,8 @@ impl<R: BufRead> SourceState<R> {
                 // Start of an element
                 Event::Start(ref e) => {
                     // Parse the namespace
-                    let namespace = ns.map(|bytes| reader.decode(bytes))
+                    let namespace = ns
+                        .map(|bytes| reader.decode(bytes))
                         .map(|s| NS::parse(s.as_ref()))
                         .unwrap_or(self.default_namespace);
 
@@ -462,15 +463,9 @@ impl From<url::ParseError> for XmlError {
 // Abstraction over the underlying XML reader event model
 enum XmlEvent {
     // An XML start tag
-    Start {
-        namespace: NS,
-        name: String,
-        attributes: Vec<NameValue>,
-    },
+    Start { namespace: NS, name: String, attributes: Vec<NameValue> },
     // An XML end tag
-    End {
-        name: String,
-    },
+    End { name: String },
     // Text or CData
     Text(String),
 }
