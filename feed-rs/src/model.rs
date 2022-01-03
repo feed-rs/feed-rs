@@ -889,6 +889,7 @@ impl MediaRating {
         MediaRating { urn: "simple".into(), value }
     }
 
+    #[must_use]
     pub fn urn(mut self, urn: &str) -> Self {
         self.urn = urn.to_string();
         self
@@ -956,6 +957,7 @@ impl Person {
         }
     }
 
+    #[must_use]
     pub fn email(mut self, email: &str) -> Self {
         self.email = Some(email.to_owned());
         self
