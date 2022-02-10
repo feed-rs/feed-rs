@@ -179,10 +179,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 
 // Handles <content:encoded>
 fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
-    let src = element
-        .xml_base
-        .as_ref()
-        .map(|xml_base| Link::new(xml_base, element.xml_base.as_ref()));
+    let src = element.xml_base.as_ref().map(|xml_base| Link::new(xml_base, element.xml_base.as_ref()));
 
     Ok(element.children_as_string()?.map(|string| Content {
         body: Some(string),
