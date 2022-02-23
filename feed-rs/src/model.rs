@@ -34,7 +34,6 @@ use url::Url;
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Feed {
     /// Type of this feed (e.g. RSS2, Atom etc)
     pub feed_type: FeedType,
@@ -243,7 +242,6 @@ pub enum FeedType {
 
 /// An item within a feed
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Entry {
     /// A unique identifier for this item with a feed. If not supplied it is initialised to a hash of the first link or a UUID if not available.
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
@@ -414,7 +412,6 @@ impl Entry {
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#category
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltcategorygtSubelementOfLtitemgt
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Category {
     /// The category as a human readable string
     /// * Atom (required): Identifies the category.
@@ -455,7 +452,6 @@ impl Category {
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#contentElement
 /// [RSS 2.0]: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Content {
     /// Atom
     /// * If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
@@ -512,7 +508,6 @@ impl Content {
 ///
 /// Atom: Identifies the software used to generate the feed, for debugging and other purposes.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Generator {
     /// Atom: Additional data
     /// RSS 2: A string indicating the program used to generate the channel.
@@ -552,7 +547,6 @@ impl Generator {
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
 /// [RSS 1 spec]: https://validator.w3.org/feed/docs/rss1.html#s5.4
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Image {
     /// Link to the image
     /// * Atom: The URL to an image or logo
@@ -935,7 +929,6 @@ impl MediaThumbnail {
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#person
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Person {
     /// Atom: human-readable name for the person.
     /// JSON Feed: human-readable name for the person.
@@ -972,7 +965,6 @@ impl Person {
 
 /// Textual content, or link to the content, for a given entry.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Text {
     pub content_type: Mime,
     pub src: Option<String>,
