@@ -643,18 +643,6 @@ fn test_relurl_2() {
     assert_eq!(content.url, Url::parse("http://example.com/images/me/hackergotchi-simpler.png").ok());
 }
 
-// Verify that valid XML with no whitespace separation is parsed correctly
-#[test]
-fn test_ghost_no_ws() {
-    let test_data = test::fixture_as_raw("rss_2.0_ghost.xml");
-    let feed = parser::parse(test_data.as_slice()).unwrap();
-
-    // Entry should have content
-    for entry in feed.entries {
-        assert!(entry.content.is_some());
-    }
-}
-
 // Verify that attributes containing escaped characters are decoded correctly
 #[test]
 fn test_escaped_attributes() {
@@ -665,4 +653,28 @@ fn test_escaped_attributes() {
         feed.links[0].href,
         "https://www.reddit.com/search.rss?q=site%3Akevincox.ca&restrict_sr=&sort=new&t=all"
     );
+}
+
+// Verify that valid XML with no whitespace separation is parsed correctly
+#[test]
+fn test_ghost_no_ws() {
+    let test_data = test::fixture_as_raw("rss_2.0_ghost_1.xml");
+    let feed = parser::parse(test_data.as_slice()).unwrap();
+
+    // Entry should have content
+    for entry in feed.entries {
+        assert!(entry.content.is_some());
+    }
+}
+// Verifies that we extract the 'content:encoded' element correctly from a variety of problematic feeds
+#[test]
+fn test_ghost_feeds() {
+    let files = vec!["rss_2.0_ghost_2.xml", "rss_2.0_cloudflare.xml", "rss_2.0_element_io.xml"];
+    for file in files {
+        let test_data = test::fixture_as_string(file);
+        let actual = parser::parse(test_data.as_bytes()).unwrap();
+        for entry in actual.entries {
+            assert!(entry.content.is_some());
+        }
+    }
 }
