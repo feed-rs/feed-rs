@@ -267,7 +267,7 @@ fn test_spec_1() {
                     r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>
             "#
-                        .to_owned(),
+                    .to_owned(),
                 ))
                 .published_rfc2822("Sun, 29 Sep 2002 19:59:01 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
@@ -280,7 +280,7 @@ fn test_spec_1() {
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation."
             "#
-                        .to_owned(),
+                    .to_owned(),
                 ))
                 .published_rfc2822("Mon, 30 Sep 2002 01:52:02 GMT")
                 .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
