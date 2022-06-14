@@ -30,7 +30,7 @@ impl<R: BufRead> ElementSource<R> {
     /// * `xml_base_uri` - the base URI if known (e.g. Content-Location, feed URI etc)
     pub(crate) fn new(xml_data: R, xml_base_uri: Option<&str>) -> XmlResult<ElementSource<R>> {
         // Create the XML parser
-        let mut reader = quick_xml::Reader::from_reader(xml_data);
+        let mut reader = Reader::from_reader(xml_data);
         reader.expand_empty_elements(true).trim_markup_names_in_closing_tags(true).trim_text(false);
 
         let state = RefCell::new(SourceState::new(reader, xml_base_uri)?);
@@ -280,9 +280,18 @@ impl<R: BufRead> SourceState<R> {
                     return Ok(Some(XmlEvent::end(e, reader)));
                 }
 
-                // Text or CData
-                Event::Text(ref t) | Event::CData(ref t) => {
+                // Text
+                Event::Text(ref t) => {
                     let event = XmlEvent::text(t, reader);
+                    if let Ok(Some(ref _t)) = event {
+                        return event;
+                    }
+                }
+
+                // CData is converted to text
+                Event::CData(t) => {
+                    let escaped = t.escape();
+                    let event = XmlEvent::text(&escaped, reader);
                     if let Ok(Some(ref _t)) = event {
                         return event;
                     }
