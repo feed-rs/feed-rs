@@ -84,7 +84,7 @@ fn handle_channel<R: BufRead>(channel: Element<R>) -> ParseFeedResult<Feed> {
 
 // Handles <category>
 fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
-    element.child_as_text().map(|text| {
+    element.children_as_string().ok().flatten().map(|text| {
         let mut category = Category::new(&text);
         category.scheme = element.attr_value("domain");
         category
@@ -228,7 +228,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.children_as_string().ok().flatten(), |name| entry.authors.push(Person::new(&name))),
 
             // Itunes elements populate the default MediaObject
             (NS::Itunes, _) => handle_itunes_item_element(child, &mut media_obj)?,
