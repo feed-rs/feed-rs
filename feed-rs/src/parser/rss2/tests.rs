@@ -240,6 +240,19 @@ fn test_example_6() {
     assert_eq!(actual, expected);
 }
 
+#[test]
+fn test_wirecutter() {
+    let test_data = test::fixture_as_string("rss_2.0_wirecutter.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let entry = actual.entries.get(0).expect("sample feed has one entry");
+    let category = entry.categories.get(0).expect("entry has one category");
+    assert_eq!(category.term, "Uncategorized");
+
+    let author = entry.authors.get(0).expect("entry has one author");
+    assert_eq!(author.name, "James Austin");
+}
+
 // Verify we can parse the example contained in the RSS 2.0 specification
 #[test]
 fn test_spec_1() {
