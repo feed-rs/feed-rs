@@ -515,10 +515,16 @@ impl XmlEvent {
             .attributes()
             .filter_map(|a| {
                 if let Ok(a) = a {
-                    let name = reader.decoder().decode(a.key.as_ref()).unwrap();
+                    let name = match reader.decoder().decode(a.key.as_ref()) {
+                        Ok(decoded) => decoded,
+                        Err(_) => return None,
+                    };
 
                     // Unescape the XML attribute, or use the original value if this fails (broken escape sequence etc)
-                    let decoded_value = reader.decoder().decode(&a.value).unwrap();
+                    let decoded_value = match reader.decoder().decode(&a.value) {
+                        Ok(decoded) => decoded,
+                        Err(_) => return None,
+                    };
                     let value = escape::unescape(&decoded_value).unwrap_or_else(|_| decoded_value.to_owned()).to_string();
 
                     Some(NameValue { name: name.into(), value })
