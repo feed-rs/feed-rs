@@ -6,7 +6,8 @@ use std::io::BufRead;
 use std::mem;
 
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
-use quick_xml::{escape, Reader};
+use quick_xml::name::ResolveResult;
+use quick_xml::{escape, NsReader, Reader};
 use url::Url;
 
 #[cfg(test)]
@@ -30,7 +31,7 @@ impl<R: BufRead> ElementSource<R> {
     /// * `xml_base_uri` - the base URI if known (e.g. Content-Location, feed URI etc)
     pub(crate) fn new(xml_data: R, xml_base_uri: Option<&str>) -> XmlResult<ElementSource<R>> {
         // Create the XML parser
-        let mut reader = Reader::from_reader(xml_data);
+        let mut reader = NsReader::from_reader(xml_data);
         reader.expand_empty_elements(true).trim_markup_names_in_closing_tags(true).trim_text(false);
 
         let state = RefCell::new(SourceState::new(reader, xml_base_uri)?);
@@ -223,9 +224,8 @@ impl<R: BufRead> ElementSource<R> {
 
 // Wraps the XML source and current depth of iteration
 struct SourceState<R: BufRead> {
-    reader: Reader<R>,
+    reader: NsReader<R>,
     buf_event: Vec<u8>,
-    buf_ns: Vec<u8>,
     next: XmlResult<Option<XmlEvent>>,
     current_depth: u32,
     base_uris: Vec<(u32, Url)>,
@@ -234,7 +234,7 @@ struct SourceState<R: BufRead> {
 
 impl<R: BufRead> SourceState<R> {
     // Wrap the reader in additional state (buffers, tree depth etc)
-    fn new(reader: Reader<R>, xml_base_uri: Option<&str>) -> XmlResult<SourceState<R>> {
+    fn new(reader: NsReader<R>, xml_base_uri: Option<&str>) -> XmlResult<SourceState<R>> {
         // If we have a base URI, parse it and init at the root
         let mut base_uris = Vec::new();
         if let Some(xml_base_uri) = xml_base_uri {
@@ -243,11 +243,9 @@ impl<R: BufRead> SourceState<R> {
         }
 
         let buf_event = Vec::with_capacity(512);
-        let buf_ns = Vec::with_capacity(128);
         let mut state = SourceState {
             reader,
             buf_event,
-            buf_ns,
             next: Ok(None),
             current_depth: 0,
             base_uris,
@@ -259,18 +257,27 @@ impl<R: BufRead> SourceState<R> {
 
     // Returns the next event
     fn fetch_next(&mut self) -> XmlResult<Option<XmlEvent>> {
+        let decoder = self.reader.decoder();
         let reader = &mut self.reader;
+
         loop {
-            let (ns, event) = reader.read_namespaced_event(&mut self.buf_event, &mut self.buf_ns)?;
+            let (ns_resolution, event) = reader.read_resolved_event_into(&mut self.buf_event)?;
 
             match event {
                 // Start of an element
                 Event::Start(ref e) => {
                     // Parse the namespace
-                    let namespace = ns
-                        .map(|bytes| reader.decode(bytes))
-                        .map(|s| NS::parse(s.as_ref()))
-                        .unwrap_or(self.default_namespace);
+                    let namespace = match ns_resolution {
+                        ResolveResult::Bound(ns) => decoder
+                            .decode(ns.as_ref())
+                            .map(|decoded| NS::parse(decoded.as_ref()))
+                            .unwrap_or(self.default_namespace),
+                        ResolveResult::Unknown(bytes) => decoder
+                            .decode(&bytes)
+                            .map(|decoded| NS::parse(decoded.as_ref()))
+                            .unwrap_or(self.default_namespace),
+                        ResolveResult::Unbound => self.default_namespace,
+                    };
 
                     return Ok(Some(XmlEvent::start(namespace, e, reader)));
                 }
@@ -290,7 +297,7 @@ impl<R: BufRead> SourceState<R> {
 
                 // CData is converted to text
                 Event::CData(t) => {
-                    let escaped = t.escape();
+                    let escaped = t.escape()?;
                     let event = XmlEvent::text(&escaped, reader);
                     if let Ok(Some(ref _t)) = event {
                         return event;
@@ -483,32 +490,36 @@ impl XmlEvent {
     // Creates a new event corresponding to an XML end-tag
     fn end<R: BufRead>(event: &BytesEnd, reader: &Reader<R>) -> XmlEvent {
         // Parse the name
-        let name = XmlEvent::parse_name(event.name(), reader);
+        let name = XmlEvent::parse_name(event.name().as_ref(), reader);
 
         XmlEvent::End { name }
     }
 
     // Extracts the element name, dropping the namespace prefix if present
     fn parse_name<R: BufRead>(bytes: &[u8], reader: &Reader<R>) -> String {
-        reader.decode(bytes).split(':').rev().next().unwrap_or("").into()
+        reader
+            .decoder()
+            .decode(bytes)
+            .ok()
+            .and_then(|name| name.split(':').rev().next().map(str::to_string))
+            .unwrap_or_default()
     }
 
     // Creates a new event corresponding to an XML start-tag
     fn start<R: BufRead>(namespace: NS, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
         // Parse the name
-        let name = XmlEvent::parse_name(event.name(), reader);
+        let name = XmlEvent::parse_name(event.name().as_ref(), reader);
 
         // Parse the attributes
         let attributes = event
             .attributes()
             .filter_map(|a| {
                 if let Ok(a) = a {
-                    let name = reader.decode(a.key);
+                    let name = reader.decoder().decode(a.key.as_ref()).unwrap();
 
                     // Unescape the XML attribute, or use the original value if this fails (broken escape sequence etc)
-                    let value = escape::unescape(a.value.as_ref())
-                        .map(|v| String::from_utf8_lossy(v.as_ref()).to_string())
-                        .unwrap_or_else(|_| reader.decode(a.value.as_ref()).to_string());
+                    let decoded_value = reader.decoder().decode(&a.value).unwrap();
+                    let value = escape::unescape(&decoded_value).unwrap_or_else(|_| decoded_value.to_owned()).to_string();
 
                     Some(NameValue { name: name.into(), value })
                 } else {
@@ -522,11 +533,13 @@ impl XmlEvent {
 
     // Creates a new event corresponding to an XML text node
     fn text<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> XmlResult<Option<XmlEvent>> {
-        let text = text.unescape_and_decode(reader)?;
+        let escaped_text = reader.decoder().decode(text)?;
+        let unescaped_text = escape::unescape(&escaped_text).map_err(quick_xml::Error::EscapeError)?;
+
         if text.is_empty() {
             Ok(None)
         } else {
-            Ok(Some(XmlEvent::Text(text)))
+            Ok(Some(XmlEvent::Text(unescaped_text.to_string())))
         }
     }
 }
