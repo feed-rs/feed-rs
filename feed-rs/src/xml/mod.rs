@@ -297,10 +297,11 @@ impl<R: BufRead> SourceState<R> {
 
                 // CData is converted to text
                 Event::CData(t) => {
-                    let escaped = t.escape()?;
-                    let event = XmlEvent::text(&escaped, reader);
-                    if let Ok(Some(ref _t)) = event {
-                        return event;
+                    if let Ok(escaped) = t.escape() {
+                        let event = XmlEvent::text(&escaped, reader);
+                        if let Ok(Some(ref _t)) = event {
+                            return event;
+                        }
                     }
                 }
 
