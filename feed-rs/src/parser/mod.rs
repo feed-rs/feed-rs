@@ -239,3 +239,6 @@ fn parse_xml<R: BufRead>(source: R, uri: Option<&str>) -> ParseFeedResult<model:
     // Couldn't find a recognised feed within the provided XML stream
     Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
 }
+
+#[cfg(test)]
+mod fuzz;
