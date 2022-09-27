@@ -691,3 +691,14 @@ fn test_ghost_feeds() {
         }
     }
 }
+
+// Verifies that content is not set (as there is no enclosure in this case)
+#[test]
+fn test_matrix() {
+    let test_data = test::fixture_as_string("rss_2.0_matrix.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+
+    // The content should not be present
+    assert!(entry.content.is_none());
+}
