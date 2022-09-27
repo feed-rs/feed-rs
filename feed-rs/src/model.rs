@@ -231,7 +231,7 @@ impl Feed {
 }
 
 /// Type of a feed (RSS, Atom etc)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FeedType {
     Atom,
     JSON,
@@ -411,7 +411,7 @@ impl Entry {
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#category
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltcategorygtSubelementOfLtitemgt
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Category {
     /// The category as a human readable string
     /// * Atom (required): Identifies the category.
@@ -451,7 +451,7 @@ impl Category {
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#contentElement
 /// [RSS 2.0]: https://validator.w3.org/feed/docs/rss2.html#ltenclosuregtSubelementOfLtitemgt
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Content {
     /// Atom
     /// * If the type attribute ends in +xml or /xml, then an xml document of this type is contained inline.
@@ -507,7 +507,7 @@ impl Content {
 /// Information on the tools used to generate the feed
 ///
 /// Atom: Identifies the software used to generate the feed, for debugging and other purposes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Generator {
     /// Atom: Additional data
     /// RSS 2: A string indicating the program used to generate the channel.
@@ -546,7 +546,7 @@ impl Generator {
 /// [Atom spec]:  http://www.atomenabled.org/developers/syndication/#optionalFeedElements
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
 /// [RSS 1 spec]: https://validator.w3.org/feed/docs/rss1.html#s5.4
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Image {
     /// Link to the image
     /// * Atom: The URL to an image or logo
@@ -609,7 +609,7 @@ impl Image {
 /// Represents a link to an associated resource for the feed or entry.
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#link
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Link {
     /// Link to additional content
@@ -792,7 +792,7 @@ impl MediaCommunity {
 }
 
 /// Represents a "media:content" item from the RSS Media spec
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MediaContent {
     /// The direct URL
     pub url: Option<Url>,
@@ -857,7 +857,7 @@ impl MediaContent {
 }
 
 /// Represents a "media:credit" item from the RSS Media spec
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MediaCredit {
     /// The entity being credited
     pub entity: String,
@@ -870,7 +870,7 @@ impl MediaCredit {
 }
 
 /// Rating of the feed, item or media within the content
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MediaRating {
     // The scheme (defaults to "simple" per the spec)
     pub urn: String,
@@ -890,7 +890,7 @@ impl MediaRating {
 }
 
 /// Represents a "media:text" item from the RSS Media spec
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MediaText {
     /// The text
     pub text: Text,
@@ -911,7 +911,7 @@ impl MediaText {
 }
 
 /// Represents a "media:thumbnail" item from the RSS Media spec
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MediaThumbnail {
     /// The thumbnail image
     pub image: Image,
@@ -928,7 +928,7 @@ impl MediaThumbnail {
 /// Represents an author, contributor etc.
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#person
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Person {
     /// Atom: human-readable name for the person.
     /// JSON Feed: human-readable name for the person.
@@ -964,7 +964,7 @@ impl Person {
 }
 
 /// Textual content, or link to the content, for a given entry.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Text {
     pub content_type: Mime,
     pub src: Option<String>,
