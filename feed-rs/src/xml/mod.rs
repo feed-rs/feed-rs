@@ -272,10 +272,7 @@ impl<R: BufRead> SourceState<R> {
                             .decode(ns.as_ref())
                             .map(|decoded| NS::parse(decoded.as_ref()))
                             .unwrap_or(self.default_namespace),
-                        ResolveResult::Unknown(bytes) => decoder
-                            .decode(&bytes)
-                            .map(|decoded| NS::parse(decoded.as_ref()))
-                            .unwrap_or(self.default_namespace),
+                        ResolveResult::Unknown(_) => self.default_namespace,
                         ResolveResult::Unbound => self.default_namespace,
                     };
 
@@ -540,12 +537,12 @@ impl XmlEvent {
 
     // Creates a new event corresponding to an XML text node
     fn text<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> XmlResult<Option<XmlEvent>> {
-        let escaped_text = reader.decoder().decode(text)?;
-        let unescaped_text = escape::unescape(&escaped_text).map_err(quick_xml::Error::EscapeError)?;
-
         if text.is_empty() {
             Ok(None)
         } else {
+            let escaped_text = reader.decoder().decode(text)?;
+            let unescaped_text = escape::unescape(&escaped_text).map_err(quick_xml::Error::EscapeError)?;
+
             Ok(Some(XmlEvent::Text(unescaped_text.to_string())))
         }
     }
