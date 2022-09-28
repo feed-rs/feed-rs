@@ -376,6 +376,33 @@ fn test_spec_1() {
     assert_eq!(actual, expected);
 }
 
+#[test]
+fn test_relative_example() {
+    let test_data = test::fixture_as_string("atom_relative.xml");
+    let feed = parser::parse_with_uri(test_data.as_bytes(), Some("https://example.com/blog/feed.xml")).unwrap();
+
+    let feed_alternate_link = feed
+        .links
+        .iter()
+        .find(|l| l.rel.as_deref() == Some("alternate"))
+        .expect("feed has an alternate link");
+    assert_eq!("https://example.com/blog/", feed_alternate_link.href);
+
+    let icon = feed.icon.expect("feed has an icon");
+    assert_eq!("https://example.com/favicon.ico", icon.uri);
+
+    let logo = feed.logo.expect("feed has a logo");
+    assert_eq!("https://example.com/blog/feed_logo.jpg", logo.uri);
+
+    let entry = feed.entries.first().expect("feed has one entry");
+    let alternate_link = entry
+        .links
+        .iter()
+        .find(|l| l.rel.as_deref() == Some("alternate"))
+        .expect("entry has an alternate link");
+    assert_eq!("https://example.com/blog/2003/12/13/atom03", alternate_link.href);
+}
+
 // Verify we can parse Atom content elements without a type attribute
 // https://tools.ietf.org/html/rfc5023#section-9.2.1
 #[test]
