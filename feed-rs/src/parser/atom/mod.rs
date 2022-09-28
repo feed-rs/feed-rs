@@ -5,6 +5,7 @@ use mime::Mime;
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaObject, Person, Text};
 use crate::parser::mediarss;
 use crate::parser::mediarss::handle_media_element;
+use crate::parser::util;
 use crate::parser::util::{if_some_then, timestamp_rfc3339_lenient};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
@@ -215,7 +216,14 @@ fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
 
 // Handles an Atom <icon> or <logo>
 fn handle_image<R: BufRead>(element: Element<R>) -> Option<Image> {
-    element.child_as_text().map(Image::new)
+    element
+        .child_as_text()
+        .map(|raw_uri| {
+            util::parse_uri(&raw_uri, element.xml_base.as_ref())
+                .map(|parsed| parsed.to_string())
+                .unwrap_or(raw_uri)
+        })
+        .map(Image::new)
 }
 
 // Handles an Atom <link>
