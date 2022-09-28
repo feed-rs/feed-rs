@@ -52,9 +52,9 @@ fn test_example_2() {
         .link(Link::new("http://www.nasa.gov/rss/dyn/breaking_news.rss", None)
             .rel("self"))
         .language("en-us")
-        .contributor(Person::new("managingEditor".into())
+        .contributor(Person::new("managingEditor")
             .email("jim.wilson@nasa.gov"))
-        .contributor(Person::new("webMaster".into())
+        .contributor(Person::new("webMaster")
             .email("brian.dunbar@nasa.gov"))
         .entry(Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".into()))
@@ -99,7 +99,7 @@ fn test_example_3() {
             .title(Text::new("How a Historian Uncovered Ronald Reagan’s Racist Remarks to Richard Nixon".into()))
             .link(Link::new("\n                https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon\n            ", None))
             .id("5d420f3abfe6c20008d5eaad")
-            .author(Person::new("Isaac Chotiner".into()))
+            .author(Person::new("Isaac Chotiner"))
             .summary(Text::html("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
             .category(Category::new("News / Q. & A."))
             .published_rfc2822("Fri, 02 Aug 2019 15:35:34 +0000")
@@ -134,7 +134,7 @@ fn test_example_4() {
         .generator(Generator::new("https://wordpress.org/?v=5.1.1"))
         .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
-            .author(Person::new("admin".into()))
+            .author(Person::new("admin"))
             .link(Link::new("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ", None))
             .published_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
             .category(Category::new("Earthquake breaking news"))
@@ -194,7 +194,7 @@ fn test_example_5() {
                 .category(Category::new("apple"))
                 .category(Category::new("google"))
                 .id("https://arstechnica.com/?p=1546121")
-                .author(Person::new("Samuel Axon".into()))
+                .author(Person::new("Samuel Axon"))
                 .summary(Text::html("Alphabet has $117 billion in cash on hand.".into()))
                 .content(
                     Content::default()
@@ -271,8 +271,8 @@ fn test_spec_1() {
         .updated_rfc2822("Mon, 30 Sep 2002 11:00:00 GMT")
         .generator(Generator::new("Radio UserLand v8.0.5"))
         .category(Category::new("1765").scheme("Syndic8"))
-        .contributor(Person::new("managingEditor".into()).email("dave@userland.com"))
-        .contributor(Person::new("webMaster".into()).email("dave@userland.com"))
+        .contributor(Person::new("managingEditor").email("dave@userland.com"))
+        .contributor(Person::new("webMaster").email("dave@userland.com"))
         .ttl(40)
         .entry(
             Entry::default()
@@ -389,20 +389,20 @@ fn test_spiegel() {
                 .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
                 // <enclosure>, media: and itunes: tags
                 .media(MediaObject::default()
-                    .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into())
-                    .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into())
+                    .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ")
+                    .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.")
                     .credit("DER SPIEGEL")
                     .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())))
                     .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510".into())
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
                         .content_type("audio/mpeg")
                     )
                     .content(MediaContent::new()
-                        .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())
+                        .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large")
                         .content_type("image/jpeg")
                     )
                     .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510".into())
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
                         .size(2519606)
                         .content_type("audio/mpeg")
                     )
@@ -464,13 +464,12 @@ fn test_bbc() {
                 // <enclosure>,  media: and itunes: tags
                 .media(
                     MediaObject::default()
-                        .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...".into())
+                        .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...")
                         .duration(Duration::from_secs(3156))
                         .content(
                             MediaContent::new()
                                 .url(
-                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3"
-                                        .into(),
+                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3",
                                 )
                                 .size(50496000)
                                 .content_type("audio/mpeg"),
@@ -478,8 +477,7 @@ fn test_bbc() {
                         .content(
                             MediaContent::new()
                                 .url(
-                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3"
-                                        .into(),
+                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3",
                                 )
                                 .size(50496000)
                                 .content_type("audio/mpeg")
@@ -545,42 +543,42 @@ fn test_ch9() {
                     MediaObject::default()
                         .content(
                             MediaContent::new()
-                                .url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4".into())
+                                .url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4")
                                 .duration(Duration::from_secs(867))
                                 .size(1)
                                 .content_type("video/mp4"),
                         )
                         .content(
                             MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp3".into())
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp3")
                                 .duration(Duration::from_secs(867))
                                 .size(13878646)
                                 .content_type("audio/mp3"),
                         )
                         .content(
                             MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp4".into())
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp4")
                                 .duration(Duration::from_secs(867))
                                 .size(20450133)
                                 .content_type("video/mp4"),
                         )
                         .content(
                             MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into())
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")
                                 .duration(Duration::from_secs(867))
                                 .size(126659374)
                                 .content_type("video/mp4"),
                         )
                         .content(
                             MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_mid.mp4".into())
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_mid.mp4")
                                 .duration(Duration::from_secs(867))
                                 .size(49241848)
                                 .content_type("video/mp4"),
                         )
                         .content(
                             MediaContent::new()
-                                .url("https://www.youtube-nocookie.com/embed/E-XqYb88hUY?enablejsapi=1".into())
+                                .url("https://www.youtube-nocookie.com/embed/E-XqYb88hUY?enablejsapi=1")
                                 .duration(Duration::from_secs(867))
                                 .size(1),
                         ),
@@ -612,7 +610,7 @@ fn test_ch9() {
                         ))
                         .content(
                             MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4".into())
+                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")
                                 .size(126659374)
                                 .content_type("video/mp4"),
                         )

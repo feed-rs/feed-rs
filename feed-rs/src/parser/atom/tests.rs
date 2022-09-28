@@ -390,7 +390,7 @@ fn test_pub_spec_1() {
             .title(Text::new("Atom-Powered Robots Run Amok".into()))
             .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
             .updated_rfc3339("2003-12-13T18:30:02Z")
-            .author(Person::new("John Doe".into()))
+            .author(Person::new("John Doe"))
             .content(Content::default().content_type("text/plain").body("Some text.")),
     );
 
@@ -409,7 +409,7 @@ fn test_entry() {
             .title(Text::new("Specifications".into()))
             .id("urn:uuid:988EF5C55CDEA24EDE1251744888912")
             .updated_rfc3339("2009-08-31T18:55:12.569Z")
-            .author(Person::new("S. A. Khuba".into()))
+            .author(Person::new("S. A. Khuba"))
             .category(Category::new("45121504").scheme("http://www.unspsc.org/UNv1111201").label("Digital Camera"))
             .contributor(Person::new("Shri. S. A. Khuba"))
             .content(

@@ -46,7 +46,7 @@ fn handle_catalog<R: BufRead>(catalog: Element<R>) -> TestResult {
         assert_eq!(child.name, "book");
 
         // Should have an id attribute
-        assert!(child.attributes.iter().find(|attr| &attr.name == "id" && &attr.value == "bk101").is_some());
+        assert!(child.attributes.iter().any(|attr| &attr.name == "id" && &attr.value == "bk101"));
 
         // Should only have a single child at this level
         count += 1;
