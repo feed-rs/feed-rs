@@ -13,6 +13,14 @@ use uuid::Uuid;
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
 
+    // Feeds may not comply with the specification
+    static ref RFC1123_FIXES: Vec<(Regex, &'static str)> = {
+        vec!(
+            // replaces the trailing " Z" with UTC offset
+            (Regex::new(" Z$").unwrap(), " +0000"),
+        )
+    };
+
     // Feeds may not comply with the specification in various ways (https://tools.ietf.org/html/rfc2822#page-14)
     static ref RFC2822_FIXES: Vec<(Regex, &'static str)> = {
         vec!(
@@ -45,6 +53,9 @@ lazy_static! {
         )
     };
 }
+
+// RFC-1123 format e.g. Tue, 15 Nov 2022 20:15:04 Z
+static RFC1123_FORMAT_STR: &str = "%a, %d %b %Y %H:%M:%S %z";
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
@@ -89,19 +100,33 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
 
 /// Parses a timestamp from an RSS2 feed.
 /// This should be an RFC-2822 formatted timestamp but we need a bunch of fixes / workarounds for the generally broken stuff we find on the internet
-pub(crate) fn timestamp_rfc2822_lenient(text: &str) -> Option<DateTime<Utc>> {
+pub(crate) fn timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds so try that first
-    if let Some(ts) = timestamp_rfc3339_lenient(text) {
+    if let Some(ts) = timestamp_rfc3339_lenient(original) {
         return Some(ts);
     }
 
-    // Clean the input string by applying each of the regex fixes
-    let mut text = text.trim().to_string();
+    // Next try RFC-2822. Need to clean the input string by applying each of the regex fixes
+    let cleaned = original.trim().to_string();
+    let mut maybe_rfc2822 = cleaned.clone();
     for (regex, replacement) in RFC2822_FIXES.iter() {
-        text = regex.replace(&text, *replacement).to_string();
+        maybe_rfc2822 = regex.replace(&maybe_rfc2822, *replacement).to_string();
+    }
+    if let Ok(ts) = DateTime::parse_from_rfc2822(&maybe_rfc2822).map(|t| t.with_timezone(&Utc)) {
+        return Some(ts);
     }
 
-    DateTime::parse_from_rfc2822(&text).map(|t| t.with_timezone(&Utc)).ok()
+    // Now try RFC-1123, because hey...its the internet. Why follow standards?
+    let mut maybe_rfc1123 = cleaned;
+    for (regex, replacement) in RFC1123_FIXES.iter() {
+        maybe_rfc1123 = regex.replace(&maybe_rfc1123, *replacement).to_string();
+    }
+    if let Ok(ts) = DateTime::parse_from_str(&maybe_rfc1123, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)) {
+        return Some(ts);
+    }
+
+    // Can't make sense of it
+    None
 }
 
 /// Parses a timestamp from an Atom or JSON feed.
@@ -215,6 +240,8 @@ mod tests {
             ("24 Sep 2013 1:27 PDT", Utc.with_ymd_and_hms(2013, 9, 24, 8, 27, 0).unwrap()),
             // Consider an invalid hour specification as start-of-day
             ("5 Jun 2017 24:05 PDT", Utc.with_ymd_and_hms(2017, 6, 5, 7, 5, 0).unwrap()),
+            // We even see RFC1123
+            ("Tue, 15 Nov 2022 20:15:04 Z", Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap()),
         ];
 
         for (source, expected) in tests {
