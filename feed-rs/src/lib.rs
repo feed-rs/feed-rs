@@ -1,7 +1,8 @@
 //! This crate provides a parser and common data model over Atom and RSS feeds.
 //!
-//! It uses [xml-rs](https://crates.io/crates/xml-rs) a light-weight, streaming XML parser to minimise memory usage
-//! and avoids copying (clone) where possible.
+//! It uses [quick-xml](https://crates.io/crates/quick-xml) a light-weight,
+//! streaming XML parser to minimise memory usage and avoids copying (clone)
+//! where possible.
 //!
 //! The model attempts to find a balance between:
 //! * convenience of a single field where semantic equivalence exists e.g. "description" from RSS 2 and "subtitle" from Atom are semantically equivalent and mapped to the same field
