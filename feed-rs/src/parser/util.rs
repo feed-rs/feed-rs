@@ -204,7 +204,7 @@ mod tests {
             // UTC is not a valid timezone in RFC-2822
             ("Mon, 01 Jan 0001 00:00:00 UTC", Utc.ymd(1, 1, 1).and_hms_milli(0, 0, 0, 0)),
             // -0000 is not considered a timezone in the parser
-            ("Wed, 22 Jan 2020 10:58:02 -0000", Utc.ymd(2020, 1, 22).and_hms_milli(10, 58, 02, 0)),
+            ("Wed, 22 Jan 2020 10:58:02 -0000", Utc.ymd(2020, 1, 22).and_hms_milli(10, 58, 2, 0)),
             // The 25th of August 2012 was a Saturday, not a Wednesday
             ("Wed, 25 Aug 2012 03:25:42 GMT", Utc.ymd(2012, 8, 25).and_hms_milli(3, 25, 42, 0)),
             // Long month names are not allowed
@@ -218,7 +218,7 @@ mod tests {
         ];
 
         for (source, expected) in tests {
-            let parsed = timestamp_rfc2822_lenient(source).expect(&format!("failed to parse {}", source));
+            let parsed = timestamp_rfc2822_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
             assert_eq!(parsed, expected);
         }
     }
@@ -233,7 +233,7 @@ mod tests {
         ];
 
         for (source, expected) in tests {
-            let parsed = timestamp_rfc3339_lenient(source).expect(&format!("failed to parse {}", source));
+            let parsed = timestamp_rfc3339_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
             assert_eq!(parsed, expected);
         }
     }

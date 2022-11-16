@@ -132,7 +132,7 @@ fn test_spec_2() {
                     "\n            XML is placing increasingly heavy loads on the existing technical\n            infrastructure of the Internet.\n        "
                         .into(),
                 ))
-                .author(Person::new("Simon St.Laurent (mailto:simonstl@simonstl.com)".into()))
+                .author(Person::new("Simon St.Laurent (mailto:simonstl@simonstl.com)"))
                 .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into())),
         );
 
