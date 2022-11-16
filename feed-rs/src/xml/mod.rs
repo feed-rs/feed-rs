@@ -523,7 +523,7 @@ impl XmlEvent {
                         Ok(decoded) => decoded,
                         Err(_) => return None,
                     };
-                    let value = escape::unescape(&decoded_value).unwrap_or_else(|_| decoded_value.to_owned()).to_string();
+                    let value = escape::unescape(&decoded_value).unwrap_or_else(|_| decoded_value.clone()).to_string();
 
                     Some(NameValue { name: name.into(), value })
                 } else {
