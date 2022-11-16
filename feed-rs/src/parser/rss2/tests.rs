@@ -1,3 +1,4 @@
+use chrono::{TimeZone, Utc};
 use std::time::Duration;
 
 use crate::model::*;
@@ -695,4 +696,26 @@ fn test_matrix() {
 
     // The content should not be present
     assert!(entry.content.is_none());
+}
+
+// Verifies we can handle an RFC1123 date in an RSS 2.0 feed
+#[test]
+fn test_rfc1123_ilgiornale() {
+    let test_data = test::fixture_as_string("rss_2.0_ilgiornale.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+
+    // Should have the expected date
+    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap());
+}
+
+// Verifies we can handle an RFC1123 date in an RSS 2.0 feed where the week day name is in a different language
+#[test]
+fn test_rfc1123_ilmessaggero() {
+    let test_data = test::fixture_as_string("rss_2.0_ilmessaggero.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+
+    // Should have the expected date
+    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap());
 }
