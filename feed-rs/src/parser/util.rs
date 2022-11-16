@@ -18,6 +18,8 @@ lazy_static! {
         vec!(
             // replaces the trailing " Z" with UTC offset
             (Regex::new(" Z$").unwrap(), " +0000"),
+            // drop the week day name
+            (Regex::new("^[[:alpha:]]{3}, ").unwrap(), ""),
         )
     };
 
@@ -55,7 +57,8 @@ lazy_static! {
 }
 
 // RFC-1123 format e.g. Tue, 15 Nov 2022 20:15:04 Z
-static RFC1123_FORMAT_STR: &str = "%a, %d %b %Y %H:%M:%S %z";
+// but without the day of week (since it is superfluous and often in languages other than English)
+static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
@@ -242,6 +245,8 @@ mod tests {
             ("5 Jun 2017 24:05 PDT", Utc.with_ymd_and_hms(2017, 6, 5, 7, 5, 0).unwrap()),
             // We even see RFC1123
             ("Tue, 15 Nov 2022 20:15:04 Z", Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap()),
+            // And RFC1123 with languages other than English...
+            ("mer, 16 nov 2022 00:38:15 +0100", Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap()),
         ];
 
         for (source, expected) in tests {
