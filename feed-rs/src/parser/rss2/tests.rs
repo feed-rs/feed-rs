@@ -468,17 +468,13 @@ fn test_bbc() {
                         .duration(Duration::from_secs(3156))
                         .content(
                             MediaContent::new()
-                                .url(
-                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3",
-                                )
+                                .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
                                 .size(50496000)
                                 .content_type("audio/mpeg"),
                         )
                         .content(
                             MediaContent::new()
-                                .url(
-                                    "http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3",
-                                )
+                                .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
                                 .size(50496000)
                                 .content_type("audio/mpeg")
                                 .duration(Duration::from_secs(3156)),
