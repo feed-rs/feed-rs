@@ -200,21 +200,21 @@ mod tests {
     fn test_timestamp_rss2() {
         let tests = vec![
             //
-            ("26 August 2019 10:00:00 +0000", Utc.ymd(2019, 8, 26).and_hms_milli(10, 0, 0, 0)),
+            ("26 August 2019 10:00:00 +0000", Utc.with_ymd_and_hms(2019, 8, 26, 10, 0, 0).unwrap()),
             // UTC is not a valid timezone in RFC-2822
-            ("Mon, 01 Jan 0001 00:00:00 UTC", Utc.ymd(1, 1, 1).and_hms_milli(0, 0, 0, 0)),
+            ("Mon, 01 Jan 0001 00:00:00 UTC", Utc.with_ymd_and_hms(1, 1, 1, 0, 0, 0).unwrap()),
             // -0000 is not considered a timezone in the parser
-            ("Wed, 22 Jan 2020 10:58:02 -0000", Utc.ymd(2020, 1, 22).and_hms_milli(10, 58, 2, 0)),
+            ("Wed, 22 Jan 2020 10:58:02 -0000", Utc.with_ymd_and_hms(2020, 1, 22, 10, 58, 2).unwrap()),
             // The 25th of August 2012 was a Saturday, not a Wednesday
-            ("Wed, 25 Aug 2012 03:25:42 GMT", Utc.ymd(2012, 8, 25).and_hms_milli(3, 25, 42, 0)),
+            ("Wed, 25 Aug 2012 03:25:42 GMT", Utc.with_ymd_and_hms(2012, 8, 25, 3, 25, 42).unwrap()),
             // Long month names are not allowed
-            ("2 September 2019 20:00:00 +0000", Utc.ymd(2019, 9, 2).and_hms_milli(20, 0, 0, 0)),
+            ("2 September 2019 20:00:00 +0000", Utc.with_ymd_and_hms(2019, 9, 2, 20, 0, 0).unwrap()),
             // RSS2 should be RFC-2822 but we get Atom/RFC-3339 formats
-            ("2016-10-01T00:00:00+10:00", Utc.ymd(2016, 9, 30).and_hms_milli(14, 0, 0, 0)),
+            ("2016-10-01T00:00:00+10:00", Utc.with_ymd_and_hms(2016, 9, 30, 14, 0, 0).unwrap()),
             // Single digit hours should be padded
-            ("24 Sep 2013 1:27 PDT", Utc.ymd(2013, 9, 24).and_hms_milli(8, 27, 0, 0)),
+            ("24 Sep 2013 1:27 PDT", Utc.with_ymd_and_hms(2013, 9, 24, 8, 27, 0).unwrap()),
             // Consider an invalid hour specification as start-of-day
-            ("5 Jun 2017 24:05 PDT", Utc.ymd(2017, 6, 5).and_hms_milli(7, 5, 0, 0)),
+            ("5 Jun 2017 24:05 PDT", Utc.with_ymd_and_hms(2017, 6, 5, 7, 5, 0).unwrap()),
         ];
 
         for (source, expected) in tests {
@@ -227,9 +227,9 @@ mod tests {
     fn test_timestamp_atom() {
         let tests = vec![
             // properly formated rfc3339 string
-            ("2014-12-29T14:53:35+02:00", Utc.ymd(2014, 12, 29).and_hms_milli(12, 53, 35, 0)),
+            ("2014-12-29T14:53:35+02:00", Utc.with_ymd_and_hms(2014, 12, 29, 12, 53, 35).unwrap()),
             // missing colon in timezone
-            ("2014-12-29T14:53:35+0200", Utc.ymd(2014, 12, 29).and_hms_milli(12, 53, 35, 0)),
+            ("2014-12-29T14:53:35+0200", Utc.with_ymd_and_hms(2014, 12, 29, 12, 53, 35).unwrap()),
         ];
 
         for (source, expected) in tests {
