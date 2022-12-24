@@ -278,7 +278,8 @@ pub struct Entry {
     pub links: Vec<Link>,
     /// A short summary of the item
     /// * Atom (recommended): Conveys a short summary, abstract, or excerpt of the entry.
-    /// * RSS 1+2 (optional): The item synopsis.
+    /// * RSS 1 (optional): Populated from the RSS namespace 'description' field, or if not present, the Dublin Core namespace 'description' field.
+    /// * RSS 2 (optional): Populated from the RSS namespace 'description' field.
     /// * JSON Feed: the summary for the item, or the text content if no summary is provided and both text and html content are specified
     ///
     /// Warning: Some feeds (especially RSS) use significant whitespace in this field even in cases where it should be considered HTML. Consider rendering this field in a way that preserves whitespace-based formatting such as a double-newline to separate paragraphs.
