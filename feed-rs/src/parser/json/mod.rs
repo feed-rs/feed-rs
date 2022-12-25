@@ -32,9 +32,9 @@ fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
     // Convert feed level fields
     feed.title = Some(Text::new(jf.title));
 
-    if_some_then(jf.home_page_url, |uri| feed.links.push(Link::new(&uri, None)));
+    if_some_then(jf.home_page_url, |uri| feed.links.push(Link::new(uri, None)));
 
-    if_some_then(jf.feed_url, |uri| feed.links.push(Link::new(&uri, None)));
+    if_some_then(jf.feed_url, |uri| feed.links.push(Link::new(uri, None)));
 
     if_some_then(jf.description, |text| feed.description = Some(Text::new(text)));
 
