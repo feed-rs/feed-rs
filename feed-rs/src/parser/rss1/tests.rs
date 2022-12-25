@@ -139,3 +139,13 @@ fn test_spec_2() {
     // Check
     assert_eq!(actual, expected);
 }
+
+// Verifies that publish date is set
+#[test]
+fn test_debian() {
+    let test_data = test::fixture_as_string("rss_1.0_debian.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+
+    assert!(entry.published.is_some());
+}

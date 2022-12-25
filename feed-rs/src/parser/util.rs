@@ -52,6 +52,8 @@ lazy_static! {
         vec!(
             // inserts missing colon in timezone
             (Regex::new(r#"(\+|-)(\d{2})(\d{2})"#).unwrap(), "${1}${2}:${3}"),
+            // appends time (midnight) and timezone (utc) if missing
+            (Regex::new(r"-\d{2}$").unwrap(), "${0}T00:00:00+00:00")
         )
     };
 }
