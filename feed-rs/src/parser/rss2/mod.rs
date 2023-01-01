@@ -230,7 +230,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (NS::RSS, "enclosure") => handle_enclosure(child, &mut media_obj),
 
-            (NS::RSS, "pubDate") => entry.published = handle_timestamp(child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = handle_timestamp(child),
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
