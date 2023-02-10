@@ -353,7 +353,7 @@ impl Entry {
     }
 
     pub fn id(mut self, id: &str) -> Self {
-        self.id = id.to_string();
+        self.id = id.trim().to_string();
         self
     }
 
@@ -635,7 +635,9 @@ impl Link {
         let href = match util::parse_uri(href.as_ref(), base) {
             Some(uri) => uri.to_string(),
             None => href.as_ref().to_string(),
-        };
+        }
+        .trim()
+        .to_string();
 
         Link {
             href,
@@ -977,7 +979,7 @@ impl Text {
         Text {
             content_type: mime::TEXT_PLAIN,
             src: None,
-            content,
+            content: content.trim().to_string(),
         }
     }
 
@@ -985,7 +987,7 @@ impl Text {
         Text {
             content_type: mime::TEXT_HTML,
             src: None,
-            content,
+            content: content.trim().to_string(),
         }
     }
 }

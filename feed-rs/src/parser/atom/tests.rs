@@ -14,41 +14,33 @@ fn test_example_1() {
     // Expected feed
     let expected = Feed::new(FeedType::Atom)
         .title(Text::new("dive into mark".into()))
-        .description(Text::new("\n        A <em>lot</em> of effort\n        went into making this effortless\n    ".into())
-            .content_type("text/html"))
+        .description(Text::new("A <em>lot</em> of effort\n        went into making this effortless".into()).content_type("text/html"))
         .updated_rfc3339("2005-07-31T12:29:29Z")
         .id("tag:example.org,2003:3")
-        .link(Link::new("http://example.org/", None)
-            .rel("alternate")
-            .media_type("text/html")
-            .href_lang("en"))
-        .link(Link::new("http://example.org/feed.atom", None)
-            .rel("self")
-            .media_type("application/atom+xml"))
+        .link(Link::new("http://example.org/", None).rel("alternate").media_type("text/html").href_lang("en"))
+        .link(Link::new("http://example.org/feed.atom", None).rel("self").media_type("application/atom+xml"))
         .rights(Text::new("Copyright (c) 2003, Mark Pilgrim".into()))
-        .generator(Generator::new("Example Toolkit")
-            .uri("http://www.example.com/")
-            .version("1.0"))
-        .entry(Entry::default()
-            .id("tag:example.org,2003:3.2397")
-            .title(Text::new("Atom draft-07 snapshot".into()))
-            .updated_rfc3339("2005-07-31T12:29:29Z")
-            .author(Person::new("Mark Pilgrim")
-                .uri("http://example.org/")
-                .email("f8dy@example.com"))
-            .link(Link::new("http://example.org/2005/04/02/atom", None)
-                .rel("alternate")
-                .media_type("text/html"))
-            .link(Link::new("http://example.org/audio/ph34r_my_podcast.mp3", None)
-                .rel("enclosure")
-                .media_type("audio/mpeg")
-                .length(1337))
-            .contributor(Person::new("Sam Ruby"))
-            .contributor(Person::new("Joe Gregorio"))
-            .content(Content::default()
-                .content_type("text/html")
-                .body("\n            <div>\n                <p>\n                    <i>[Update: The Atom draft is finished.]</i>\n                </p>\n            </div>\n        "))
-            .published_rfc3339("2003-12-13T08:29:29-04:00"));
+        .generator(Generator::new("Example Toolkit").uri("http://www.example.com/").version("1.0"))
+        .entry(
+            Entry::default()
+                .id("tag:example.org,2003:3.2397")
+                .title(Text::new("Atom draft-07 snapshot".into()))
+                .updated_rfc3339("2005-07-31T12:29:29Z")
+                .author(Person::new("Mark Pilgrim").uri("http://example.org/").email("f8dy@example.com"))
+                .link(Link::new("http://example.org/2005/04/02/atom", None).rel("alternate").media_type("text/html"))
+                .link(
+                    Link::new("http://example.org/audio/ph34r_my_podcast.mp3", None)
+                        .rel("enclosure")
+                        .media_type("audio/mpeg")
+                        .length(1337),
+                )
+                .contributor(Person::new("Sam Ruby"))
+                .contributor(Person::new("Joe Gregorio"))
+                .content(Content::default().content_type("text/html").body(
+                    "<div>\n                <p>\n                    <i>[Update: The Atom draft is finished.]</i>\n                </p>\n            </div>",
+                ))
+                .published_rfc3339("2003-12-13T08:29:29-04:00"),
+        );
 
     // Check
     assert_eq!(actual, expected);
@@ -147,8 +139,7 @@ fn test_example_3() {
                 .label("Zero Trust")
                 .scheme("http://www.sixapart.com/ns/types#tag"))
             .content(Content::default()
-                .body(r#"
-        <p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
+                .body(r#"<p>We all heed the gospel of patching, but as recent incidents made clear, even cutting-edge disruptors struggle to patch everything, everywhere, and all the time.</p>
         <img src="http://feeds.feedburner.com/~r/TheAkamaiBlog/~4/NnQEuqRSyug" height="1" width="1" alt=""/>"#)
                 .content_type("text/html")));
 
@@ -264,8 +255,7 @@ fn test_example_6() {
             <li>Switch to event-based parser (xml-rs) to reduce peak memory usage and use of clone()</li>
             <li>Expanded test coverage</li>
             <li>Documentation improvements</li>
-            </ul>
-        "#,
+            </ul>"#,
                         )
                         .content_type("text/html"),
                 )
@@ -322,8 +312,7 @@ fn test_example_6() {
 // Verify that we don't trim essential whitespace
 #[test]
 fn test_example_7() {
-    let expected_body = r#"<div xmlns="http://www.w3.org/1999/xhtml"><p>This is a follow up from <a href="https://who-t.blogspot.com/2018/12/high-resolution-wheel-scrolling-on.html">the kernel support for high-resolution wheel scrolling</a> which you totally forgot about because it's already more then a year in the past and seriously, who has the attention span these days to remember this. Anyway, I finally found time and motivation to pick this up again and I started lining up the pieces like cans, for it only to be shot down by the commentary of strangers on the internet. The <a href="https://gitlab.freedesktop.org/wayland/wayland/-/merge_requests/72">Wayland merge request</a> lists the various pieces (libinput, wayland, weston, mutter, gtk and Xwayland) but for the impatient there's also an <a href="https://copr.fedorainfracloud.org/coprs/whot/high-resolution-wheel-scrolling/">Fedora 32 COPR</a>. For all you weirdos inexplicably not running the latest Fedora, well, you'll have to compile this yourself, just like I did. </p> <p>Let's recap: in v5.0 the kernel added new axes <b>REL_WHEEL_HI_RES</b> and <b>REL_HWHEEL_HI_RES</b> for all devices. On devices that actually support high-resolution wheel scrolling (Logitech and Microsoft mice, primarily) you'll get multiple hires events before the now-legacy <b>REL_WHEEL</b> events. On all other devices those two are in sync. </p> <p>Integrating this into the userspace stack was a bit of a mess at first, but I think the solution is good enough, even if it has a rather verbose explanation on how to handle it. The actual patches to integrate ended up being relatively simple. So let's see why it's a bit weird: </p> <p>When Wayland started, back in WhoahReallyThatLongAgo, scrolling was specified as the <b>wl_pointer.axis</b> event with a value in pixels. This works fine for touchpads, not so much for wheels. The early versions of Weston decreed that one wheel click was 10 pixels [1] and, perhaps surprisingly, the world kept on turning. When libinput was forked from Weston <a href="https://who-t.blogspot.com/2015/01/providing-physical-movement-of-wheel.html">an early change</a> was that wheel events would have two values - degrees of movement and click count ("discrete steps"). The wayland protocol was expanded to include the discrete steps as <b>wl_pointer.axis_discrete</b> as well. Then backwards compatibility reared its ugly head and Mutter, Weston, GTK all basically said: one discrete step equals 10 pixels so we multiply the discrete value by 10 and, perhaps surprisingly, the world kept on turning. </p> <p>This worked out well enough for a few years but with high resolution wheels we ran into a problem. Discrete steps are integers, so we can't send partial values. And the protocol is defined in a way that any tweaking of the behaviour would result in broken clients which, perhaps surprisingly, is a Bad Thing. This lead to the current proposal of separate events. <b>LIBINPUT_EVENT_POINTER_AXIS_WHEEL</b> and for Wayland the <b>wl_pointer.axis_v120</b> event, linked to above. These events are (like the kernel events) a parallel event stream to the previous events and effectively replace the <b>LIBINPUT_EVENT_POINTER_AXIS</b> and Wayland <b>wl_pointer.axis/axis_discrete</b> pair for wheel events (not so for touchpad or button scrolling though). </p> <p>The compositor side of things is relatively simple: take the events from libinput and pass the hires ones as v120 events and the lowres ones as v120 events with a value of zero. The client side takes the v120 events and uses them over <b>wl_pointer.axis/axis_discrete</b> unless one is zero in which case you can discard all axis events in that <b>wl_pointer.frame</b>. Since most client implementation already have the support for smooth scrolling (because, well, touchpads do exist) it's relatively simple to integrate - the new events just feed into the smooth scrolling code. And since you already have to do wheel emulation for that (because, well, old clients exist) wheel emulation is handled easily too. </p> <p>All that to provide buttery smooth [2] wheel scrolling. Or not, if your hardware doesn't support it. In which case, well, live with the warm fuzzy feeling that someone else has a better user experience now. Or soon, anyway. </p> <p><small>[1] with, I suspect, the scientific measurement of "yeah, that seems about alright"<br></br>[2] like butter out of a fridge, so still chunky but at least less so than before<br></br></small></p></div>
-    "#;
+    let expected_body = r#"<div xmlns="http://www.w3.org/1999/xhtml"><p>This is a follow up from <a href="https://who-t.blogspot.com/2018/12/high-resolution-wheel-scrolling-on.html">the kernel support for high-resolution wheel scrolling</a> which you totally forgot about because it's already more then a year in the past and seriously, who has the attention span these days to remember this. Anyway, I finally found time and motivation to pick this up again and I started lining up the pieces like cans, for it only to be shot down by the commentary of strangers on the internet. The <a href="https://gitlab.freedesktop.org/wayland/wayland/-/merge_requests/72">Wayland merge request</a> lists the various pieces (libinput, wayland, weston, mutter, gtk and Xwayland) but for the impatient there's also an <a href="https://copr.fedorainfracloud.org/coprs/whot/high-resolution-wheel-scrolling/">Fedora 32 COPR</a>. For all you weirdos inexplicably not running the latest Fedora, well, you'll have to compile this yourself, just like I did. </p> <p>Let's recap: in v5.0 the kernel added new axes <b>REL_WHEEL_HI_RES</b> and <b>REL_HWHEEL_HI_RES</b> for all devices. On devices that actually support high-resolution wheel scrolling (Logitech and Microsoft mice, primarily) you'll get multiple hires events before the now-legacy <b>REL_WHEEL</b> events. On all other devices those two are in sync. </p> <p>Integrating this into the userspace stack was a bit of a mess at first, but I think the solution is good enough, even if it has a rather verbose explanation on how to handle it. The actual patches to integrate ended up being relatively simple. So let's see why it's a bit weird: </p> <p>When Wayland started, back in WhoahReallyThatLongAgo, scrolling was specified as the <b>wl_pointer.axis</b> event with a value in pixels. This works fine for touchpads, not so much for wheels. The early versions of Weston decreed that one wheel click was 10 pixels [1] and, perhaps surprisingly, the world kept on turning. When libinput was forked from Weston <a href="https://who-t.blogspot.com/2015/01/providing-physical-movement-of-wheel.html">an early change</a> was that wheel events would have two values - degrees of movement and click count ("discrete steps"). The wayland protocol was expanded to include the discrete steps as <b>wl_pointer.axis_discrete</b> as well. Then backwards compatibility reared its ugly head and Mutter, Weston, GTK all basically said: one discrete step equals 10 pixels so we multiply the discrete value by 10 and, perhaps surprisingly, the world kept on turning. </p> <p>This worked out well enough for a few years but with high resolution wheels we ran into a problem. Discrete steps are integers, so we can't send partial values. And the protocol is defined in a way that any tweaking of the behaviour would result in broken clients which, perhaps surprisingly, is a Bad Thing. This lead to the current proposal of separate events. <b>LIBINPUT_EVENT_POINTER_AXIS_WHEEL</b> and for Wayland the <b>wl_pointer.axis_v120</b> event, linked to above. These events are (like the kernel events) a parallel event stream to the previous events and effectively replace the <b>LIBINPUT_EVENT_POINTER_AXIS</b> and Wayland <b>wl_pointer.axis/axis_discrete</b> pair for wheel events (not so for touchpad or button scrolling though). </p> <p>The compositor side of things is relatively simple: take the events from libinput and pass the hires ones as v120 events and the lowres ones as v120 events with a value of zero. The client side takes the v120 events and uses them over <b>wl_pointer.axis/axis_discrete</b> unless one is zero in which case you can discard all axis events in that <b>wl_pointer.frame</b>. Since most client implementation already have the support for smooth scrolling (because, well, touchpads do exist) it's relatively simple to integrate - the new events just feed into the smooth scrolling code. And since you already have to do wheel emulation for that (because, well, old clients exist) wheel emulation is handled easily too. </p> <p>All that to provide buttery smooth [2] wheel scrolling. Or not, if your hardware doesn't support it. In which case, well, live with the warm fuzzy feeling that someone else has a better user experience now. Or soon, anyway. </p> <p><small>[1] with, I suspect, the scientific measurement of "yeah, that seems about alright"<br></br>[2] like butter out of a fridge, so still chunky but at least less so than before<br></br></small></p></div>"#;
     // Parse the feed
     let test_data = test::fixture_as_string("atom_example_7.xml");
     let feed = parser::parse(test_data.as_bytes()).unwrap();

@@ -59,12 +59,12 @@ fn test_example_2() {
             .email("brian.dunbar@nasa.gov"))
         .entry(Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".into()))
-            .link(Link::new("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ", None))
+            .link(Link::new("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship", None))
             .summary(Text::html(r#"More than three months after delivering several tons of supplies and scientific experiments to
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
                 depart the orbiting laboratory Tuesday, Aug. 6.
             "#.to_owned()))
-            .id("\n                http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship\n            ")
+            .id("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship")
             .published_rfc2822("Thu, 01 Aug 2019 16:15 EDT")
             .updated(actual.updated)
             .media(MediaObject::default()
@@ -88,7 +88,7 @@ fn test_example_3() {
     let expected = Feed::new(FeedType::RSS2)
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("News, Politics, Opinion, Commentary, and Analysis".into()))
-        .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.\n        ".into()))
+        .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.".into()))
         .link(Link::new("https://www.newyorker.com/news", None))
         .link(Link::new("https://www.newyorker.com/feed/news/rss", None)
             .rel("self")
@@ -98,7 +98,7 @@ fn test_example_3() {
         .updated_rfc2822("Tue, 06 Aug 2019 10:46:05 +0000")
         .entry(Entry::default()
             .title(Text::new("How a Historian Uncovered Ronald Reagan’s Racist Remarks to Richard Nixon".into()))
-            .link(Link::new("\n                https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon\n            ", None))
+            .link(Link::new("https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon", None))
             .id("5d420f3abfe6c20008d5eaad")
             .author(Person::new("Isaac Chotiner"))
             .summary(Text::html("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
@@ -136,13 +136,13 @@ fn test_example_4() {
         .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
             .author(Person::new("admin"))
-            .link(Link::new("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ", None))
+            .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/", None))
             .published_rfc2822("Tue, 06 Aug 2019 05:01:15 +0000")
             .category(Category::new("Earthquake breaking news"))
             .category(Category::new("Minor World Earthquakes Magnitude -3.9"))
             .category(Category::new("Spárti"))
-            .id("\n                http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/\n            ")
-            .summary(Text::html("\n                A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday.".into()))
+            .id("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/")
+            .summary(Text::html("A minor earthquake magnitude 3.5 (ml/mb) strikes near Kalamáta, Trípoli, Pýrgos, Spárti, Filiatrá, Messíni, Greece on Tuesday.".into()))
             .content(Content::default()
                 .body("<p><img class='size-full alignleft' title='Earthquake location 37.102S, 21.9072W' alt='Earthquake location 37.102S, 21.9072W' src='http://www.earthquakenewstoday.com/wp-content/uploads/35_20.jpg' width='146' height='146' />A minor earthquake with magnitude 3.5 (ml/mb) was detected on Tuesday, 8 kilometers (5 miles) from Aris in Greece.Exact location of event, depth 10 km, 21.9072&deg; East, 37.102&deg; North. </p>")
                 .content_type("text/html"))
@@ -382,7 +382,7 @@ fn test_spiegel() {
         )
         .entry(
             Entry::default()
-                .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ".into()))
+                .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval".into()))
                 .content(Content::default().body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#).content_type("text/html"))
                 .summary(Text::html("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
                 .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri", None))
@@ -505,7 +505,7 @@ fn test_ch9() {
                 .link("https://s.ch9.ms/Shows/Azure-Friday"),
         )
         .description(Text::new(
-            "Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights. "
+            "Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights."
                 .into(),
         ))
         .link(
@@ -718,4 +718,20 @@ fn test_rfc1123_ilmessaggero() {
 
     // Should have the expected date
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap());
+}
+
+// Verifies we trim leading and trailing whitespace in text fields
+// e.g. those with newlines before the CDATA
+#[test]
+fn test_trim_whitespace_text_nodes() {
+    let test_data = test::fixture_as_string("rss_2.0_nightvale.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(actual.description.unwrap().content.starts_with("<p>Twice-monthly community updates"));
+
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    assert!(entry.summary.as_ref().unwrap().content.starts_with("<p>The University of What It Is"));
+
+    let media = entry.media.get(0).expect("entry has 1 media item");
+    assert!(media.description.as_ref().unwrap().content.starts_with("The University of What It Is"));
 }

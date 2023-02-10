@@ -78,7 +78,7 @@ fn test_spec_1() {
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("XML.com".into()))
         .link(Link::new("http://xml.com/pub", None))
-        .description(Text::new("\n            XML.com features a rich mix of information and services\n            for the XML community.\n        ".into()))
+        .description(Text::new("XML.com features a rich mix of information and services\n            for the XML community.".into()))
         .logo(Image::new("http://xml.com/universal/images/xml_tiny.gif".into())
             .link("http://www.xml.com")
             .title("XML.com"))
@@ -88,13 +88,13 @@ fn test_spec_1() {
             .updated(entry0.updated)            // not present in the test data
             .title(Text::new("Processing Inclusions with XSLT".into()))
             .link(Link::new("http://xml.com/pub/2000/08/09/xslt/xslt.html", None))
-            .summary(Text::new("\n\n            Processing document inclusions with general XML tools can be\n            problematic. This article proposes a way of preserving inclusion\n            information through SAX-based processing.\n        ".into())))
+            .summary(Text::new("Processing document inclusions with general XML tools can be\n            problematic. This article proposes a way of preserving inclusion\n            information through SAX-based processing.".into())))
         .entry(Entry::default()
             .id("54f62e9fe8901546d7e25c0827e1b8e8")     // hash of the link
             .updated(entry1.updated)            // not present in the test data
             .title(Text::new("Putting RDF to Work".into()))
             .link(Link::new("http://xml.com/pub/2000/08/09/rdfdb/index.html", None))
-            .summary(Text::new("\n            Tool and API support for the Resource Description Framework\n            is slowly coming of age. Edd Dumbill takes a look at RDFDB,\n            one of the most exciting new RDF toolkits.\n        ".into())));
+            .summary(Text::new("Tool and API support for the Resource Description Framework\n            is slowly coming of age. Edd Dumbill takes a look at RDFDB,\n            one of the most exciting new RDF toolkits.".into())));
 
     // Check
     assert_eq!(actual, expected);
@@ -129,8 +129,7 @@ fn test_spec_2() {
                 .title(Text::new("XML: A Disruptive Technology".into()))
                 .link(Link::new("http://c.moreover.com/click/here.pl?r123", None))
                 .summary(Text::new(
-                    "\n            XML is placing increasingly heavy loads on the existing technical\n            infrastructure of the Internet.\n        "
-                        .into(),
+                    "XML is placing increasingly heavy loads on the existing technical\n            infrastructure of the Internet.".into(),
                 ))
                 .author(Person::new("Simon St.Laurent (mailto:simonstl@simonstl.com)"))
                 .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into())),
