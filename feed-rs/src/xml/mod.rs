@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use std::io::BufRead;
 use std::mem;
 
-use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
+use quick_xml::events::{BytesCData, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::name::ResolveResult;
 use quick_xml::{escape, NsReader, Reader};
 use url::Url;
@@ -294,11 +294,9 @@ impl<R: BufRead> SourceState<R> {
 
                 // CData is converted to text
                 Event::CData(t) => {
-                    if let Ok(escaped) = t.escape() {
-                        let event = XmlEvent::text(&escaped, reader);
-                        if let Ok(Some(ref _t)) = event {
-                            return event;
-                        }
+                    let event = XmlEvent::text_from_cdata(&t, reader);
+                    if let Ok(Some(ref _t)) = event {
+                        return event;
                     }
                 }
 
@@ -544,6 +542,18 @@ impl XmlEvent {
             let unescaped_text = escape::unescape(&escaped_text).map_err(quick_xml::Error::EscapeError)?;
 
             Ok(Some(XmlEvent::Text(unescaped_text.to_string())))
+        }
+    }
+
+    // Creates a new event from the corresponding cdata
+    // No need to unescape in this case given cdata is "raw"
+    fn text_from_cdata<R: BufRead>(cdata: &BytesCData, reader: &Reader<R>) -> XmlResult<Option<XmlEvent>> {
+        if cdata.is_empty() {
+            Ok(None)
+        } else {
+            let decoded_text = reader.decoder().decode(cdata)?;
+
+            Ok(Some(XmlEvent::Text(decoded_text.to_string())))
         }
     }
 }

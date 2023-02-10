@@ -149,3 +149,17 @@ fn test_debian() {
 
     assert!(entry.published.is_some());
 }
+
+// Verifies ISO8859 decoding works correctly
+#[test]
+fn test_iso8859() {
+    let test_data = test::fixture_as_raw("rss_1.0_iso8859.xml");
+    let actual = parser::parse(test_data.as_slice()).unwrap();
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+
+    let expected = "Ab April soll es wieder Förderung für den Ausbau von Glasfaser geben.";
+    let summary = &entry.summary.as_ref().unwrap().content;
+    assert!(summary.starts_with(expected));
+    let content = entry.content.as_ref().unwrap().body.as_ref().unwrap();
+    assert!(content.contains(expected));
+}
