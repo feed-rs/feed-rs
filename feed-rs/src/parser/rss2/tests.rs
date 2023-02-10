@@ -735,3 +735,12 @@ fn test_trim_whitespace_text_nodes() {
     let media = entry.media.get(0).expect("entry has 1 media item");
     assert!(media.description.as_ref().unwrap().content.starts_with("The University of What It Is"));
 }
+
+// Verifies we use DublinCore date as entry published date if present
+#[test]
+fn test_published_from_dc_date() {
+    let test_data = test::fixture_as_string("rss_2.0_dbengines.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
+}
