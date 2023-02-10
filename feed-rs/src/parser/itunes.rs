@@ -1,5 +1,5 @@
 use crate::model::{Category, Feed, Image, MediaCredit, MediaObject, MediaRating, MediaThumbnail, Person};
-use crate::parser::atom::handle_text;
+use crate::parser::atom;
 use crate::parser::util::{if_some_then, parse_npt};
 use crate::parser::ParseFeedResult;
 use crate::xml::{Element, NS};
@@ -38,7 +38,7 @@ pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, fee
 // Process <itunes> elements at item level and turn them into something that looks like MediaRSS objects.
 pub(crate) fn handle_itunes_item_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
     match element.ns_and_tag() {
-        (NS::Itunes, "title") => media_obj.title = handle_text(element)?,
+        (NS::Itunes, "title") => media_obj.title = atom::handle_text(element)?,
 
         (NS::Itunes, "image") => if_some_then(handle_image(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
 
@@ -46,7 +46,7 @@ pub(crate) fn handle_itunes_item_element<R: BufRead>(element: Element<R>, media_
 
         (NS::Itunes, "author") => if_some_then(handle_author(element), |credit| media_obj.credits.push(credit)),
 
-        (NS::Itunes, "summary") => media_obj.description = handle_text(element)?,
+        (NS::Itunes, "summary") => media_obj.description = atom::handle_text(element)?,
 
         // Nothing required for unknown elements
         _ => {}

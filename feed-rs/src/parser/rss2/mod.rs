@@ -226,7 +226,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
 
-            (NS::RSS, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid),
+            (NS::RSS, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid.trim().to_string()),
 
             (NS::RSS, "enclosure") => handle_enclosure(child, &mut media_obj),
 
@@ -265,7 +265,11 @@ fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
 
 // Handles <title>, <description> etc
 fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
-    element.child_as_text().map(Text::new)
+    if let Ok(Some(text)) = element.children_as_string() {
+        Some(Text::new(text))
+    } else {
+        None
+    }
 }
 
 // Handles date/time
