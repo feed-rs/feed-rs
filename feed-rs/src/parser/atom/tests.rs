@@ -500,3 +500,19 @@ fn test_mediarss_newscred() {
     let media_obj = &entry.media[0];
     assert_eq!(media_obj, &expected);
 }
+
+#[test]
+fn test_reddit() {
+    let test_data = test::fixture_as_string("atom_mediarss_reddit_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
+
+    let expected = MediaObject::default()
+        .thumbnail(MediaThumbnail::new(
+            Image::new("https://b.thumbs.redditmedia.com/_MXt-0n8VXQc-EQ7Q0vFioALFWFITAgVWu4Wf8dThhU.jpg".to_string())
+        ));
+
+    let entry = &actual.entries[actual.entries.len() - 2];
+    let media_obj = &entry.media[0];
+    assert_eq!(media_obj, &expected);
+
+}

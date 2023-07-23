@@ -188,8 +188,8 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
         }
     }
 
-    // If a media:content item was found in this entry, then attach it
-    if !media_obj.content.is_empty() {
+    // If a media:content or media:thumbnail item was found in this entry, then attach it
+    if !media_obj.content.is_empty() || !media_obj.thumbnails.is_empty() {
         entry.media.push(media_obj);
     }
 
