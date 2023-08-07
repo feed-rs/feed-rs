@@ -21,6 +21,9 @@ readme = "README.md"
 [badges]
 travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
+[features]
+generated-feed-id-compat = []
+
 [dependencies]
 chrono = { version = "0.4.26", default-features = false }
 lazy_static = "1.4.0"

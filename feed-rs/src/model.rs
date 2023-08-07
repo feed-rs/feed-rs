@@ -633,8 +633,14 @@ pub struct Link {
 impl Link {
     pub(crate) fn new<S: AsRef<str>>(href: S, base: Option<&Url>) -> Link {
         let href = match util::parse_uri(href.as_ref(), base) {
-            Some(uri) => uri.to_string(),
-            None => href.as_ref().to_string(),
+            Some(uri) => {
+                let mut ret: String = uri.into();
+                if cfg!(feature="generated-feed-id-compat") && ret.ends_with('/') && !href.as_ref().ends_with('/') {
+                    ret.pop();
+                }
+                ret
+            }
+            None => href.as_ref().to_string()
         }
         .trim()
         .to_string();
