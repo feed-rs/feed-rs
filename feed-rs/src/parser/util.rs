@@ -51,7 +51,7 @@ lazy_static! {
     static ref RFC3339_FIXES: Vec<(Regex, &'static str)> = {
         vec!(
             // inserts missing colon in timezone
-            (Regex::new(r#"(\+|-)(\d{2})(\d{2})"#).unwrap(), "${1}${2}:${3}"),
+            (Regex::new(r"(\+|-)(\d{2})(\d{2})").unwrap(), "${1}${2}:${3}"),
             // appends time (midnight) and timezone (utc) if missing
             (Regex::new(r"-\d{2}$").unwrap(), "${0}T00:00:00+00:00")
         )
@@ -156,11 +156,11 @@ lazy_static! {
     // See "3.6 Normal Play Time" in https://www.ietf.org/rfc/rfc2326.txt
     static ref NPT_HHMMSS: Regex = {
         // Extract hours (h), minutes (m), seconds (s) and fractional seconds (f)
-        Regex::new(r#"(?P<h>\d+):(?P<m>\d{2}):(?P<s>\d{2})(\.(?P<f>\d+))?"#).unwrap()
+        Regex::new(r"(?P<h>\d+):(?P<m>\d{2}):(?P<s>\d{2})(\.(?P<f>\d+))?").unwrap()
     };
     static ref NPT_SEC: Regex = {
         // Extract seconds (s) and fractional seconds (f)
-        Regex::new(r#"(?P<s>\d+)(\.(?P<f>\d+))?"#).unwrap()
+        Regex::new(r"(?P<s>\d+)(\.(?P<f>\d+))?").unwrap()
     };
 }
 
