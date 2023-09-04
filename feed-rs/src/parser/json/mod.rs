@@ -76,7 +76,7 @@ fn handle_content(content: Option<String>, content_type: Mime) -> Option<Content
 // Converts a JSON feed item into our model
 fn handle_item(ji: JsonItem) -> Entry {
     let mut entry = Entry {
-        id: ji.id,
+        id: ji.id.unwrap_or("".into()),
         ..Default::default()
     };
 
@@ -161,7 +161,7 @@ struct JsonAuthor {
 
 #[derive(Debug, Deserialize)]
 struct JsonItem {
-    pub id: String,
+    pub id: Option<String>,
     pub url: Option<String>,
     pub external_url: Option<String>,
     pub title: Option<String>,

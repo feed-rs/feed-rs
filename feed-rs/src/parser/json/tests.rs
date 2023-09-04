@@ -81,3 +81,16 @@ fn test_spec_1() {
     // Check
     assert_eq!(actual, expected);
 }
+
+// Even though the spec is clear its mandatory, we still have feeds that do not supply the ID
+#[test]
+fn test_optional_entry_id() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("jsonfeed_elastic_1.1.json");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(!actual.id.is_empty());
+    for entry in actual.entries {
+        assert!(!entry.id.is_empty());
+    }
+}
