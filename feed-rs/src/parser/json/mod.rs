@@ -40,16 +40,39 @@ fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
 
     if_some_then(jf.icon, |uri| feed.logo = Some(Image::new(uri)));
 
+    if_some_then(jf.language, |language| feed.language = Some(language));
+
     if_some_then(jf.favicon, |uri| feed.icon = Some(Image::new(uri)));
 
-    if_some_then(handle_person(jf.author), |person| feed.authors.push(person));
+    handle_authors(&mut feed.authors, &jf.author, &jf.authors);
 
     // Convert items within the JSON feed
     jf.items.into_iter().for_each(|ji| {
         feed.entries.push(handle_item(ji));
     });
 
+    // Per the spec, any items without an author inherit the feed
+    if !feed.authors.is_empty() {
+        feed.entries.iter_mut().for_each(|entry| {
+            if entry.authors.is_empty() {
+                entry.authors.append(&mut feed.authors.clone());
+            }
+        });
+    }
+
     Ok(feed)
+}
+
+fn accumulate_author(authors: &mut Vec<Person>, ja: &JsonAuthor) {
+    // Only add if we haven't already seen this person
+    if let Some(name) = &ja.name {
+        if !authors.iter().any(|a| a.name.as_str() == name) {
+            let mut person = Person::new(name);
+            person.uri = ja.url.clone();
+
+            authors.push(person);
+        }
+    }
 }
 
 // Handles an attachment
@@ -61,6 +84,19 @@ fn handle_attachment(attachment: JsonAttachment) -> Link {
     link.length = attachment.size_in_bytes;
 
     link
+}
+
+// Converts author / authors objects into our model
+fn handle_authors(accumulated: &mut Vec<Person>, author: &Option<JsonAuthor>, authors: &Option<Vec<JsonAuthor>>) {
+    if let Some(ja) = author {
+        accumulate_author(accumulated, ja);
+    }
+
+    if let Some(jas) = authors {
+        for ja in jas {
+            accumulate_author(accumulated, ja);
+        }
+    }
 }
 
 // Handles HTML or plain text content
@@ -104,7 +140,7 @@ fn handle_item(ji: JsonItem) -> Entry {
 
     if_some_then(ji.date_modified, |modified| entry.updated = timestamp_rfc3339_lenient(&modified));
 
-    if_some_then(handle_person(ji.author), |person| entry.authors.push(person));
+    handle_authors(&mut entry.authors, &ji.author, &ji.authors);
 
     if_some_then(ji.tags, |tags| {
         tags.into_iter().map(|t| Category::new(&t)).for_each(|category| entry.categories.push(category))
@@ -117,31 +153,18 @@ fn handle_item(ji: JsonItem) -> Entry {
     entry
 }
 
-// Converts an author object into our model
-fn handle_person(author: Option<JsonAuthor>) -> Option<Person> {
-    if let Some(ja) = author {
-        if ja.name.is_some() {
-            let mut person = Person::new(&ja.name.unwrap());
-
-            person.uri = ja.url;
-
-            return Some(person);
-        }
-    }
-
-    None
-}
-
 #[derive(Debug, Deserialize)]
 struct JsonFeed {
     pub version: String,
     pub title: String,
     pub home_page_url: Option<String>,
     pub feed_url: Option<String>,
+    pub language: Option<String>,
     pub description: Option<String>,
     pub icon: Option<String>,
     pub favicon: Option<String>,
     pub author: Option<JsonAuthor>,
+    pub authors: Option<Vec<JsonAuthor>>,
     pub items: Vec<JsonItem>,
 }
 
@@ -171,6 +194,7 @@ struct JsonItem {
     pub date_published: Option<String>,
     pub date_modified: Option<String>,
     pub author: Option<JsonAuthor>,
+    pub authors: Option<Vec<JsonAuthor>>,
     pub tags: Option<Vec<String>>,
     pub attachments: Option<Vec<JsonAttachment>>,
 }

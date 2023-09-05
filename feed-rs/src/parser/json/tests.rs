@@ -72,6 +72,8 @@ fn test_spec_1() {
             .title(Text::new("Announcing JSON Feed".into()))
             .published_rfc3339("2017-05-17T08:02:12-07:00")
             .link(Link::new("https://jsonfeed.org/2017/05/17/announcing_json_feed", None))
+            .author(Person::new("Brent Simmons and Manton Reece")
+                .uri("https://jsonfeed.org/"))
             .content(Content::default()
                 .body(r#"<p>We — Manton Reece and Brent Simmons — have noticed that JSON has become the developers’ choice for APIs, and that developers will often go out of their way to avoid XML. JSON is simpler to read and write, and it’s less prone to bugs.</p>
 <p>So we developed JSON Feed, a format similar to <a href="http://cyber.harvard.edu/rss/rss.html">RSS</a> and <a href="https://tools.ietf.org/html/rfc4287">Atom</a> but in JSON. It reflects the lessons learned from our years of work reading and publishing feeds.</p>..."#)
@@ -93,4 +95,36 @@ fn test_optional_entry_id() {
     for entry in actual.entries {
         assert!(!entry.id.is_empty());
     }
+}
+
+// Verify we can parse the v1.1 specific payload
+#[test]
+fn test_elastic_v1_1() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("jsonfeed_elastic_1.1.json");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Check language was extracted correctly for the feed
+    assert_eq!("en-US", actual.language.unwrap());
+
+    // Check feed authors (should combine both deprecated and new fields)
+    assert_eq!(actual.authors, vec!(Person::new("Fake Author 3"), Person::new("Fake Author 4")));
+
+    // Check first item - combine author + authors
+    let mut entries = actual.entries.iter();
+    let entry = entries.next().unwrap();
+    let chris = Person {
+        name: "Chris Churilo".to_string(),
+        uri: Some("https://www.influxdata.com/blog/author/chrisc/".to_string()),
+        email: None,
+    };
+    assert_eq!(entry.authors, vec!(Person::new("Fake Author 2"), chris.clone(), Person::new("Fake Author 1")));
+
+    // Second item migrates from old author to new authors field
+    let entry = entries.next().unwrap();
+    assert_eq!(entry.authors, vec!(chris.clone()));
+
+    // Third item inherits feed authors (per the spec)
+    let entry = entries.next().unwrap();
+    assert_eq!(entry.authors, vec!(Person::new("Fake Author 3"), Person::new("Fake Author 4")));
 }
