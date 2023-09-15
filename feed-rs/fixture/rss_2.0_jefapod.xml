@@ -1,0 +1,1072 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+
+    <title>Astronomy Picture of the Day RSS Feed</title>
+    <link>http://www.acme.com/jef/apod/</link>
+    <description>
+	<![CDATA[
+	<p>
+	The
+	<a href="http://apod.nasa.gov/apod/">Astronomy Picture of the Day</a>
+	is a wonderful web site that puts up a different astronomy-related
+	picture every day.
+	However, the site does not have an RSS feed.
+	This page fixes that deficiency.
+	]]>
+    </description>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 15 Sep 2023 13:06:00 GMT</lastBuildDate>
+    <generator>ACME Labs custom shell script</generator>
+    <managingEditor>jef@mail.acme.com</managingEditor>
+    <webMaster>webmaster@mail.acme.com</webMaster>
+    <image>
+	<url>http://www.acme.com/jef/apod/apod.GIF</url>
+	<title>Astronomy Picture of the Day RSS Feed</title>
+	<link>http://www.acme.com/jef/apod/</link>
+    </image>
+
+    <item>
+	<title><![CDATA[Venus, Moon, and the Smoking Mountain]]></title>
+	<link>http://apod.nasa.gov/apod/ap230915.html</link>
+	<pubDate>Fri, 15 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230915.html"><img src="https://apod.nasa.gov/apod/image/2309/IMG_3603_1024.jpg" /></a>
+<title>Venus, Moon, and the Smoking Mountain</title>
+
+<a href="https://solarsystem.nasa.gov/skywatching/home/">Venus has returned</a> 
+as a <a href="https://apod.nasa.gov/apod/ap230826.html">brilliant morning star</a>.
+
+From a window seat on a flight to Mexico City,
+the bright celestial beacon was captured just before sunrise in
+this astronomical snapshot, taken on September 12.
+
+Venus, at the upper right, shared the early predawn skies
+with an <a href="https://apod.nasa.gov/apod/ap210710.html">old crescent Moon</a>.
+
+Seen from this stratospheric perspective, both mountain peaks and
+clouds appear in silhouette along a glowing eastern horizon.
+
+The dramatic, long, low cloud bank was created by venting
+from planet Earth's active volcano
+<a href="https://en.wikipedia.org/wiki/Popocat%C3%A9petl">Popocatépetl</a>.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[NGC 7331 and Beyond]]></title>
+	<link>http://apod.nasa.gov/apod/ap230914.html</link>
+	<pubDate>Thu, 14 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230914.html"><img src="https://apod.nasa.gov/apod/image/2309/LRGBHa23_n7331r_800c.jpg" /></a>
+<title>NGC 7331 and Beyond</title>
+
+Big, beautiful spiral galaxy
+<a href="http://messier.seds.org/xtra/ngc/n7331.html">NGC 7331</a>
+is often touted as an analog to our own
+<a href="https://apod.nasa.gov/apod/ap080606.html">Milky Way</a>.
+
+About 50 million light-years distant in the northern constellation
+<a href="http://hawastsoc.org/deepsky/peg/index.html">Pegasus</a>,
+NGC 7331 was recognized early on as
+a spiral nebula and is actually one of the brighter
+<a href="http://www.seasky.org/cosmic/sky7a07.html">galaxies</a>
+<i>not</i> included in Charles Messier's
+<a href="https://www.nasa.gov/content/explore-the-night-sky-hubble-s-messier-catalog-bio">famous</a>
+18th century catalog.
+
+Since the galaxy's disk
+<a href="https://apod.nasa.gov/apod/ap040701.html">is inclined</a> to our line-of-sight, long
+telescopic exposures often result in images that evokes a strong
+sense of depth.
+
+The effect is further enhanced
+<a href="https://www.astrobin.com/6xa02f/">in this sharp image</a>
+by galaxies that lie beyond the gorgeous
+<a href="http://nedwww.ipac.caltech.edu/level5/March02/Gordon/Gordon2.html">island universe</a>.
+
+The most prominent background galaxies are about one tenth the
+<a href="http://chandra.harvard.edu/photo/scale.html">apparent size</a>
+of NGC 7331 and so lie roughly ten times farther away.
+
+Their close alignment on the sky with NGC 7331
+occurs just by chance.
+
+Lingering above
+the plane of the Milky Way, this striking visual grouping of galaxies is
+known to some as the
+<a href="https://en.wikipedia.org/wiki/NGC_7331_Group">Deer Lick Group</a>.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 13 – NGC 4632: Galaxy with a Hidden Polar Ring    ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230913.html</link>
+	<pubDate>Wed, 13 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230913.html"><img src="https://apod.nasa.gov/apod/image/2309/PolarRing_Askap_960.jpg" /></a>
+<title> APOD: 2023 September 13 – NGC 4632: Galaxy with a Hidden Polar Ring    </title>
+Galaxy NGC 4632 hides a secret from optical telescopes. 
+
+It is surrounded by a ring of cool 
+<a href="https://periodic.lanl.gov/1.shtml">hydrogen</a> 
+gas orbiting at 90 degrees to its spiral disk. 
+
+Such <a href="https://apod.nasa.gov/apod/ap990510.html">polar ring galaxies</a> 
+have previously been discovered using starlight. 
+
+However, NGC 4632 is among the first in which a 
+<a href="https://science.nasa.gov/ems/05_radiowaves">radio</a> 
+<a href="https://public.nrao.edu/telescopes/radio-telescopes/">telescope</a> survey revealed a polar ring. 
+
+The <a href="https://youtu.be/dkMr-D2719w">featured composite image</a> 
+combines this gas ring, observed with the highly sensitive 
+<a href="https://www.csiro.au/en/about/facilities-collections/atnf/askap-radio-telescope"
+>ASKAP telescope</a>, with optical data from the 
+<a href="https://subarutelescope.org/">Subaru telescope</a>. 
+
+Using <a href="https://images.nasa.gov/details/ARC-1992-AC89-0437-6"
+>virtual reality</a>, astronomers separated out the 
+gas in the main disk of the galaxy from the ring, 
+and the subtle color gradient traces its orbital motion. 
+
+Why do 
+<a href="https://en.wikipedia.org/wiki/Polar-ring_galaxy">polar rings</a> exist? 
+
+They could be material 
+<a href="https://www.rover.com/blog/wp-content/uploads/dog-playing-tug.jpg"
+>pulled</a> from one galaxy as it 
+<a href="https://apod.nasa.gov/apod/ap190811.html">gravitationally interacts</a> with a companion. 
+
+Or hydrogen gas flows along the 
+<a href="https://www.youtube.com/watch?v=c-H3WzaewdY"
+>filaments of the cosmic web</a> and accretes into a ring around a galaxy, 
+some of which gravitationally contracts into stars.
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[Galaxy Cluster Abell 370 and Beyond]]></title>
+	<link>http://apod.nasa.gov/apod/ap230912.html</link>
+	<pubDate>Tue, 12 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230912.html"><img src="https://apod.nasa.gov/apod/image/2309/STSCI-HST-abell370_1024.jpg" /></a>
+<title>Galaxy Cluster Abell 370 and Beyond</title>
+
+Some 4 billion light-years away, massive galaxy cluster Abell 370
+is captured in this sharp
+<a href="https://hubblesite.org/contents/media/images/2017/20/4024-Image.html">Hubble Space Telescope snapshot</a>.
+
+The cluster of galaxies only
+appears to be dominated by two giant elliptical galaxies
+and infested with faint arcs.
+
+In reality, the fainter, scattered bluish arcs, along with the
+<a href="https://apod.nasa.gov/apod/ap160828.html">dramatic dragon arc</a>
+below and left of center, are images of galaxies that lie
+far beyond Abell 370.
+
+About twice as distant, their otherwise undetected light is
+magnified and distorted by the cluster's enormous gravitational mass,
+overwhelmingly dominated by unseen
+<a href="https://en.wikipedia.org/wiki/Dark_matter#Galaxy_clusters">dark matter</a>.
+
+Providing a
+<a href="http://webbtelescope.org/">tantalizing glimpse</a>
+of galaxies in the early universe, the effect is known as gravitational
+<a href="https://apod.nasa.gov/apod/ap151127.html">lensing</a>.
+
+A consequence of warped
+<a href="http://www.black-holes.org/">spacetime</a>, lensing was
+predicted by Einstein almost a century ago.
+
+<a href="https://hubblesite.org/contents/media/videos/2017/20/953-Video.html">Far beyond</a>
+the spiky foreground Milky Way star at lower right,
+Abell 370 is seen toward the constellation Cetus, the Sea Monster.
+
+It was the last of six galaxy clusters imaged in the
+<a href="https://frontierfields.org/">Frontier Fields</a> project.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 11 – Beautiful Comet Nishimura  ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230911.html</link>
+	<pubDate>Mon, 11 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230911.html"><img src="https://apod.nasa.gov/apod/image/2309/BeautNishimura_Horalek_960.jpg" /></a>
+<title> APOD: 2023 September 11 – Beautiful Comet Nishimura  </title>
+This scene would be beautiful even without the comet.
+
+By itself, the 
+<a href="https://apod.nasa.gov/apod/ap220924.html">sunrise sky</a> is an elegant deep blue on high, 
+with faint white stars peeking through, while near the horizon is a 
+<a href="https://imgflip.com/s/meme/Smiling-Cat.jpg">pleasing</a> tan.
+
+By itself, the foreground hills of eastern 
+<a href="https://en.wikipedia.org/wiki/Slovakia">Slovakia</a> are appealingly green, 
+with the Zadňa hura and Veľká hora hills in the distance, 
+and with the lights of small towns along the way. 
+
+<a href="https://solarsystem.nasa.gov/planets/venus/overview/"
+>Venus</a>, by itself on the right, appears 
+<a href="https://i.etsystatic.com/9751869/r/il/699fcc/2114310287/il_1140xN.2114310287_9si9.jpg"
+>unusually exquisite</a>, 
+surrounded by a colorful atmospheric corona.
+
+But what attracts the eye most is the 
+<a href="https://spaceplace.nasa.gov/comets/">comet</a>.
+
+On the left, in 
+<a href="https://www.petrhoralek.com/?p=23774">this composite image</a> 
+taken just before dawn yesterday morning, is 
+<a href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=C%2F2023%20P1"
+>Comet Nishimura</a>. 
+
+On recent mornings around the globe, its 
+<a href="https://theskylive.com/comets">bright</a> 
+<a href="https://en.wikipedia.org/wiki/Coma_(comet)">coma</a> and long ion 
+<a href="https://en.wikipedia.org/wiki/Comet_tail">tail</a> 
+make many a morning panoramic photo unusually beautiful. 
+
+Tomorrow, <a href="https://en.wikipedia.org/wiki/C/2023_P1_(Nishimura)"
+>C/2023 P1 (Nishimura)</a> will pass its nearest to the Earth for about the next 434 years.
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 10 – An Annular Solar Eclipse over New Mexico   ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230910.html</link>
+	<pubDate>Sun, 10 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230910.html"><img src="https://apod.nasa.gov/apod/image/2309/AnnularEclipse_Pinski_960.jpg" /></a>
+<title> APOD: 2023 September 10 – An Annular Solar Eclipse over New Mexico   </title>
+What is this person doing? 
+
+In 2012, an annular eclipse of the Sun was visible over a 
+<a href="http://eclipse.gsfc.nasa.gov/SEgoogle/SEgoogle2001/SE2012May20Agoogle.html"
+>narrow path</a> that crossed the northern Pacific Ocean and 
+<a href="https://stardate.org/content/ring-fire">several western US states</a>. 
+
+In an annular solar 
+<a href="https://www.nasa.gov/content/eclipses-and-transits-overview"
+>eclipse</a>, the Moon is too far from the Earth to 
+<a href="https://apod.nasa.gov/apod/ap170301.html">block out</a> the entire Sun, leaving the Sun 
+<a href="https://www.syfy.com/sites/syfy/files/2022/10/gettyimages-696166057.jpg"
+>peeking out</a> over the Moon's disk in a 
+<a href="https://apod.nasa.gov/apod/ap130509.html">ring of fire</a>. 
+
+To capture this 
+<a href="https://www.youtube.com/watch?v=DtkoAlwIpWY"
+>unusual solar event</a>, an industrious photographer drove from 
+<a href="https://en.wikipedia.org/wiki/Arizona">Arizona</a> to 
+<a href="https://en.wikipedia.org/wiki/New_Mexico">New Mexico</a> 
+to find just the right vista.
+
+After setting up and just as the 
+<a href="https://apod.nasa.gov/apod/ap120522.html">eclipsed Sun</a> was setting over a ridge about 0.5 kilometers away, a person unknowingly walked right into the shot.
+
+Although grateful for the unexpected human element, the photographer 
+never learned the identity of the 
+<a href="https://apod.nasa.gov/apod/ap160501.html">silhouetted</a> interloper.
+
+It appears likely that the person is holding a circular 
+<a href="http://www.mreclipse.com/Totality2/TotalityCh11.html">device</a> 
+that would enable them to get their own view of the eclipse.
+
+<a href="http://www.cp-pics.com/p533893218/h4d180eaa#h4d180eaa">The shot</a> 
+was taken at sunset on 2012 May 20 at 7:36 pm local time from 
+<a href="http://www.dailymail.co.uk/news/article-2167595/Stunning-image-shows-boy-watching-solar-eclipse--taken-1-5-miles-away.html">a park</a> near 
+<a href="https://www.youtube.com/watch?v=aPkaLjssP54">Albuquerque</a>. 
+
+Next month, on October 14, a different narrow swath across 
+<a href="https://en.wikipedia.org/wiki/Americas"
+>North and South America</a> will be exposed to a 
+<a href="https://solarsystem.nasa.gov/eclipses/2023/oct-14-annular/where-when/"
+>different annular solar eclipse</a>, if the sky is clear.
+
+Simultaneously, cloud-free observers 
+almost anywhere on either continent will be able to see a 
+<a href="https://apod.nasa.gov/apod/ap210628.html">partial solar eclipse</a>. 
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 9 – Comet Nishimura Grows   ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230909.html</link>
+	<pubDate>Sat, 09 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230909.html"><img src="https://apod.nasa.gov/apod/image/2309/Nishimura_Kennett_1080.jpg" /></a>
+<title> APOD: 2023 September 9 – Comet Nishimura Grows   </title>
+Comet Nishimura is growing.
+
+More precisely, the tails 
+<a href="https://en.wikipedia.org/wiki/C/2023_P1_(Nishimura)">C/2023 P1 (Nishimura)</a> 
+are growing as it nears the Sun.
+
+Discovered only last month, the 
+<a href="https://spaceplace.nasa.gov/comets/en/">comet</a> is already near 
+naked eye brightness as it now moves inside the Earth's orbit. 
+
+The comet will be nearest the 
+<a href="https://solarsystem.nasa.gov/planets/earth/overview/"
+>Earth</a> next week, but nearest the Sun the week after -- on September 17. 
+
+Speculation holds that expelled ice and dust from 
+<a href="https://apod.nasa.gov/apod/ap230821.html">Comet Nishimura</a>'s last visit to the inner 
+<a href="https://solarsystem.nasa.gov/solar-system/our-solar-system/in-depth/"
+>Solar System</a> may have created the 
+<a href="https://en.wikipedia.org/wiki/Sigma_Hydrids">Sigma Hydrids</a> 
+meteor shower which peaks yearly in December. 
+
+If so, then this 
+<a href="https://apod.nasa.gov/apod/ap180808.html">meteor shower</a> may become more active,
+<a href=" https://assets.rebelmouse.io/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbWFnZSI6Imh0dHBzOi8vYXNzZXRzLnJibC5tcy80MTY0MTI3L29yaWdpbi5qcGciLCJleHBpcmVzX2F0IjoxNzA1Mzg5MjY1fQ.6M9vsWms-VGr9rPN1WvxANS2gjpEtNTYtBqtc4CDEZ8/img.jpg"
+>refreshed</a> with new 
+<a href="https://apod.nasa.gov/apod/ap171106.html">comet debris</a>.
+
+<a href="https://www.facebook.com/media/set/?set=a.287149497346968&type=3"
+>Pictured, Comet Nishimura</a> was captured from 
+<a href="https://en.wikipedia.org/wiki/Edgewood,_New_Mexico"
+>Edgewood</a>, 
+<a href="https://en.wikipedia.org/wiki/New_Mexico">New Mexico</a>, 
+<a href="https://en.wikipedia.org/wiki/United_States">USA</a> 
+four nights ago, showing a long ion tail structured by interactions with the 
+<a href="https://solarsystem.nasa.gov/resources/2288/the-solar-wind-across-our-solar-system/"
+>Sun's wind</a>.
+
+Look for <a href="https://earthsky.org/tonight/new-comet-c-2023-p1-nishimura-bright-august-september-october-2023/">this comet</a> near your 
+eastern horizon just before sunrise for the next few mornings, 
+but very near your 
+western horizon just after sunset next week -- as its coma 
+<a href="http://www.aerith.net/comet/catalog/2023P1/2023P1.html"
+>continues to brighten</a> and its 
+<a href="https://apod.nasa.gov/apod/ap131117.html">tails continue</a> to grow. 
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[Star Factory Messier 17]]></title>
+	<link>http://apod.nasa.gov/apod/ap230908.html</link>
+	<pubDate>Fri, 08 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230908.html"><img src="https://apod.nasa.gov/apod/image/2309/OmegaNebulaGrandMesaObservatory2023_1024.jpg" /></a>
+<title>Star Factory Messier 17</title>
+
+<a href="https://apod.nasa.gov/apod/ap030821.html">Sculpted by</a> stellar winds and radiation,
+the star factory known as
+<a href="http://en.wikipedia.org/wiki/Messier_17">Messier 17</a>
+lies some 5,500 light-years away in the nebula-rich constellation
+<a href="http://www.hawastsoc.org/deepsky/sgr/index.html">Sagittarius</a>.
+
+At that distance, this 1/3 degree wide field of view spans over
+30 light-years.
+
+<a href="https://www.flickr.com/photos/transientastro/53148661858/">The sharp composite, color image</a>
+highlights faint details of the region's gas and
+dust clouds against a backdrop of central
+<a href="https://apod.nasa.gov/apod/ap130531.html">Milky Way</a> stars.
+
+Stellar winds and energetic light
+from hot, massive stars formed from 
+M17's stock of cosmic gas and dust have slowly carved away at the 
+remaining interstellar material,
+producing the cavernous appearance and
+<a href="https://apod.nasa.gov/apod/ap040828.html">undulating</a> shapes.
+
+<a href="http://www.spitzer.caltech.edu/images/
+1972-ssc2008-21a1-M17-Celestial-Sea-of-Stars">M17 is also</a>
+known as the Omega Nebula or the Swan Nebula.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[The Large Cloud of Magellan]]></title>
+	<link>http://apod.nasa.gov/apod/ap230907.html</link>
+	<pubDate>Thu, 07 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230907.html"><img src="https://apod.nasa.gov/apod/image/2309/TheLargeMagellanicCloud1024.jpg" /></a>
+<title>The Large Cloud of Magellan</title>
+
+The 16th century Portuguese navigator
+<a href="http://en.wikipedia.org/wiki/Ferdinand_Magellan">Ferdinand Magellan</a> and his crew had plenty of time to study the 
+southern sky during the
+<a href="http://www.fordham.edu/halsall/mod/1519magellan.html">first circumnavigation</a> of planet Earth.
+
+As a result, two fuzzy cloud-like
+objects easily visible to southern hemisphere 
+skygazers are known as the
+<a href="https://apod.nasa.gov/apod/ap060809.html">Clouds of Magellan</a>, now understood to be
+satellite galaxies of our much larger, spiral Milky Way galaxy.
+
+About 160,000 light-years distant in the constellation
+Dorado, the
+<a href="http://messier.seds.org/xtra/ngc/lmc.html">Large Magellanic Cloud</a>
+is seen in this
+<a href="https://www.cwastrophotography.com/the-large-magellanic-cloud-lmc">sharp galaxy portrait</a>.
+
+Spanning about 15,000 light-years or so, it is
+the most massive of the Milky Way's
+<a href="http://www.atlasoftheuniverse.com/sattelit.html">satellite galaxies</a>
+and is the home of the 
+<a href="http://heritage.stsci.edu/1999/04/">closest supernova</a> in modern times, 
+<a href="https://apod.nasa.gov/apod/ap170305.html">SN 1987A</a>. 
+
+The prominent patch above center is 30 Doradus,
+also known as the magnificent
+<a href="https://apod.nasa.gov/apod/ap090916.html">Tarantula Nebula</a>, a giant 
+star-forming region about 1,000 light-years across.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 6 – HESS Telescopes Explore the High Energy Sky  ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230906.html</link>
+	<pubDate>Wed, 06 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230906.html"><img src="" /></a>
+<title> APOD: 2023 September 6 – HESS Telescopes Explore the High Energy Sky  </title>
+They may look like modern mechanical dinosaurs, but they are enormous swiveling eyes that watch the sky.
+
+The 
+<a href="https://www.mpi-hd.mpg.de/hfm/HESS/pages/about/telescopes/"
+>High Energy Stereoscopic System (H.E.S.S.) Observatory</a> 
+is composed of four 12-meter reflecting-mirror telescopes surrounding a 
+<a href="https://apod.nasa.gov/apod/ap120727.html">larger telescope</a> housing a 28-meter mirror.
+
+They are designed to detect strange flickers of blue light -- 
+<a href="https://en.wikipedia.org/wiki/Cherenkov_radiation">Cherenkov radiation</a> 
+--emitted when 
+<a href="https://en.wikipedia.org/wiki/Charged_particle">charged particles</a> move slightly faster than the 
+<a href="https://en.wikipedia.org/wiki/Speed_of_light">speed of light</a> in air. 
+
+This light is emitted when a 
+<a href="https://science.nasa.gov/ems/12_gammarays">gamma ray</a> 
+from a distant source strikes a molecule in 
+<a href="https://spaceplace.nasa.gov/atmosphere/"
+>Earth's atmosphere</a> and starts a 
+<a href="https://apod.nasa.gov/apod/ap060814.html">charged-particle shower</a>. 
+
+<a href="https://www.mpi-hd.mpg.de/hfm/HESS/pages/about/"
+>H.E.S.S.</a> is sensitive to some of the highest energy photons 
+(<a href="https://scienceblogs.com/builtonfacts/2013/11/27/how-often-does-the-sun-emit-1-tev-photons">TeV</a>) crossing the universe. 
+
+Operating since 2003 in 
+<a href="https://en.wikipedia.org/wiki/Namibia">Namibia</a>, 
+H.E.S.S. has searched for <a href=
+"https://www.nasa.gov/audience/forstudents/9-12/features/what-is-dark-matter.html">dark matter</a> and has 
+<a href="https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H/abstract"
+>discovered over 50 sources</a> emitting high energy radiation including 
+<a href="https://apod.nasa.gov/apod/ap230601.html">supernova remnants</a> and the 
+<a href="https://apod.nasa.gov/apod/ap180729.html">centers of galaxies</a> that contain supermassive 
+<a href="https://apod.nasa.gov/htmltest/rjn_bht.html">black holes</a>. 
+
+Pictured in June, 
+<a href="https://youtu.be/0u9lr1RXpsE">H.E.S.S. telescopes</a> swivel and stare in 
+<a href="https://youtu.be/xjMtlL1dCeA">time-lapse sequences</a> shot in front of our 
+<a href="https://apod.nasa.gov/apod/ap180427.html">Milky Way Galaxy</a> and the 
+<a href="https://apod.nasa.gov/apod/ap160725.html">Magellanic Clouds</a> -- 
+as the occasional Earth-orbiting satellite zips by.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 5 – Blue Supermoon Beyond Syracuse ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230905.html</link>
+	<pubDate>Tue, 05 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230905.html"><img src="https://apod.nasa.gov/apod/image/2309/SuperBlueMoon_Saragozza_960.jpg" /></a>
+<title> APOD: 2023 September 5 – Blue Supermoon Beyond Syracuse </title>
+The last full moon was doubly unusual.
+
+First of all, it was a 
+<a href="https://moon.nasa.gov/news/197/super-blue-moons-your-questions-answered/"
+>blue moon</a>. 
+
+A modern definition of a 
+<a href="https://www.loc.gov/everyday-mysteries/astronomy/item/what-is-a-blue-moon-is-it-ever-really-blue/">blue moon</a> is a second full moon to occur during one 
+<a href="https://en.wikipedia.org/wiki/Gregorian_calendar">calendar</a> month. 
+
+Since there are 13 full moons in 2023, one month has to have two -- and that month was August. 
+
+The first full moon was on August 1 and named a 
+<a href="https://www.fullmoonology.com/full-moon-calendar-2023/"
+>Sturgeon Moon</a>.
+
+The second reason that the last full moon was 
+<a href="https://apod.nasa.gov/apod/ap220704.html">unusual</a> was because it was a 
+<a href="https://en.wikipedia.org/wiki/Supermoon">supermoon</a>. 
+
+A modern definition of 
+<a href="https://moon.nasa.gov/news/197/super-blue-moons-your-questions-answered/"
+>supermoon</a> is a moon that reaches its full 
+<a href="https://solarsystem.nasa.gov/resources/676/phases-of-the-moon/"
+>phase</a> when it is relatively close to Earth -- and so 
+<a href="https://svs.gsfc.nasa.gov/5048">appears</a> 
+a bit larger and brighter than average.
+
+
+Pictured, the 
+<a href="https://apod.nasa.gov/apod/ap230830.html">blue supermoon of 2023</a> 
+was imaged 
+<a href="https://i.kym-cdn.com/entries/icons/original/000/002/232/bullet_cat.jpg"
+>hovering</a> far behind a historic 
+<a href="https://youtu.be/l11c8SqqTOM">castle</a> and
+<a href="https://en.wikipedia.org/wiki/Castello_Maniace">lighthouse</a> in 
+<a href="https://en.wikipedia.org/wiki/Province_of_Syracuse">Syracuse</a>, 
+<a href="https://en.wikipedia.org/wiki/Sicily">Sicily</a>, 
+<a href="https://en.wikipedia.org/wiki/Italy">Italy</a>. 
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 4 – Cygnus: Bubble and Crescent]]></title>
+	<link>http://apod.nasa.gov/apod/ap230904.html</link>
+	<pubDate>Mon, 04 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230904.html"><img src="https://apod.nasa.gov/apod/image/2309/CrescentBubble_AlHarbi_1080.jpg" /></a>
+<title> APOD: 2023 September 4 – Cygnus: Bubble and Crescent</title>
+As stars die, they create clouds. 
+
+Two stellar death clouds of gas and dust 
+can be found toward the high-flying constellation of the Swan (Cygnus)
+as they <a href="https://apod.nasa.gov/apod/ap150819.html">drift through</a>
+rich star fields in the plane of our 
+<a href="http://www.atlasoftheuniverse.com/galaxy.html"
+>Milky Way Galaxy</a>.
+
+Caught here within the
+<a href="https://www.instagram.com/p/CvNSVbhsXYs/">telescopic
+field of view</a> are the
+<a href="https://apod.nasa.gov/apod/ap150113.html">Soap Bubble</a> (lower left) and the
+<a href="https://apod.nasa.gov/apod/ap210617.html">Crescent Nebula</a> (upper right).
+
+Both were formed at the final phase in the life of a star.
+
+Also known as NGC 6888,
+the Crescent Nebula was shaped as its bright, central massive
+<a href="https://en.wikipedia.org/wiki/Wolf%E2%80%93Rayet_star">Wolf-Rayet
+star</a>, WR 136, shed its outer envelope in
+a strong stellar wind.
+
+Burning through fuel at a prodigious rate, WR 136 is near the end of
+<a href="https://www.nasa.gov/image-feature/goddard/hubble-view-wolf-rayet-stars-intense-and-short-lived">a short life</a>
+that should finish in a spectacular
+<a href="https://youtu.be/wymMn-SmALY">supernova</a> explosion.
+
+<a href="http://www.starimager.com/Image%20Gallery%20Pages/Hydrogen%20Alpha%20Images/ic%201318_AP_8%20pane%20mosaic_bubble%20nebula.htm">
+Discovered in 2013</a>, the Soap Bubble Nebula is likely a
+<a href="https://en.wikipedia.org/wiki/Planetary_nebula">planetary
+nebula</a>, the final shroud of a lower mass, long-lived, Sun-like star
+destined to become a slowly cooling white dwarf.
+
+Both stellar nebulas are about 5,000 
+<a href="https://spaceplace.nasa.gov/light-year/en/">light-years</a> 
+distant, with the larger Crescent Nebula 
+<a href="https://media.istockphoto.com/id/1170788685/photo/jumping-cat.jpg?s=612x612&w=0&k=20&c=_Ot_m-qULa-AS2ueDMH8Qc4vu8jdsNso2hzIxsVGjTw=">spanning</a> about 25 light-years across.
+
+Within a few million years, both will likely have dispersed.
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 September 3 – Comet Schwassmann Wachmann 3 Fragments]]></title>
+	<link>http://apod.nasa.gov/apod/ap230903.html</link>
+	<pubDate>Sun, 03 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230903.html"><img src="https://apod.nasa.gov/apod/image/2309/fragb73p_hst_960.jpg" /></a>
+<title> APOD: 2023 September 3 – Comet Schwassmann Wachmann 3 Fragments</title>
+Periodic comet
+<a href="http://cometography.com/pcomets/
+073p.html">73P/Schwassmann-Wachmann 3</a> has broken up at least twice.
+
+A <a href="https://apod.nasa.gov/apod/ap050915.html">cosmic souffle</a>
+of ice and dust left over from the early
+solar system, this comet was first 
+<a href="https://hubblesite.org/contents/news-releases/2016/news-2016-35.html"
+>seen to split</a> into several large pieces
+during the close-in part of its orbit in 1995. 
+
+However, <a href="https://skyandtelescope.org/press-releases/comet-schwassmann-wachmann-3-at-its-best/">in the 2006 passage</a>, it disintegrated into
+dozens of fragments that stretched several degrees across the sky.
+
+Since 
+<a href="https://solarsystem.nasa.gov/asteroids-comets-and-meteors/comets/overview/"
+>comets</a> are relatively fragile, stresses from heat, gravity
+and outgassing, for example, could be responsible for their
+tendency <a href="https://apod.nasa.gov/apod/ap000811.html">to break up</a> in such a
+spectacular fashion when they near the 
+<a href="https://i.pinimg.com/originals/d1/bb/1b/d1bb1bcb8e244356d0bd053e134344a3.jpg"
+>hot Sun</a>.
+
+The Hubble Space Telescope
+<a href="https://hubblesite.org/contents/media/videos/2006/18/527-Video.html"
+>recorded, in 2006, the featured 
+sharp view</a> of prolific <a href="https://apod.nasa.gov/apod/ap060426.html">Fragment B</a>,
+itself trailing a multitude of
+smaller pieces, each with its own cometary coma and tail.
+
+The picture spans over 3,000 kilometers at the comet's 
+distance of 32 million kilometers from 
+<a href="https://spaceplace.nasa.gov/all-about-earth/">planet Earth</a>.
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[NGC 7023: The Iris Nebula]]></title>
+	<link>http://apod.nasa.gov/apod/ap230902.html</link>
+	<pubDate>Sat, 02 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230902.html"><img src="https://apod.nasa.gov/apod/image/2309/268_lorand_fenyes_iris_ngc7023_1024.jpg" /></a>
+<title>NGC 7023: The Iris Nebula</title>
+
+These cosmic clouds have blossomed 1,300 light-years away
+in the fertile starfields of the
+<a href="http://hawastsoc.org/deepsky/cep/index.html">constellation Cepheus</a>.
+
+Called the Iris Nebula,
+<a href="http://www.universetoday.com/17597/ngc-7023-iris-from-the-dust-by-kent-wood/">NGC 7023</a>
+is not the only nebula
+to evoke the imagery <a href="https://apod.nasa.gov/apod/ap080214.html">of flowers</a>.
+
+Still, this
+<a href="https://fenyeslorand.hu/irisz_ngc7023/">deep telescopic image</a>
+shows off the Iris Nebula's range of
+colors and symmetries embedded in surrounding
+fields of interstellar dust.
+
+Within the Iris itself, dusty nebular material surrounds a hot,
+young star.
+
+The dominant color of the brighter reflection nebula is blue,
+characteristic of dust grains reflecting starlight.
+
+<a href="http://www.spacetelescope.org/news/heic0915/">Central
+filaments</a>
+of the reflection nebula glow with a faint reddish
+photoluminescence as some dust grains
+<a href="http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=1989ApJ...347L..25W&db_key=AST&high=3bc4bede8e21358">effectively convert</a>
+the star's invisible
+ultraviolet radiation to visible red light.
+
+Infrared
+<a href="http://cdsads.u-strasbg.fr/cgi-bin/nph-bib_query?2000A%26A...354L..17M&db_key=AST&nosetcookie=1">observations</a>
+indicate that this nebula contains
+complex carbon molecules known as
+<a href="https://www.spitzer.caltech.edu/news/feature07-03-spitzer-learns-about-carbons-cosmic-life">PAHs</a>.
+
+The dusty blue petals of the Iris Nebula span about six light-years.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[The Great Globular Cluster in Hercules]]></title>
+	<link>http://apod.nasa.gov/apod/ap230901.html</link>
+	<pubDate>Fri, 01 Sep 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230901.html"><img src="https://apod.nasa.gov/apod/image/2309/M13-totale-en-cours-crop8_1024.jpg" /></a>
+<title>The Great Globular Cluster in Hercules</title>
+
+<a href="http://messier.seds.org/xtra/similar/halley_pt.html">In 1716</a>,
+English astronomer
+<a href="http://www.bbc.co.uk/history/historic_figures/halley_edmond.shtml">Edmond Halley</a>
+noted, "This is but a little Patch, but it shows itself to the naked Eye, when
+the Sky is serene and the Moon absent."
+
+<a href="http://messier.seds.org/m/m013.html">Of course, M13</a>
+is now less modestly recognized as the Great Globular Cluster in
+Hercules, one of the brightest
+<a href="http://en.wikipedia.org/wiki/Globular_cluster">globular
+star clusters</a> in the northern sky.
+
+<a href="https://www.astrobin.com/mxfret/C/">Sharp telescopic views like
+this one</a>
+reveal the spectacular cluster's
+<a href="https://skyandtelescope.org/observing/gobs-of-globs-guide-to-16-spring-globular-clusters/">hundreds of thousands of stars.</a>
+
+At a distance of 25,000 light-years, the
+<a href="https://hubblesite.org/contents/news-releases/2008/news-2008-40.html">cluster stars crowd</a>
+into a region 150 light-years in diameter.
+
+<a href="https://apod.nasa.gov/apod/ap031213.html">Approaching</a> the cluster core, 
+upwards of 100 stars could be contained
+in a cube just 3 light-years on a side.
+
+For comparison, the
+<a href="https://apod.nasa.gov/apod/ap160825.html">closest star</a> to the Sun is over
+4 light-years away.
+
+The remarkable range of brightness
+recorded in this image follows stars into the dense cluster core.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[The Crew 7 Nebula]]></title>
+	<link>http://apod.nasa.gov/apod/ap230831.html</link>
+	<pubDate>Thu, 31 Aug 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230831.html"><img src="https://apod.nasa.gov/apod/image/2308/Crew_7_Nebula_Seeley-1_1024.jpg" /></a>
+<title>The Crew 7 Nebula</title>
+
+Not the
+<a href="https://apod.nasa.gov/apod/ap230713.html">James Webb Space Telescope's</a>
+latest view of a distant galactic nebula,
+this illuminated cloud of gas and dust dazzled
+early morning spacecoast skygazers on August 26.
+
+The snapshot was taken about 2 minutes after the launch of
+of a Falcon 9 rocket on
+<a href="https://www.nasa.gov/press-release/nasa-s-spacex-crew-7-launches-to-international-space-station">the SpaceX Crew-7 mission</a>,
+the seventh commercial crew rotation mission for the International
+Space Station.
+
+It captures drifting plumes and exhaust from the separated
+first and second stage illuminated against the still dark skies.
+
+Near the center of the image, within the ragged blueish ring,
+are two bright points of light.
+
+The lower one is the second stage of the rocket
+carrying 4 humans to space in a Crew Dragon spacecraft.
+
+The bright point above is the Falcon 9
+first stage booster
+<a href="https://apod.nasa.gov/apod/ap200312.html">orienting itself</a> for the trip back
+to Landing Zone-1
+<a href="https://apod.nasa.gov/apod/ap230803.html">at Cape Canaveral</a>, planet Earth.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[Full Moons of August]]></title>
+	<link>http://apod.nasa.gov/apod/ap230830.html</link>
+	<pubDate>Wed, 30 Aug 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230830.html"><img src="https://apod.nasa.gov/apod/image/2308/GianniTumino_SturgeonMoon_Palette_JPG_LOGO_1024.jpg" /></a>
+<title>Full Moons of August</title>
+
+<a href="https://moon.nasa.gov/diy-moon-orbit/">Near perigee</a>,
+the closest point in its almost moonthly orbit,
+a Full Moon rose as the Sun set on August 1.
+
+Its brighter than average lunar disk was captured in this
+dramatic moonrise sequence over dense cloud banks along the
+eastern horizon from Ragusa, Sicily.
+
+Illuminating night skies around planet Earth it was the second
+<a href="https://earthsky.org/astronomy-essentials/what-is-a-supermoon/">supermoon of 2023</a>.
+
+Yet again near perigee, the third supermoon of 2023 will also
+<a href="https://moon.nasa.gov/news/196/the-next-full-moon-is-a-supermoon-the-sturgeon-moon/">shine on an August night</a>.
+
+Rising as the Sun sets tonight
+this second Full Moon in August will be known to some as a Blue Moon,
+even though scattered sunlight gives the lunar disk a reddened hue.
+
+Defined as the second full moon in a calendar month,
+<a href="https://earthsky.org/astronomy-essentials/when-is-the-next-blue-moon/">blue moons</a>
+occur only once every 2 or 3 years.
+
+That's because lunar phases take 29.5 days,
+almost a calendar month, to go through a complete cycle.
+
+<a href="https://earthsky.org/tonight/full-blue-moon-near-saturn-supermoon-august-30-31-2023/">Tonight an August Blue Moon</a>
+will find itself beside bright planet Saturn.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 August 29 – Unusual Spiral Galaxy M66 from Webb   ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230829.html</link>
+	<pubDate>Tue, 29 Aug 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230829.html"><img src="https://apod.nasa.gov/apod/image/2308/M66_JwstTomlinson_1080.jpg" /></a>
+<title> APOD: 2023 August 29 – Unusual Spiral Galaxy M66 from Webb   </title>
+Why isn't spiral galaxy
+<a href="https://en.wikipedia.org/wiki/Messier_66">M66</a> symmetric?  
+
+Usually,
+<a href="https://youtu.be/c5Us-jonCLA">density waves</a> 
+of gas, dust, and newly formed stars circle a
+<a href="http://www.seds.org/messier/spir.html">spiral galaxy</a>'s
+center and create a
+<a href="https://apod.nasa.gov/apod/ap210312.html">nearly symmetric galaxy</a>.  
+
+The differences between M66's
+spiral arms and the apparent displacement of its
+<a href="https://www.glyphweb.com/esky/concepts/galacticnucleus.html"
+>nucleus</a> are all likely caused by previous close interactions and the
+<a href="https://en.wikipedia.org/wiki/Tidal_force">tidal gravitational pulls</a>
+of nearby galaxy neighbors 
+<a href="https://apod.nasa.gov/apod/ap210320.html">M65 and NGC 3628</a>.
+
+The galaxy,
+<a href="https://www.flickr.com/photos/brian_tomlinson/52631087860/in/pool-apods/"
+>featured here</a> in 
+<a href="https://science.nasa.gov/ems/07_infraredwaves"
+>infrared light</a> taken by the 
+<a href="https://webb.nasa.gov/content/about/index.html"
+>James Webb Space Telescope</a>, spans about 100,000
+<a href="https://chandra.harvard.edu/photo/cosmic_distance.html"
+>light years</a>, lies about 35 million <a href=
+"https://starchild.gsfc.nasa.gov/docs/StarChild/questions/question19.html"
+>light years</a> distant, and is the largest galaxy in a
+group known as the
+<a href="https://en.wikipedia.org/wiki/Leo_Triplet">Leo Triplet</a>.  
+
+Like many spiral galaxies, the long and intricate
+<a href="https://apod.nasa.gov/apod/ap030706.html">dust</a> lanes of
+<a href="https://esahubble.org/videos/heic1006a/">M66</a> 
+are seen intertwined with the
+<a href="https://en.wikipedia.org/wiki/List_of_brightest_stars"
+>bright stars</a> and 
+<a href="https://astronomy.swin.edu.au/cosmos/d/Dust+Grain"
+>intergalactic dust</a> that follow the spiral arms.
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 August 28 – Star Formation in the Pacman Nebula  ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230828.html</link>
+	<pubDate>Mon, 28 Aug 2023 13:06:01 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230828.html"><img src="https://apod.nasa.gov/apod/image/2308/Pacman_Stocks_1080.jpg" /></a>
+<title> APOD: 2023 August 28 – Star Formation in the Pacman Nebula  </title>
+Look through the cosmic cloud cataloged as NGC 281
+and you might miss the stars of open cluster
+<a href="https://ui.adsabs.harvard.edu/abs/1997AJ....113.2116G/abstract"
+>IC 1590</a>.
+
+Formed
+<a href="https://chandra.harvard.edu/photo/2007/ngc281/">within
+the nebula</a>, that cluster's young, massive stars
+ultimately power the pervasive nebular glow.
+
+The eye-catching shapes looming in the featured 
+portrait of NGC 281 are sculpted dusty columns and dense
+<a href="https://en.wikipedia.org/wiki/Bok_globule">Bok globules</a>
+seen in silhouette, eroded by intense, energetic winds and 
+<a href="https://science.nasa.gov/ems/10_ultravioletwaves">radiation</a>
+from the hot cluster stars.
+
+If they survive long enough,
+the dusty structures could also be sites of future star formation.
+
+<a href="http://www.google.com/pacman/">Playfully called</a>
+the Pacman Nebula because of its overall shape,
+NGC 281 is about 10,000 light-years away in the constellation
+<a href="http://www.hawastsoc.org/deepsky/cas/">Cassiopeia</a>.
+
+This sharp composite image was made through
+<a href="https://apod.nasa.gov/apod/ap071102.html">narrow-band</a> filters.
+
+It combines emission from the nebula's hydrogen 
+and oxygen atoms to 
+<a href="https://hubblesite.org/contents/articles/the-meaning-of-light-and-color"
+>synthesize</a> red, green, and blue colors.
+
+The scene spans well over 80 
+<a href="https://spaceplace.nasa.gov/light-year/en/"
+>light-years</a> at the estimated distance of 
+<a href="https://en.wikipedia.org/wiki/NGC_281">NGC 281</a>.
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[ APOD: 2023 August 27 – Three Galaxies and a Comet ]]></title>
+	<link>http://apod.nasa.gov/apod/ap230827.html</link>
+	<pubDate>Sun, 27 Aug 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230827.html"><img src="https://apod.nasa.gov/apod/image/2308/cometmcnaught_druckmuller_960.jpg" /></a>
+<title> APOD: 2023 August 27 – Three Galaxies and a Comet </title>
+Diffuse starlight and dark nebulae
+<a href="https://apod.nasa.gov/apod/ap070222.html">along</a> the southern
+<a href="http://www.milkywaysky.com/">Milky Way</a> arc over the 
+horizon and sprawl diagonally through this
+gorgeous nightscape.
+
+The <a href="http://www.zam.fme.vutbr.cz/~druck/Astro/
+Mcnaugh/3772-84/0-info.htm">breath-taking mosaic</a> spans a wide
+100 degrees, with the rugged
+<a href="http://maps.google.com/maps?f=q&hl=en
+&q=S+41%C2%B0+11.34%27,+W+71%C2%B0+32.95%27
+&layer=&ie=UTF8&om=1&z=8&ll=-41.112469,-71.548462
+&spn=1.961703,5.537109&t=h&iwloc=addr">terrain</a> of the 
+<a href="https://en.wikipedia.org/wiki/Patagonia">Patagonia</a>, 
+<a href="https://en.wikipedia.org/wiki/Argentina">Argentina</a> 
+region in the foreground.
+
+Along with the 
+<a href="https://st.depositphotos.com/1654654/2517/i/950/depositphotos_25176671-stock-photo-cat-looking-through-a-hole.jpg"
+>insider's view</a> of 
+<a href="https://imagine.gsfc.nasa.gov/science/objects/milkyway1.html"
+>our own galaxy</a>, the image
+features our outside perspective on two irregular satellite galaxies -
+the <a href="https://apod.nasa.gov/apod/ap190905.html">Large</a> and
+<a href="https://apod.nasa.gov/apod/ap210105.html">Small</a> Magellanic Clouds.
+
+The scene also captures the
+<a href="https://apod.nasa.gov/apod/ap070201.html">broad tail</a>
+and <a href="https://apod.nasa.gov/apod/ap070119.html">bright coma</a> of 
+<a href="https://apod.nasa.gov/apod/ap131117.html">Comet McNaught</a>, the
+<a href="https://ssd.jpl.nasa.gov/?great_comets">Great Comet of</a> 2007.
+
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[Crescents of Venus]]></title>
+	<link>http://apod.nasa.gov/apod/ap230826.html</link>
+	<pubDate>Sat, 26 Aug 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230826.html"><img src="https://apod.nasa.gov/apod/image/2308/fasidivenere.jpg" /></a>
+<title>Crescents of Venus</title>
+
+<a href="https://en.wikipedia.org/wiki/Galileo_Galilei#Phases_of_Venus">Just as the Moon goes</a>
+through phases, Venus' visible sunlit hemisphere
+<a href="https://solarsystem.nasa.gov/resources/482/galileos-phases-of-venus-and-other-planets/">waxes and wanes</a>.
+
+This sequence of
+<a href="https://www.flickr.com/photos/194524290@N05/53120589281/">telescopic
+images</a>
+illustrates the steady changes for Venus during
+its recent 2023 apparition as our evening star.
+
+Gliding along its interior orbit between Earth and Sun, Venus grows
+larger during that period because it is approaching planet Earth.
+
+Its crescent narrows though, as the inner planet swings closer to our
+line-of-sight to the Sun.
+
+Closest to the Earth-Sun line but passing about 8 degrees south of the
+Sun, on August 13 Venus reached its (non-judgmental)
+<a href="https://earthsky.org/astronomy-essentials/inferior-conjunction-venus-between-sun-and-earth/">inferior conjunction</a>.
+
+And now Venus shines above the eastern horizon in
+predawn skies, completing its transition to planet Earth's
+<a href="https://history.nasa.gov/SP-424/ch1.htm">morning star</a>.
+
+On August 21, NASA's Parker Solar Probe completed its sixth
+gravity assist flyby of Venus, using the encounter to maneuver
+the probe toward its
+<a href="https://blogs.nasa.gov/parkersolarprobe/2023/08/23/venus-flyby-sends-parker-solar-probe-toward-record-setting-flights-around-the-sun/">closest approach yet to the Sun</a>.
+
+	    ]]>
+	</description>
+    </item>
+
+    <item>
+	<title><![CDATA[A Season of Saturn]]></title>
+	<link>http://apod.nasa.gov/apod/ap230825.html</link>
+	<pubDate>Fri, 25 Aug 2023 13:06:00 GMT</pubDate>
+	<description>
+	    <![CDATA[
+	    <a href="http://apod.nasa.gov/apod/ap230825.html"><img src="https://apod.nasa.gov/apod/image/2308/SeasonSaturnapodacasely1024.jpg" /></a>
+<title>A Season of Saturn</title>
+
+<a href="https://solarsystem.nasa.gov/planets/saturn/overview/">Ringed planet Saturn</a>
+will be at its 2023 opposition,
+opposite the Sun in Earth's skies, on August 27.
+
+While that puts the sixth planet from the Sun at its
+<a href="https://earthsky.org/astronomy-essentials/saturn-at-opposition-closest-brightest-best/">brightest and well-placed</a>
+for viewing, its beautiful ring system isn't
+visible to the unaided eye.
+
+Still, this sequence of telescopic images taken a year
+apart over the last six years
+follows both Saturn and rings as seen from inner planet Earth.
+
+The gas giant's <a href="https://apod.nasa.gov/apod/ap210919.html">ring plane tilts</a>
+from most open in 2018 to approaching edge-on in 2023 (top to bottom).
+
+That's summer to nearly the autumn
+<a href="https://apod.nasa.gov/apod/ap091110.html">equinox for Saturn's</a> northern hemisphere.
+
+In the sharp planetary portraits, Saturn's northern
+<a href="https://apod.nasa.gov/apod/ap230618.html">hexagon</a> and a large
+<a href="https://apod.nasa.gov/apod/ap110119.html">storm</a> system are clearly visible in 2018.
+
+In 2023, <a href="https://apod.nasa.gov/apod/ap170205.html">ice moon Tethys</a>
+is transiting, casting its shadow across
+southern hemisphere cloud bands, while
+Saturn's cold blue south pole is emerging
+from almost a decade of winter darkness.
+
+	    ]]>
+	</description>
+    </item>
+
+</channel>
+</rss>

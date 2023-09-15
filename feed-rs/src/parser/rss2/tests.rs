@@ -744,3 +744,15 @@ fn test_published_from_dc_date() {
     let entry = actual.entries.get(0).expect("feed has 1 entry");
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
 }
+
+// Verifies we see whitespace and line breaks in the description elements
+#[test]
+fn test_jefapod() {
+    let test_data = test::fixture_as_string("rss_2.0_jefapod.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    for entry in actual.entries {
+        let content = entry.summary.unwrap().content;
+        assert!(content.contains('\n'));
+        assert!(content.contains(' '));
+    }
+}
