@@ -16,6 +16,10 @@ mod tests;
 /// Parses an Atom feed into our model
 pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
+    feed.language = root.attr_value("xml:lang");
+
+
+
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {

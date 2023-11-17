@@ -55,6 +55,7 @@ fn test_example_2() {
 
     let expected = Feed::new(FeedType::Atom)
         .id("tag:theregister.co.uk,2005:feed/theregister.co.uk/science/")
+        .language("en")
         .title(Text::new("The Register - Science".into()))
         .link(Link::new("https://www.theregister.co.uk/science/headlines.atom", None)
             .rel("self")
@@ -223,6 +224,7 @@ fn test_example_6() {
 
     let expected = Feed::new(FeedType::Atom)
         .id("tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases")
+        .language("en-US")
         .link(
             Link::new("https://github.com/feed-rs/feed-rs/releases", None)
                 .rel("alternate")
