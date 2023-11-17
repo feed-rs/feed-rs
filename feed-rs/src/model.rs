@@ -296,6 +296,9 @@ pub struct Entry {
     /// 2) a default for any other "media:*" elements found at the item level
     /// See the Atom tests for youtube and newscred for examples
     pub media: Vec<MediaObject>,
+
+    /// Atom (optional): The language specified on the item
+    pub language: Option<String>,
 }
 
 impl Default for Entry {
@@ -314,6 +317,7 @@ impl Default for Entry {
             source: None,
             rights: None,
             media: Vec::new(),
+            language: None,
         }
     }
 }
@@ -382,6 +386,11 @@ impl Entry {
 
     pub fn media(mut self, media: MediaObject) -> Self {
         self.media.push(media);
+        self
+    }
+
+    pub fn language(mut self, language: &str) -> Self {
+        self.language = Some(language.to_owned());
         self
     }
 }
