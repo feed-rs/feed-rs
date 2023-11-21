@@ -3,3 +3,4 @@ members = [
     "feed-rs",
     "testurls"
 ]
+resolver = "2"
