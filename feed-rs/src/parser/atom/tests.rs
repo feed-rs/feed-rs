@@ -259,7 +259,14 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::new("markpritchard")),
+                .author(Person::new("markpritchard"))
+                .media(
+                    MediaObject::default().thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars3.githubusercontent.com/u/8234070?s=60&v=4".to_owned())
+                            .width(30)
+                            .height(30),
+                    )),
+                ),
         )
         .entry(
             Entry::default()
@@ -272,7 +279,14 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook")),
+                .author(Person::new("kumabook"))
+                .media(
+                    MediaObject::default().thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
+                            .width(30)
+                            .height(30),
+                    )),
+                ),
         )
         .entry(
             Entry::default()
@@ -289,7 +303,14 @@ fn test_example_6() {
                         .body(r#"<p>Handle rel attribute of link element of entry of atom</p>"#)
                         .content_type("text/html"),
                 )
-                .author(Person::new("kumabook")),
+                .author(Person::new("kumabook"))
+                .media(
+                    MediaObject::default().thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
+                            .width(30)
+                            .height(30),
+                    )),
+                ),
         )
         .entry(
             Entry::default()
@@ -302,7 +323,14 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.0".into()))
                 .content(Content::default().body(r#"<p>Update crate info to Cargo.toml</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook")),
+                .author(Person::new("kumabook"))
+                .media(
+                    MediaObject::default().thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
+                            .width(30)
+                            .height(30),
+                    )),
+                ),
         );
 
     // Check
@@ -506,13 +534,11 @@ fn test_reddit() {
     let test_data = test::fixture_as_string("atom_mediarss_reddit_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::default()
-        .thumbnail(MediaThumbnail::new(
-            Image::new("https://b.thumbs.redditmedia.com/_MXt-0n8VXQc-EQ7Q0vFioALFWFITAgVWu4Wf8dThhU.jpg".to_string())
-        ));
+    let expected = MediaObject::default().thumbnail(MediaThumbnail::new(Image::new(
+        "https://b.thumbs.redditmedia.com/_MXt-0n8VXQc-EQ7Q0vFioALFWFITAgVWu4Wf8dThhU.jpg".to_string(),
+    )));
 
     let entry = &actual.entries[actual.entries.len() - 2];
     let media_obj = &entry.media[0];
     assert_eq!(media_obj, &expected);
-
 }
