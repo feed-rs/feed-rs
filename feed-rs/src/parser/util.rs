@@ -8,7 +8,7 @@ use regex::{Captures, Regex};
 use url::Url;
 use uuid::Uuid;
 
-use crate::model::Text;
+use crate::model::{Link, Text};
 use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
 
@@ -64,13 +64,27 @@ lazy_static! {
 // but without the day of week (since it is superfluous and often in languages other than English)
 static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
+/// Generified timestamp parser
+pub(crate) type TimestampParser = fn(&str) -> Option<DateTime<Utc>>;
+
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     Ok(element.children_as_string()?.map(Text::html))
 }
 
-/// Generified timestamp parser
-pub(crate) type TimestampParser = fn(&str) -> Option<DateTime<Utc>>;
+// Handles <link>
+pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
+    element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))
+}
+
+// Handles <title>, <description> etc
+pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
+    if let Ok(Some(text)) = element.children_as_string() {
+        Some(Text::new(text))
+    } else {
+        None
+    }
+}
 
 /// Handles date/time
 pub(crate) fn handle_timestamp<R: BufRead>(parser: &Parser, element: Element<R>) -> Option<DateTime<Utc>> {
