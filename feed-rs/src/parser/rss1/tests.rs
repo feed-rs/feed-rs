@@ -162,3 +162,13 @@ fn test_iso8859() {
     let content = entry.content.as_ref().unwrap().body.as_ref().unwrap();
     assert!(content.contains(expected));
 }
+
+// Verifies bioRxiv titles are extracted correctly
+#[test]
+fn test_bio_rxiv() {
+    let test_data = test::fixture_as_raw("rss1/rss_1.0_biorxiv.xml");
+    let actual = parser::parse(test_data.as_slice()).unwrap();
+    for entry in actual.entries {
+        assert!(!entry.title.unwrap().content.is_empty())
+    }
+}

@@ -34,11 +34,11 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => feed.title = handle_text(child),
+            (NS::RSS, "title") => feed.title = util::handle_text(child),
 
-            (NS::RSS, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
+            (NS::RSS, "link") => if_some_then(util::handle_link(child), |link| feed.links.push(link)),
 
-            (NS::RSS, "description") => feed.description = handle_text(child),
+            (NS::RSS, "description") => feed.description = util::handle_text(child),
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
 
@@ -46,7 +46,7 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
 
             (NS::DublinCore, "language") => feed.language = child.child_as_text(),
 
-            (NS::DublinCore, "rights") => feed.rights = handle_text(child),
+            (NS::DublinCore, "rights") => feed.rights = util::handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -90,11 +90,11 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => entry.title = handle_text(child),
+            (NS::RSS, "title") => entry.title = util::handle_text(child),
 
-            (NS::RSS, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
+            (NS::RSS, "link") => if_some_then(util::handle_link(child), |link| entry.links.push(link)),
 
-            (NS::RSS, "description") => entry.summary = handle_text(child),
+            (NS::RSS, "description") => entry.summary = util::handle_text(child),
 
             (NS::Content, "encoded") => content_encoded = util::handle_encoded(child)?,
 
@@ -104,11 +104,11 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::DublinCore, "description") => {
                 if entry.summary.is_none() {
-                    entry.summary = handle_text(child)
+                    entry.summary = util::handle_text(child)
                 }
             }
 
-            (NS::DublinCore, "rights") => entry.rights = handle_text(child),
+            (NS::DublinCore, "rights") => entry.rights = util::handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -134,14 +134,4 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
         // No point returning anything if we are missing a destination
         None
     })
-}
-
-// Handles <link>
-fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))
-}
-
-// Handles <title>, <description>
-fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
-    element.child_as_text().map(Text::new)
 }
