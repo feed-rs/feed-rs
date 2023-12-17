@@ -3,17 +3,17 @@ use std::io::Read;
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::util::{if_some_then, parse_timestamp_lenient};
-use crate::parser::{ParseFeedError, ParseFeedResult};
+use crate::parser::util::if_some_then;
+use crate::parser::{ParseFeedError, ParseFeedResult, Parser};
 
 #[cfg(test)]
 mod tests;
 
 /// Parses a JSON feed into our model
-pub(crate) fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: Read>(parser: &Parser, stream: R) -> ParseFeedResult<Feed> {
     let parsed = serde_json::from_reader(stream);
     if let Ok(json_feed) = parsed {
-        convert(json_feed)
+        convert(parser, json_feed)
     } else {
         // Unable to parse the JSON
         Err(ParseFeedError::JsonSerde(parsed.err().unwrap()))
@@ -21,7 +21,7 @@ pub(crate) fn parse<R: Read>(stream: R) -> ParseFeedResult<Feed> {
 }
 
 // Convert the JSON Feed into our standard model
-fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
+fn convert(parser: &Parser, jf: JsonFeed) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::JSON);
 
     // If the version exists, it should be something we support
@@ -48,7 +48,7 @@ fn convert(jf: JsonFeed) -> ParseFeedResult<Feed> {
 
     // Convert items within the JSON feed
     jf.items.into_iter().for_each(|ji| {
-        feed.entries.push(handle_item(ji));
+        feed.entries.push(handle_item(parser, ji));
     });
 
     // Per the spec, any items without an author inherit the feed
@@ -110,7 +110,7 @@ fn handle_content(content: Option<String>, content_type: Mime) -> Option<Content
 }
 
 // Converts a JSON feed item into our model
-fn handle_item(ji: JsonItem) -> Entry {
+fn handle_item(parser: &Parser, ji: JsonItem) -> Entry {
     let mut entry = Entry {
         id: ji.id.unwrap_or("".into()),
         ..Default::default()
@@ -136,9 +136,9 @@ fn handle_item(ji: JsonItem) -> Entry {
         }
     }
 
-    if_some_then(ji.date_published, |published| entry.published = parse_timestamp_lenient(&published));
+    if_some_then(ji.date_published, |published| entry.published = parser.parse_timestamp(&published));
 
-    if_some_then(ji.date_modified, |modified| entry.updated = parse_timestamp_lenient(&modified));
+    if_some_then(ji.date_modified, |modified| entry.updated = parser.parse_timestamp(&modified));
 
     handle_authors(&mut entry.authors, &ji.author, &ji.authors);
 

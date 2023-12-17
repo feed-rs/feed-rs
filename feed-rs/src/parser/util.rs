@@ -9,7 +9,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::model::Text;
-use crate::parser::ParseFeedResult;
+use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
 
 lazy_static! {
@@ -69,10 +69,13 @@ pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult
     Ok(element.children_as_string()?.map(Text::html))
 }
 
+/// Generified timestamp parser
+pub(crate) type TimestampParser = fn(&str) -> Option<DateTime<Utc>>;
+
 /// Handles date/time
-pub(crate) fn handle_timestamp<R: BufRead>(element: Element<R>) -> Option<DateTime<Utc>> {
+pub(crate) fn handle_timestamp<R: BufRead>(parser: &Parser, element: Element<R>) -> Option<DateTime<Utc>> {
     if let Some(text) = element.child_as_text() {
-        parse_timestamp_lenient(&text)
+        parser.parse_timestamp(&text)
     } else {
         None
     }

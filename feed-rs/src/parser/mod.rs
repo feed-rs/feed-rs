@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use std::error::Error;
 use std::fmt;
 use std::hash::Hasher;
@@ -6,6 +7,7 @@ use std::io::{BufRead, BufReader, Read};
 use siphasher::sip128::{Hasher128, SipHasher};
 
 use crate::model;
+use crate::parser::util::TimestampParser;
 use crate::xml;
 use crate::xml::NS;
 
@@ -101,6 +103,7 @@ impl fmt::Display for ParseErrorKind {
 /// Parser for various feed formats
 pub struct Parser {
     base_uri: Option<String>,
+    timestamp_parser: TimestampParser,
 }
 
 impl Parser {
@@ -144,7 +147,7 @@ impl Parser {
         let result = match first_char {
             Some('<') => self.parse_xml(input),
 
-            Some('{') => Parser::parse_json(input),
+            Some('{') => self.parse_json(input),
 
             _ => Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot)),
         };
@@ -160,8 +163,13 @@ impl Parser {
     }
 
     // Handles JSON content
-    fn parse_json<R: BufRead>(source: R) -> ParseFeedResult<model::Feed> {
-        json::parse(source)
+    fn parse_json<R: BufRead>(&self, source: R) -> ParseFeedResult<model::Feed> {
+        json::parse(self, source)
+    }
+
+    // Parses timestamps with the configured parser (internal, or supplied via the builder)
+    fn parse_timestamp(&self, text: &str) -> Option<DateTime<Utc>> {
+        (self.timestamp_parser)(text)
     }
 
     // Handles XML content
@@ -174,23 +182,23 @@ impl Parser {
             match (root.name.as_str(), version.as_deref()) {
                 ("feed", _) => {
                     element_source.set_default_default_namespace(NS::Atom);
-                    return atom::parse_feed(root);
+                    return atom::parse_feed(self, root);
                 }
                 ("entry", _) => {
                     element_source.set_default_default_namespace(NS::Atom);
-                    return atom::parse_entry(root);
+                    return atom::parse_entry(self, root);
                 }
                 ("rss", Some("2.0")) => {
                     element_source.set_default_default_namespace(NS::RSS);
-                    return rss2::parse(root);
+                    return rss2::parse(self, root);
                 }
                 ("rss", Some("0.91")) | ("rss", Some("0.92")) => {
                     element_source.set_default_default_namespace(NS::RSS);
-                    return rss0::parse(root);
+                    return rss0::parse(self, root);
                 }
                 ("RDF", _) => {
                     element_source.set_default_default_namespace(NS::RSS);
-                    return rss1::parse(root);
+                    return rss1::parse(self, root);
                 }
                 _ => {}
             };
@@ -219,6 +227,7 @@ pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<
 /// Builder to create instances of `FeedParser`
 pub struct Builder {
     base_uri: Option<String>,
+    timestamp_parser: TimestampParser,
 }
 
 impl Builder {
@@ -232,14 +241,20 @@ impl Builder {
     }
 
     pub fn build(self) -> Parser {
-        Parser { base_uri: self.base_uri }
+        Parser {
+            base_uri: self.base_uri,
+            timestamp_parser: self.timestamp_parser,
+        }
     }
 }
 
 /// Creates a parser instance with sensible defaults
 impl Default for Builder {
     fn default() -> Self {
-        Builder { base_uri: None }
+        Builder {
+            base_uri: None,
+            timestamp_parser: util::parse_timestamp_lenient,
+        }
     }
 }
 
