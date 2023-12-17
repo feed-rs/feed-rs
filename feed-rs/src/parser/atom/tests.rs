@@ -15,7 +15,7 @@ fn test_example_1() {
     let expected = Feed::new(FeedType::Atom)
         .title(Text::new("dive into mark".into()))
         .description(Text::new("A <em>lot</em> of effort\n        went into making this effortless".into()).content_type("text/html"))
-        .updated_rfc3339("2005-07-31T12:29:29Z")
+        .updated_parsed("2005-07-31T12:29:29Z")
         .id("tag:example.org,2003:3")
         .link(Link::new("http://example.org/", None).rel("alternate").media_type("text/html").href_lang("en"))
         .link(Link::new("http://example.org/feed.atom", None).rel("self").media_type("application/atom+xml"))
@@ -25,7 +25,7 @@ fn test_example_1() {
             Entry::default()
                 .id("tag:example.org,2003:3.2397")
                 .title(Text::new("Atom draft-07 snapshot".into()))
-                .updated_rfc3339("2005-07-31T12:29:29Z")
+                .updated_parsed("2005-07-31T12:29:29Z")
                 .author(Person::new("Mark Pilgrim").uri("http://example.org/").email("f8dy@example.com"))
                 .link(Link::new("http://example.org/2005/04/02/atom", None).rel("alternate").media_type("text/html"))
                 .link(
@@ -39,7 +39,7 @@ fn test_example_1() {
                 .content(Content::default().content_type("text/html").body(
                     "<div>\n                <p>\n                    <i>[Update: The Atom draft is finished.]</i>\n                </p>\n            </div>",
                 ))
-                .published_rfc3339("2003-12-13T08:29:29-04:00"),
+                .published("2003-12-13T08:29:29-04:00"),
         );
 
     // Check
@@ -69,10 +69,10 @@ fn test_example_2() {
         .icon(Image::new("https://www.theregister.co.uk/Design/graphics/icons/favicon.png".into()))
         .description(Text::new("Biting the hand that feeds IT — sci/tech news and views for the world".into()))
         .logo(Image::new("https://www.theregister.co.uk/Design/graphics/Reg_default/The_Register_r.png".into()))
-        .updated_rfc3339("2019-07-31T11:54:28Z")
+        .updated_parsed("2019-07-31T11:54:28Z")
         .entry(Entry::default()
             .id("tag:theregister.co.uk,2005:story204156")
-            .updated_rfc3339("2019-07-31T11:54:28Z")
+            .updated_parsed("2019-07-31T11:54:28Z")
             .author(Person::new("Richard Speed")
                 .uri("https://search.theregister.co.uk/?author=Richard%20Speed"))
             .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/31/orbitbeyond_drops_nasa_moon_contract/", None)
@@ -84,7 +84,7 @@ fn test_example_2() {
                 .content_type("text/html")))
         .entry(Entry::default()
             .id("tag:theregister.co.uk,2005:story204131")
-            .updated_rfc3339("2019-07-30T05:41:09Z")
+            .updated_parsed("2019-07-30T05:41:09Z")
             .author(Person::new("Kieren McCarthy")
                 .uri("https://search.theregister.co.uk/?author=Kieren%20McCarthy"))
             .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/30/french_arming_satellites/", None)
@@ -112,7 +112,7 @@ fn test_example_3() {
             .rel("alternate")
             .media_type("text/html"))
         .id("tag:blogs.akamai.com,2019-07-30://2")
-        .updated_rfc3339("2019-07-30T15:02:05Z")
+        .updated_parsed("2019-07-30T15:02:05Z")
         .generator(Generator::new("Movable Type Pro 5.2.13")
             .uri("http://www.sixapart.com/movabletype/"))
         .link(Link::new("http://feeds.feedburner.com/TheAkamaiBlog", None)
@@ -126,8 +126,8 @@ fn test_example_3() {
                 .rel("alternate")
                 .media_type("text/html"))
             .id("tag:blogs.akamai.com,2019://2.3337")
-            .published_rfc3339("2019-07-30T16:00:00Z")
-            .updated_rfc3339("2019-07-30T15:02:05Z")
+            .published("2019-07-30T16:00:00Z")
+            .updated_parsed("2019-07-30T15:02:05Z")
             .summary(Text::new("Now, there are many reasons to isolate your infrastructure from the Internet. Minimizing the number of exposed things not only reduces risk, it also reduces operational complexity. VPNs are counter to this. VPNs make it so you aren't exposing all of your applications publicly in a DMZ, which is good. But for the most part, they still provide access to the corporate network to get access to corporate apps. Definitely bad. At this point, I think we all agree that moats and castles belong in the past.".into()))
             .author(Person::new("Lorenz Jakober"))
             .category(Category::new("Zero Trust")
@@ -161,13 +161,13 @@ fn test_example_4() {
             .media_type("application/atom+xml"))
         .title(Text::new("ebm-papst product news".into()))
         .id("tag:ebmpapst.com,2011-06-30:1309426729931")
-        .updated_rfc3339("2019-07-29T09:41:09Z")
+        .updated_parsed("2019-07-29T09:41:09Z")
         .entry(Entry::default()
             .title(Text::new(" Connection with future".into()))
             .link(Link::new("https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html", None)
                 .rel("alternate"))
             .id("tag:ebmpapst.com,2019-07-17:0310161724098")
-            .updated_rfc3339("2019-07-17T03:10:16Z")
+            .updated_parsed("2019-07-17T03:10:16Z")
             .summary(Text::new(r#" <a href="https://idt.ebmpapst.com/de/en/idt/campaign/simatic-micro-drive.html"><img src="http://www.ebmpapst.com//media/content/homepage/currenttopic/ads_cd2013/FF_ep_keyvisual_100px.jpg" border="0" align="right"></a> Working in perfect harmony: the ebm-papst drive solutions for SIMATIC MICRO-DRIVE drive regulators from Siemens. "#.to_owned())
                 .content_type("text/html")));
 
@@ -184,7 +184,7 @@ fn test_example_5() {
 
     let expected = Feed::new(FeedType::Atom)
         .title(Text::new("USGS Magnitude 2.5+ Earthquakes, Past Hour".into()))
-        .updated_rfc3339("2019-07-31T13:17:27Z")
+        .updated_parsed("2019-07-31T13:17:27Z")
         .author(Person::new("U.S. Geological Survey")
             .uri("https://earthquake.usgs.gov/"))
         .id("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_hour.atom")
@@ -194,7 +194,7 @@ fn test_example_5() {
         .entry(Entry::default()
             .id("urn:earthquake-usgs-gov:nc:73239366")
             .title(Text::new("M 3.6 - 15km W of Petrolia, CA".into()))
-            .updated_rfc3339("2019-07-31T13:07:31.364Z")
+            .updated_parsed("2019-07-31T13:07:31.364Z")
             .link(Link::new("https://earthquake.usgs.gov/earthquakes/eventpage/nc73239366", None)
                 .rel("alternate")
                 .media_type("text/html"))
@@ -234,11 +234,11 @@ fn test_example_6() {
                 .media_type("application/atom+xml"),
         )
         .title(Text::new("Release notes from feed-rs".into()))
-        .updated_rfc3339("2020-01-19T16:01:56+11:00")
+        .updated_parsed("2020-01-19T16:01:56+11:00")
         .entry(
             Entry::default()
                 .id("tag:github.com,2008:Repository/90976281/v0.2.0")
-                .updated_rfc3339("2020-01-19T16:08:59+11:00")
+                .updated_parsed("2020-01-19T16:08:59+11:00")
                 .link(
                     Link::new("https://github.com/feed-rs/feed-rs/releases/tag/v0.2.0", None)
                         .rel("alternate")
@@ -271,7 +271,7 @@ fn test_example_6() {
         .entry(
             Entry::default()
                 .id("tag:github.com,2008:Repository/90976281/0.1.3")
-                .updated_rfc3339("2017-07-07T21:47:46+10:00")
+                .updated_parsed("2017-07-07T21:47:46+10:00")
                 .link(
                     Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.3", None)
                         .rel("alternate")
@@ -291,7 +291,7 @@ fn test_example_6() {
         .entry(
             Entry::default()
                 .id("tag:github.com,2008:Repository/90976281/0.1.1")
-                .updated_rfc3339("2017-06-16T18:49:36+10:00")
+                .updated_parsed("2017-06-16T18:49:36+10:00")
                 .link(
                     Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1", None)
                         .rel("alternate")
@@ -315,7 +315,7 @@ fn test_example_6() {
         .entry(
             Entry::default()
                 .id("tag:github.com,2008:Repository/90976281/0.1.0")
-                .updated_rfc3339("2017-06-15T16:44:26+10:00")
+                .updated_parsed("2017-06-15T16:44:26+10:00")
                 .link(
                     Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0", None)
                         .rel("alternate")
@@ -378,13 +378,13 @@ fn test_spec_1() {
         .id("urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6")
         .title(Text::new("Example Feed".into()))
         .link(Link::new("http://example.org/", None).rel("alternate"))
-        .updated_rfc3339("2003-12-13T18:30:02Z")
+        .updated_parsed("2003-12-13T18:30:02Z")
         .author(Person::new("John Doe"))
         .entry(
             Entry::default()
                 .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
                 .title(Text::new("Atom-Powered Robots Run Amok".into()))
-                .updated_rfc3339("2003-12-13T18:30:02Z")
+                .updated_parsed("2003-12-13T18:30:02Z")
                 .summary(Text::new("Some text.".into()))
                 .link(Link::new("http://example.org/2003/12/13/atom03", None).rel("alternate")),
         );
@@ -433,7 +433,7 @@ fn test_pub_spec_1() {
         Entry::default()
             .title(Text::new("Atom-Powered Robots Run Amok".into()))
             .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
-            .updated_rfc3339("2003-12-13T18:30:02Z")
+            .updated_parsed("2003-12-13T18:30:02Z")
             .author(Person::new("John Doe"))
             .content(Content::default().content_type("text/plain").body("Some text.")),
     );
@@ -452,7 +452,7 @@ fn test_entry() {
         Entry::default()
             .title(Text::new("Specifications".into()))
             .id("urn:uuid:988EF5C55CDEA24EDE1251744888912")
-            .updated_rfc3339("2009-08-31T18:55:12.569Z")
+            .updated_parsed("2009-08-31T18:55:12.569Z")
             .author(Person::new("S. A. Khuba"))
             .category(Category::new("45121504").scheme("http://www.unspsc.org/UNv1111201").label("Digital Camera"))
             .contributor(Person::new("Shri. S. A. Khuba"))

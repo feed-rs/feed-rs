@@ -93,7 +93,7 @@ fn test_0_92_spec_1() {
         .title(Text::new("Dave Winer: Grateful Dead".into()))
         .link(Link::new("http://www.scripting.com/blog/categories/gratefulDead.html", None))
         .description(Text::new("A high-fidelity Grateful Dead song every day. This is where we're experimenting with\n            enclosures on RSS news items that download when you're not using your computer. If it works (it will)\n            it will be the end of the Click-And-Wait multimedia experience on the Internet.".into()))
-        .updated_rfc2822("Fri, 13 Apr 2001 19:23:02 GMT")
+        .updated_parsed("Fri, 13 Apr 2001 19:23:02 GMT")
         .contributor(Person::new("managingEditor").email("dave@userland.com (Dave Winer)"))
         .contributor(Person::new("webMaster").email("dave@userland.com (Dave Winer)"))
         .entry(Entry::default()

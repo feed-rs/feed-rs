@@ -1,9 +1,7 @@
 use std::io::BufRead;
 
-use chrono::{DateTime, Utc};
-
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::util::{if_some_then, timestamp_rfc2822_lenient};
+use crate::parser::util::if_some_then;
 use crate::parser::{util, ParseFeedResult};
 use crate::xml::{Element, NS};
 
@@ -44,7 +42,7 @@ fn handle_channel<R: BufRead>(feed: &mut Feed, channel: Element<R>) -> ParseFeed
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
 
-            (NS::DublinCore, "date") => feed.published = handle_timestamp(child),
+            (NS::DublinCore, "date") => feed.published = util::handle_timestamp(child),
 
             (NS::DublinCore, "language") => feed.language = child.child_as_text(),
 
@@ -102,7 +100,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
-            (NS::DublinCore, "date") => entry.published = handle_timestamp(child),
+            (NS::DublinCore, "date") => entry.published = util::handle_timestamp(child),
 
             (NS::DublinCore, "description") => {
                 if entry.summary.is_none() {
@@ -146,13 +144,4 @@ fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
 // Handles <title>, <description>
 fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
     element.child_as_text().map(Text::new)
-}
-
-// Handles date/time
-fn handle_timestamp<R: BufRead>(element: Element<R>) -> Option<DateTime<Utc>> {
-    if let Some(text) = element.child_as_text() {
-        timestamp_rfc2822_lenient(&text)
-    } else {
-        None
-    }
 }

@@ -18,7 +18,7 @@ fn test_example_1() {
         .link(Link::new("http://www.example.com/main.html", None))
         .description(Text::new("Site description".into()))
         .updated(actual.updated) // not present in the test data
-        .published_rfc3339("2017-06-13T09:00:00Z")
+        .published("2017-06-13T09:00:00Z")
         .language("ja")
         .entry(
             Entry::default()
@@ -27,7 +27,7 @@ fn test_example_1() {
                 .title(Text::new("記事1のタイトル".into()))
                 .link(Link::new("記事1のURL", None))
                 .summary(Text::new("記事1の内容".into()))
-                .published_rfc3339("2017-06-13T09:00:00Z")
+                .published("2017-06-13T09:00:00Z")
                 .author(Person::new("記事1の作者名")),
         )
         .entry(

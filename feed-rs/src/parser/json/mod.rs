@@ -3,7 +3,7 @@ use std::io::Read;
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::util::{if_some_then, timestamp_rfc3339_lenient};
+use crate::parser::util::{if_some_then, parse_timestamp_lenient};
 use crate::parser::{ParseFeedError, ParseFeedResult};
 
 #[cfg(test)]
@@ -136,9 +136,9 @@ fn handle_item(ji: JsonItem) -> Entry {
         }
     }
 
-    if_some_then(ji.date_published, |published| entry.published = timestamp_rfc3339_lenient(&published));
+    if_some_then(ji.date_published, |published| entry.published = parse_timestamp_lenient(&published));
 
-    if_some_then(ji.date_modified, |modified| entry.updated = timestamp_rfc3339_lenient(&modified));
+    if_some_then(ji.date_modified, |modified| entry.updated = parse_timestamp_lenient(&modified));
 
     handle_authors(&mut entry.authors, &ji.author, &ji.authors);
 

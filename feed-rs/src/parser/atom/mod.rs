@@ -6,7 +6,7 @@ use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, L
 use crate::parser::mediarss;
 use crate::parser::mediarss::handle_media_element;
 use crate::parser::util;
-use crate::parser::util::{if_some_then, timestamp_rfc3339_lenient};
+use crate::parser::util::{if_some_then, parse_timestamp_lenient};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 
@@ -23,7 +23,7 @@ pub(crate) fn parse_feed<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> 
 
             (NS::Atom, "title") => feed.title = handle_text(child)?,
 
-            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| feed.updated = timestamp_rfc3339_lenient(&text)),
+            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| feed.updated = parse_timestamp_lenient(&text)),
 
             (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| feed.authors.push(person)),
 
@@ -158,7 +158,7 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
 
             (NS::Atom, "title") => entry.title = handle_text(child)?,
 
-            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| entry.updated = timestamp_rfc3339_lenient(&text)),
+            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| entry.updated = parse_timestamp_lenient(&text)),
 
             (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
 
@@ -173,7 +173,7 @@ fn handle_entry<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry
             (NS::Atom, "contributor") => if_some_then(handle_person(child)?, |person| entry.contributors.push(person)),
 
             // Some feeds have "pubDate" instead of "published"
-            (NS::Atom, "published") | (NS::Atom, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = timestamp_rfc3339_lenient(&text)),
+            (NS::Atom, "published") | (NS::Atom, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = parse_timestamp_lenient(&text)),
 
             (NS::Atom, "rights") => entry.rights = handle_text(child)?,
 
