@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use crate::model::*;
 use crate::parser;
+use crate::parser::util;
 use crate::util::test;
 use url::Url;
 
@@ -743,4 +744,24 @@ fn test_published_from_dc_date() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.get(0).expect("feed has 1 entry");
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
+}
+
+// Verifies that an custom parser is correctly called and can return a useful date
+#[test]
+fn test_custom_timestamp_parser() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_nbcny.xml");
+
+    let actual = parser::Builder::new()
+        .timestamp_parser(|text| {
+            if text == "Sat, Dec 16 2023 02:02:33 PM" {
+                util::parse_timestamp_lenient("Sat, 16 Dec 2023 19:02:33 UTC")
+            } else {
+                None
+            }
+        })
+        .build()
+        .parse(test_data.as_bytes())
+        .unwrap();
+    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 12, 16, 19, 2, 33).unwrap());
 }

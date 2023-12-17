@@ -216,12 +216,7 @@ pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
 
 /// Convenience during transition to the builder
 pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<model::Feed> {
-    let mut builder = Builder::default();
-    if let Some(uri) = uri {
-        builder.base_uri(uri);
-    }
-
-    builder.build().parse(source)
+    Builder::new().base_uri(uri).build().parse(source)
 }
 
 /// Builder to create instances of `FeedParser`
@@ -237,8 +232,8 @@ impl Builder {
     }
 
     /// Source of the content, used to resolve relative URLs in XML based feeds
-    pub fn base_uri<S: AsRef<str>>(&mut self, uri: S) -> &mut Self {
-        self.base_uri = Some(uri.as_ref().to_string());
+    pub fn base_uri<S: AsRef<str>>(mut self, uri: Option<S>) -> Self {
+        self.base_uri = uri.map(|s| s.as_ref().to_string());
         self
     }
 
@@ -248,6 +243,12 @@ impl Builder {
             base_uri: self.base_uri,
             timestamp_parser: self.timestamp_parser,
         }
+    }
+
+    /// Registers a custom timestamp parser
+    pub fn timestamp_parser(mut self, ts_parser: TimestampParser) -> Self {
+        self.timestamp_parser = ts_parser;
+        self
     }
 }
 
