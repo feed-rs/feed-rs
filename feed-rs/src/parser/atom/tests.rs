@@ -8,7 +8,7 @@ use crate::util::test;
 #[test]
 fn test_example_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_example_1.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -50,7 +50,7 @@ fn test_example_1() {
 #[test]
 fn test_example_2() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_example_2.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_2.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     let expected = Feed::new(FeedType::Atom)
@@ -103,7 +103,7 @@ fn test_example_2() {
 #[test]
 fn test_example_3() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_example_3.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_3.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     let expected = Feed::new(FeedType::Atom)
@@ -151,7 +151,7 @@ fn test_example_3() {
 #[test]
 fn test_example_4() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_example_4.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_4.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     let expected = Feed::new(FeedType::Atom)
@@ -179,7 +179,7 @@ fn test_example_4() {
 #[test]
 fn test_example_5() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_example_5.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_5.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     let expected = Feed::new(FeedType::Atom)
@@ -218,7 +218,7 @@ fn test_example_5() {
 #[test]
 fn test_example_6() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_example_6.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_6.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     let expected = Feed::new(FeedType::Atom)
@@ -342,7 +342,7 @@ fn test_example_6() {
 fn test_example_7() {
     let expected_body = r#"<div xmlns="http://www.w3.org/1999/xhtml"><p>This is a follow up from <a href="https://who-t.blogspot.com/2018/12/high-resolution-wheel-scrolling-on.html">the kernel support for high-resolution wheel scrolling</a> which you totally forgot about because it's already more then a year in the past and seriously, who has the attention span these days to remember this. Anyway, I finally found time and motivation to pick this up again and I started lining up the pieces like cans, for it only to be shot down by the commentary of strangers on the internet. The <a href="https://gitlab.freedesktop.org/wayland/wayland/-/merge_requests/72">Wayland merge request</a> lists the various pieces (libinput, wayland, weston, mutter, gtk and Xwayland) but for the impatient there's also an <a href="https://copr.fedorainfracloud.org/coprs/whot/high-resolution-wheel-scrolling/">Fedora 32 COPR</a>. For all you weirdos inexplicably not running the latest Fedora, well, you'll have to compile this yourself, just like I did. </p> <p>Let's recap: in v5.0 the kernel added new axes <b>REL_WHEEL_HI_RES</b> and <b>REL_HWHEEL_HI_RES</b> for all devices. On devices that actually support high-resolution wheel scrolling (Logitech and Microsoft mice, primarily) you'll get multiple hires events before the now-legacy <b>REL_WHEEL</b> events. On all other devices those two are in sync. </p> <p>Integrating this into the userspace stack was a bit of a mess at first, but I think the solution is good enough, even if it has a rather verbose explanation on how to handle it. The actual patches to integrate ended up being relatively simple. So let's see why it's a bit weird: </p> <p>When Wayland started, back in WhoahReallyThatLongAgo, scrolling was specified as the <b>wl_pointer.axis</b> event with a value in pixels. This works fine for touchpads, not so much for wheels. The early versions of Weston decreed that one wheel click was 10 pixels [1] and, perhaps surprisingly, the world kept on turning. When libinput was forked from Weston <a href="https://who-t.blogspot.com/2015/01/providing-physical-movement-of-wheel.html">an early change</a> was that wheel events would have two values - degrees of movement and click count ("discrete steps"). The wayland protocol was expanded to include the discrete steps as <b>wl_pointer.axis_discrete</b> as well. Then backwards compatibility reared its ugly head and Mutter, Weston, GTK all basically said: one discrete step equals 10 pixels so we multiply the discrete value by 10 and, perhaps surprisingly, the world kept on turning. </p> <p>This worked out well enough for a few years but with high resolution wheels we ran into a problem. Discrete steps are integers, so we can't send partial values. And the protocol is defined in a way that any tweaking of the behaviour would result in broken clients which, perhaps surprisingly, is a Bad Thing. This lead to the current proposal of separate events. <b>LIBINPUT_EVENT_POINTER_AXIS_WHEEL</b> and for Wayland the <b>wl_pointer.axis_v120</b> event, linked to above. These events are (like the kernel events) a parallel event stream to the previous events and effectively replace the <b>LIBINPUT_EVENT_POINTER_AXIS</b> and Wayland <b>wl_pointer.axis/axis_discrete</b> pair for wheel events (not so for touchpad or button scrolling though). </p> <p>The compositor side of things is relatively simple: take the events from libinput and pass the hires ones as v120 events and the lowres ones as v120 events with a value of zero. The client side takes the v120 events and uses them over <b>wl_pointer.axis/axis_discrete</b> unless one is zero in which case you can discard all axis events in that <b>wl_pointer.frame</b>. Since most client implementation already have the support for smooth scrolling (because, well, touchpads do exist) it's relatively simple to integrate - the new events just feed into the smooth scrolling code. And since you already have to do wheel emulation for that (because, well, old clients exist) wheel emulation is handled easily too. </p> <p>All that to provide buttery smooth [2] wheel scrolling. Or not, if your hardware doesn't support it. In which case, well, live with the warm fuzzy feeling that someone else has a better user experience now. Or soon, anyway. </p> <p><small>[1] with, I suspect, the scientific measurement of "yeah, that seems about alright"<br></br>[2] like butter out of a fridge, so still chunky but at least less so than before<br></br></small></p></div>"#;
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_example_7.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_7.xml");
     let feed = parser::parse(test_data.as_bytes()).unwrap();
     let body = feed
         .entries
@@ -358,7 +358,7 @@ fn test_example_7() {
 // Verify that the Reddit ATOM feed parses correctly
 #[test]
 fn test_example_reddit() {
-    let test_data = test::fixture_as_string("atom_example_reddit.xml");
+    let test_data = test::fixture_as_string("atom/atom_example_reddit.xml");
     let feed = parser::parse(test_data.as_bytes()).unwrap();
     for entry in feed.entries {
         assert!(entry.updated.is_some());
@@ -370,7 +370,7 @@ fn test_example_reddit() {
 #[test]
 fn test_spec_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_spec_1.xml");
+    let test_data = test::fixture_as_string("atom/atom_spec_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -395,7 +395,7 @@ fn test_spec_1() {
 
 #[test]
 fn test_relative_example() {
-    let test_data = test::fixture_as_string("atom_relative.xml");
+    let test_data = test::fixture_as_string("atom/atom_relative.xml");
     let feed = parser::parse_with_uri(test_data.as_bytes(), Some("https://example.com/blog/feed.xml")).unwrap();
 
     let feed_alternate_link = feed
@@ -425,7 +425,7 @@ fn test_relative_example() {
 #[test]
 fn test_pub_spec_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom_pub_spec_1.xml");
+    let test_data = test::fixture_as_string("atom/atom_pub_spec_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id(""); // Clear randomly generated UUID
 
     // Expected feed
@@ -445,7 +445,7 @@ fn test_pub_spec_1() {
 // Verify we can parse an Atom Entry (no feed)
 #[test]
 fn test_entry() {
-    let test_data = test::fixture_as_string("atom_entry_1.xml");
+    let test_data = test::fixture_as_string("atom/atom_entry_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
     let expected = Feed::new(FeedType::Atom).entry(
@@ -473,7 +473,7 @@ fn test_entry() {
 // Verify we can parse MediaRSS extensions from youtube
 #[test]
 fn test_mediarss_youtube() {
-    let test_data = test::fixture_as_string("atom_mediarss_youtube_1.xml");
+    let test_data = test::fixture_as_string("atom/atom_mediarss_youtube_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
     let expected = MediaObject::default()
@@ -502,7 +502,7 @@ fn test_mediarss_youtube() {
 // Verify we can parse MediaRSS extensions from newscred (don't use the media:group)
 #[test]
 fn test_mediarss_newscred() {
-    let test_data = test::fixture_as_string("atom_mediarss_newscred_1.xml");
+    let test_data = test::fixture_as_string("atom/atom_mediarss_newscred_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
     let expected = MediaObject::default()
@@ -531,7 +531,7 @@ fn test_mediarss_newscred() {
 
 #[test]
 fn test_reddit() {
-    let test_data = test::fixture_as_string("atom_mediarss_reddit_1.xml");
+    let test_data = test::fixture_as_string("atom/atom_mediarss_reddit_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
     let expected = MediaObject::default().thumbnail(MediaThumbnail::new(Image::new(

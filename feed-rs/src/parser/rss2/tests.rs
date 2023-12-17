@@ -10,7 +10,7 @@ use url::Url;
 #[test]
 fn test_example_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_example_1.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_example_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -40,7 +40,7 @@ fn test_example_1() {
 #[test]
 fn test_example_2() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_example_2.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_example_2.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -81,7 +81,7 @@ fn test_example_2() {
 #[test]
 fn test_example_3() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_example_3.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_example_3.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -118,7 +118,7 @@ fn test_example_3() {
 #[test]
 fn test_example_4() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_example_4.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_example_4.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -156,7 +156,7 @@ fn test_example_4() {
 #[test]
 fn test_example_5() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_example_5.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_example_5.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -213,7 +213,7 @@ fn test_example_5() {
 #[test]
 fn test_example_6() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_example_6.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_example_6.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -243,7 +243,7 @@ fn test_example_6() {
 
 #[test]
 fn test_wirecutter() {
-    let test_data = test::fixture_as_string("rss_2.0_wirecutter.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_wirecutter.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     let entry = actual.entries.get(0).expect("sample feed has one entry");
@@ -258,7 +258,7 @@ fn test_wirecutter() {
 #[test]
 fn test_spec_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_spec_1.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_spec_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -309,7 +309,7 @@ fn test_spec_1() {
 #[test]
 fn test_invalid_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_invalid_1.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_invalid_1.xml");
     let feed = parser::parse(test_data.as_bytes());
     assert!(feed.is_err());
 }
@@ -317,7 +317,7 @@ fn test_invalid_1() {
 // Verifies that we can handle non-UTF8 streams
 #[test]
 fn test_encoding_1() {
-    let test_data = test::fixture_as_raw("rss_2.0_encoding_1.xml");
+    let test_data = test::fixture_as_raw("rss2/rss_2.0_encoding_1.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
     assert_eq!(feed.title.unwrap().content, "RSS Feed do Site Inovação Tecnológica");
 }
@@ -325,7 +325,7 @@ fn test_encoding_1() {
 // Verifies we extract the content:encoded element
 #[test]
 fn test_heated() {
-    let test_data = test::fixture_as_raw("rss_2.0_heated.xml");
+    let test_data = test::fixture_as_raw("rss2/rss_2.0_heated.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
     let content = &feed.entries[0].content.as_ref().unwrap();
     assert!(content.body.as_ref().unwrap().contains("I have some good news and some bad news"));
@@ -335,7 +335,7 @@ fn test_heated() {
 // Check reported issue that RockPaperShotgun does not extract summary
 #[test]
 fn test_rockpapershotgun() {
-    let test_data = test::fixture_as_raw("rss_2.0_rps.xml");
+    let test_data = test::fixture_as_raw("rss2/rss_2.0_rps.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
 
     // Feed should have a description
@@ -350,7 +350,7 @@ fn test_rockpapershotgun() {
 #[test]
 fn test_spiegel() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_spiegel.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_spiegel.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -384,14 +384,14 @@ fn test_spiegel() {
             Entry::default()
                 .title(Text::new("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval".into()))
                 .content(Content::default().body(r#"Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. <br><br><p>See <a href="https://omnystudio.com/listener">omnystudio.com/listener</a> for privacy information.</p>"#).content_type("text/html"))
-                .summary(Text::html("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.".into()))
+                .summary(Text::html("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \nSee omnystudio.com/listener for privacy information.".into()))
                 .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri", None))
                 .published("2021-02-06T23:01:00Z")
                 .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
                 // <enclosure>, media: and itunes: tags
                 .media(MediaObject::default()
                     .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ")
-                    .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \r\nSee omnystudio.com/listener for privacy information.")
+                    .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \nSee omnystudio.com/listener for privacy information.")
                     .credit("DER SPIEGEL")
                     .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())))
                     .content(MediaContent::new()
@@ -419,7 +419,7 @@ fn test_spiegel() {
 // In the case of this feed, we ignore googleplay, and don't overwrite the RSS2 image
 #[test]
 fn test_spreaker_ignore_unknown_ns() {
-    let test_data = test::fixture_as_raw("rss_2.0_spreaker.xml");
+    let test_data = test::fixture_as_raw("rss2/rss_2.0_spreaker.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
 
     // Feed should have a logo
@@ -430,7 +430,7 @@ fn test_spreaker_ignore_unknown_ns() {
 #[test]
 fn test_bbc() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_bbc.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_bbc.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -492,7 +492,7 @@ fn test_bbc() {
 #[test]
 fn test_ch9() {
     // Parse the feed
-    let test_data = test::fixture_as_string("rss_2.0_ch9.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_ch9.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -623,7 +623,7 @@ fn test_ch9() {
 #[test]
 fn test_relurl_1() {
     // This example feed uses the xml:base standard so we don't need to pass the source URI
-    let test_data = test::fixture_as_string("rss_2.0_relurl_1.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_relurl_1.xml");
     let actual = parser::parse_with_uri(test_data.as_bytes(), None).unwrap();
 
     // Check the links in the feed
@@ -643,7 +643,7 @@ fn test_relurl_1() {
 #[test]
 fn test_relurl_2() {
     // This example feed does not use the xml:base standard so we test using a provided feed URI
-    let test_data = test::fixture_as_string("rss_2.0_relurl_2.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_relurl_2.xml");
     let actual = parser::parse_with_uri(test_data.as_bytes(), Some("http://example.com")).unwrap();
 
     // The link for the enclosure should be absolute
@@ -654,7 +654,7 @@ fn test_relurl_2() {
 // Verify that attributes containing escaped characters are decoded correctly
 #[test]
 fn test_escaped_attributes() {
-    let test_data = test::fixture_as_raw("rss_2.0_reddit.xml");
+    let test_data = test::fixture_as_raw("rss2/rss_2.0_reddit.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
 
     assert_eq!(
@@ -666,7 +666,7 @@ fn test_escaped_attributes() {
 // Verify that valid XML with no whitespace separation is parsed correctly
 #[test]
 fn test_ghost_no_ws() {
-    let test_data = test::fixture_as_raw("rss_2.0_ghost_1.xml");
+    let test_data = test::fixture_as_raw("rss2/rss_2.0_ghost_1.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
 
     // Entry should have content
@@ -679,7 +679,7 @@ fn test_ghost_no_ws() {
 fn test_ghost_feeds() {
     let files = vec!["rss_2.0_ghost_2.xml", "rss_2.0_cloudflare.xml", "rss_2.0_element_io.xml"];
     for file in files {
-        let test_data = test::fixture_as_string(file);
+        let test_data = test::fixture_as_string(&format!("rss2/{}", file));
         let actual = parser::parse(test_data.as_bytes()).unwrap();
         for entry in actual.entries {
             assert!(entry.content.is_some());
@@ -690,7 +690,7 @@ fn test_ghost_feeds() {
 // Verifies that content is not set (as there is no enclosure in this case)
 #[test]
 fn test_matrix() {
-    let test_data = test::fixture_as_string("rss_2.0_matrix.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_matrix.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.get(0).expect("feed has 1 entry");
 
@@ -701,7 +701,7 @@ fn test_matrix() {
 // Verifies we can handle an RFC1123 date in an RSS 2.0 feed
 #[test]
 fn test_rfc1123_ilgiornale() {
-    let test_data = test::fixture_as_string("rss_2.0_ilgiornale.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_ilgiornale.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.get(0).expect("feed has 1 entry");
 
@@ -712,7 +712,7 @@ fn test_rfc1123_ilgiornale() {
 // Verifies we can handle an RFC1123 date in an RSS 2.0 feed where the week day name is in a different language
 #[test]
 fn test_rfc1123_ilmessaggero() {
-    let test_data = test::fixture_as_string("rss_2.0_ilmessaggero.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_ilmessaggero.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.get(0).expect("feed has 1 entry");
 
@@ -724,7 +724,7 @@ fn test_rfc1123_ilmessaggero() {
 // e.g. those with newlines before the CDATA
 #[test]
 fn test_trim_whitespace_text_nodes() {
-    let test_data = test::fixture_as_string("rss_2.0_nightvale.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_nightvale.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     assert!(actual.description.unwrap().content.starts_with("<p>Twice-monthly community updates"));
@@ -739,7 +739,7 @@ fn test_trim_whitespace_text_nodes() {
 // Verifies we use DublinCore date as entry published date if present
 #[test]
 fn test_published_from_dc_date() {
-    let test_data = test::fixture_as_string("rss_2.0_dbengines.xml");
+    let test_data = test::fixture_as_string("rss2/rss_2.0_dbengines.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.get(0).expect("feed has 1 entry");
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());

@@ -6,7 +6,7 @@ use crate::util::test;
 #[test]
 fn test_example_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_example_1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_example_1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -53,7 +53,7 @@ fn test_example_1() {
 #[test]
 fn test_spec_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_spec_1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_spec_1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -88,7 +88,7 @@ fn test_spec_1() {
 #[test]
 fn test_optional_entry_id() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_elastic_1.1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_elastic_1.1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     assert!(!actual.id.is_empty());
@@ -101,7 +101,7 @@ fn test_optional_entry_id() {
 #[test]
 fn test_elastic_v1_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_elastic_1.1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_elastic_1.1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Check language was extracted correctly for the feed
