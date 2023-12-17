@@ -6,7 +6,7 @@ use crate::util::test;
 #[test]
 fn test_example_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_example_1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_example_1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -22,8 +22,8 @@ fn test_example_1() {
         .icon(Image::new("https://daringfireball.net/graphics/favicon-64.png".into()))
         .entry(Entry::default()
             .title(Text::new("How Jeff Bezos’s iPhone X Was Hacked".into()))
-            .published_rfc3339("2020-01-24T23:46:57Z")
-            .updated_rfc3339("2020-01-24T23:46:57Z")
+            .published("2020-01-24T23:46:57Z")
+            .updated_parsed("2020-01-24T23:46:57Z")
             .id("https://daringfireball.net/linked/2020/01/24/bezos-iphone-x")
             .link(Link::new("https://daringfireball.net/linked/2020/01/24/bezos-iphone-x", None))
             .link(Link::new("https://www.nytimes.com/2020/01/22/technology/jeff-bezos-hack-iphone.html", None))
@@ -34,8 +34,8 @@ fn test_example_1() {
                 .length(177)))
         .entry(Entry::default()
             .title(Text::new("Instagram for Windows 95".into()))
-            .published_rfc3339("2020-01-21T01:07:00Z")
-            .updated_rfc3339("2020-01-21T20:58:36Z")
+            .published("2020-01-21T01:07:00Z")
+            .updated_parsed("2020-01-21T20:58:36Z")
             .id("https://daringfireball.net/linked/2020/01/20/instagram-for-win95")
             .link(Link::new("https://daringfireball.net/linked/2020/01/20/instagram-for-win95", None))
             .link(Link::new("https://www.behance.net/gallery/41023081/Instagram-for-Win95?utm_source=morning_brew", None))
@@ -53,7 +53,7 @@ fn test_example_1() {
 #[test]
 fn test_spec_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_spec_1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_spec_1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -70,7 +70,7 @@ fn test_spec_1() {
             .updated(actual.entries[0].updated)             // not in test content
             .id("https://jsonfeed.org/2017/05/17/announcing_json_feed")
             .title(Text::new("Announcing JSON Feed".into()))
-            .published_rfc3339("2017-05-17T08:02:12-07:00")
+            .published("2017-05-17T08:02:12-07:00")
             .link(Link::new("https://jsonfeed.org/2017/05/17/announcing_json_feed", None))
             .author(Person::new("Brent Simmons and Manton Reece")
                 .uri("https://jsonfeed.org/"))
@@ -88,7 +88,7 @@ fn test_spec_1() {
 #[test]
 fn test_optional_entry_id() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_elastic_1.1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_elastic_1.1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     assert!(!actual.id.is_empty());
@@ -101,7 +101,7 @@ fn test_optional_entry_id() {
 #[test]
 fn test_elastic_v1_1() {
     // Parse the feed
-    let test_data = test::fixture_as_string("jsonfeed_elastic_1.1.json");
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_elastic_1.1.json");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Check language was extracted correctly for the feed

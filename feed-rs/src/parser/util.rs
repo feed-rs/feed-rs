@@ -1,14 +1,16 @@
-use crate::model::Text;
-use crate::parser::ParseFeedResult;
-use crate::xml::Element;
-use chrono::{DateTime, Utc};
-use regex::{Captures, Regex};
 use std::error::Error;
 use std::io::BufRead;
 use std::ops::Add;
 use std::time::Duration;
+
+use chrono::{DateTime, Utc};
+use regex::{Captures, Regex};
 use url::Url;
 use uuid::Uuid;
+
+use crate::model::Text;
+use crate::parser::{ParseFeedResult, Parser};
+use crate::xml::Element;
 
 lazy_static! {
     // Initialise the set of regular expressions we use to clean up broken dates
@@ -67,6 +69,18 @@ pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult
     Ok(element.children_as_string()?.map(Text::html))
 }
 
+/// Generified timestamp parser
+pub(crate) type TimestampParser = fn(&str) -> Option<DateTime<Utc>>;
+
+/// Handles date/time
+pub(crate) fn handle_timestamp<R: BufRead>(parser: &Parser, element: Element<R>) -> Option<DateTime<Utc>> {
+    if let Some(text) = element.child_as_text() {
+        parser.parse_timestamp(&text)
+    } else {
+        None
+    }
+}
+
 /// Simplifies the "if let ... = parse ... assign" block
 pub(crate) fn if_some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
     if let Some(v) = v {
@@ -79,6 +93,17 @@ pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>,
     if let Ok(v) = v {
         func(Some(v))
     }
+}
+
+/// Parses a timestamp using a variety of strategies to try and deal with the remarkable variability and non-standards
+/// compliant text on the internet.
+pub(crate) fn parse_timestamp_lenient(original: &str) -> Option<DateTime<Utc>> {
+    // Curiously, we see RFC-3339 dates in RSS 2 feeds, and it is supposed to be the format for Atom and Json too so we try this first
+    try_parse_timestamp_rfc3339_lenient(original)
+        // Next is the format for RSS 2, which is used often
+        .or_else(|| try_parse_timestamp_rfc2822_lenient(original))
+        // And we also have RFC 1123 to complete the set of RFCs
+        .or_else(|| try_parse_timestamp_rfc1123_lenient(original))
 }
 
 // Parses a URI, potentially resolving relative URIs against the base if provided
@@ -103,47 +128,37 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
     }
 }
 
-/// Parses a timestamp from an RSS2 feed.
-/// This should be an RFC-2822 formatted timestamp but we need a bunch of fixes / workarounds for the generally broken stuff we find on the internet
-pub(crate) fn timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
-    // Curiously, we see RFC-3339 dates in RSS 2 feeds so try that first
-    if let Some(ts) = timestamp_rfc3339_lenient(original) {
-        return Some(ts);
-    }
-
-    // Next try RFC-2822. Need to clean the input string by applying each of the regex fixes
-    let cleaned = original.trim().to_string();
-    let mut maybe_rfc2822 = cleaned.clone();
-    for (regex, replacement) in RFC2822_FIXES.iter() {
-        maybe_rfc2822 = regex.replace(&maybe_rfc2822, *replacement).to_string();
-    }
-    if let Ok(ts) = DateTime::parse_from_rfc2822(&maybe_rfc2822).map(|t| t.with_timezone(&Utc)) {
-        return Some(ts);
-    }
-
-    // Now try RFC-1123, because hey...its the internet. Why follow standards?
-    let mut maybe_rfc1123 = cleaned;
+// Parses a timestamp from a potentially RFC-1123 formatted timestamp (which isn't part of any feed standard, but hey
+// its the internet, why follow standards?
+fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
+    let mut cleaned = original.trim().to_string();
     for (regex, replacement) in RFC1123_FIXES.iter() {
-        maybe_rfc1123 = regex.replace(&maybe_rfc1123, *replacement).to_string();
-    }
-    if let Ok(ts) = DateTime::parse_from_str(&maybe_rfc1123, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)) {
-        return Some(ts);
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    // Can't make sense of it
-    None
+    DateTime::parse_from_str(&cleaned, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)).ok()
 }
 
-/// Parses a timestamp from an Atom or JSON feed.
-/// This should be an RFC-3339 formatted timestamp but we need fixes for feeds that don't comply
-pub(crate) fn timestamp_rfc3339_lenient(text: &str) -> Option<DateTime<Utc>> {
+// Parses a timestamp from a potentially RFC-2822 formatted timestamp
+fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
     // Clean the input string by applying each of the regex fixes
-    let mut text = text.trim().to_string();
-    for (regex, replacement) in RFC3339_FIXES.iter() {
-        text = regex.replace(&text, *replacement).to_string();
+    let mut cleaned = original.trim().to_string();
+    for (regex, replacement) in RFC2822_FIXES.iter() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    DateTime::parse_from_rfc3339(text.trim()).map(|t| t.with_timezone(&Utc)).ok()
+    DateTime::parse_from_rfc2822(&cleaned).map(|t| t.with_timezone(&Utc)).ok()
+}
+
+// Parses a timestamp from a potentially RFC-3339 formatted string
+fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
+    // Clean the input string by applying each of the regex fixes
+    let mut cleaned = original.trim().to_string();
+    for (regex, replacement) in RFC3339_FIXES.iter() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    }
+
+    DateTime::parse_from_rfc3339(cleaned.trim()).map(|t| t.with_timezone(&Utc)).ok()
 }
 
 /// Generates a new UUID.
@@ -252,7 +267,7 @@ mod tests {
         ];
 
         for (source, expected) in tests {
-            let parsed = timestamp_rfc2822_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
+            let parsed = parse_timestamp_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
             assert_eq!(parsed, expected);
         }
     }
@@ -267,7 +282,7 @@ mod tests {
         ];
 
         for (source, expected) in tests {
-            let parsed = timestamp_rfc3339_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
+            let parsed = parse_timestamp_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
             assert_eq!(parsed, expected);
         }
     }

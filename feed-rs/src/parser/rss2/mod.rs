@@ -1,14 +1,13 @@
 use std::io::BufRead;
 
-use chrono::{DateTime, Utc};
 use mime::Mime;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person, Text};
-use crate::parser::atom;
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::mediarss;
 use crate::parser::mediarss::handle_media_element;
-use crate::parser::util::{if_ok_then_some, if_some_then, timestamp_rfc2822_lenient};
+use crate::parser::util::{if_ok_then_some, if_some_then};
+use crate::parser::{atom, Parser};
 use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 
@@ -16,21 +15,21 @@ use crate::xml::{Element, NS};
 mod tests;
 
 /// Parses an RSS 2.0 feed into our model
-pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
     // Only expecting a channel element
     let found_channel = root.children().find(|result| match result {
         Ok(element) => &element.name == "channel",
         Err(_) => true,
     });
     if let Some(channel) = found_channel {
-        handle_channel(channel?)
+        handle_channel(parser, channel?)
     } else {
         Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
     }
 }
 
 // Handles the <channel> element
-fn handle_channel<R: BufRead>(channel: Element<R>) -> ParseFeedResult<Feed> {
+fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::RSS2);
 
     for child in channel.children() {
@@ -52,10 +51,10 @@ fn handle_channel<R: BufRead>(channel: Element<R>) -> ParseFeedResult<Feed> {
 
             (NS::RSS, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
 
-            (NS::RSS, "pubDate") => feed.published = handle_timestamp(child),
+            (NS::RSS, "pubDate") => feed.published = util::handle_timestamp(parser, child),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = handle_timestamp(child),
+            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = util::handle_timestamp(parser, child),
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
@@ -65,7 +64,7 @@ fn handle_channel<R: BufRead>(channel: Element<R>) -> ParseFeedResult<Feed> {
 
             (NS::RSS, "image") => feed.logo = handle_image(child)?,
 
-            (NS::RSS, "item") => if_some_then(handle_item(child)?, |item| feed.entries.push(item)),
+            (NS::RSS, "item") => if_some_then(handle_item(parser, child)?, |item| feed.entries.push(item)),
 
             (NS::Itunes, _) => handle_itunes_channel_element(child, &mut feed)?,
 
@@ -207,7 +206,7 @@ fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 // * "content:encoded" is mapped to the content field of an Entry
 // * MediaRSS elements without a parent group are added to a default MediaObject
 // * Itunes elements are added to the default MediaObject
-fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
+fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     // Create a default media object e.g. MediaRSS elements that are not within a "<media:group>", enclosures etc
@@ -230,7 +229,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (NS::RSS, "enclosure") => handle_enclosure(child, &mut media_obj),
 
-            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = handle_timestamp(child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
@@ -267,15 +266,6 @@ fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
 fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
     if let Ok(Some(text)) = element.children_as_string() {
         Some(Text::new(text))
-    } else {
-        None
-    }
-}
-
-// Handles date/time
-fn handle_timestamp<R: BufRead>(element: Element<R>) -> Option<DateTime<Utc>> {
-    if let Some(text) = element.child_as_text() {
-        timestamp_rfc2822_lenient(&text)
     } else {
         None
     }

@@ -1,27 +1,25 @@
 use std::io::BufRead;
 
-use chrono::{DateTime, Utc};
-
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
-use crate::parser::util::{if_some_then, timestamp_rfc2822_lenient};
-use crate::parser::{util, ParseFeedResult};
+use crate::parser::util::if_some_then;
+use crate::parser::{util, ParseFeedResult, Parser};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
 mod tests;
 
 /// Parses an RSS 1.0 feed into our model
-pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
+pub(crate) fn parse<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::RSS1);
 
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "channel") => handle_channel(&mut feed, child)?,
+            (NS::RSS, "channel") => handle_channel(parser, &mut feed, child)?,
 
             (NS::RSS, "image") => feed.logo = handle_image(child)?,
 
-            (NS::RSS, "item") => if_some_then(handle_item(child)?, |entry| feed.entries.push(entry)),
+            (NS::RSS, "item") => if_some_then(handle_item(parser, child)?, |entry| feed.entries.push(entry)),
 
             // Nothing required for unknown elements
             _ => {}
@@ -32,7 +30,7 @@ pub(crate) fn parse<R: BufRead>(root: Element<R>) -> ParseFeedResult<Feed> {
 }
 
 // Handles the <channel> element
-fn handle_channel<R: BufRead>(feed: &mut Feed, channel: Element<R>) -> ParseFeedResult<()> {
+fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element<R>) -> ParseFeedResult<()> {
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
@@ -44,7 +42,7 @@ fn handle_channel<R: BufRead>(feed: &mut Feed, channel: Element<R>) -> ParseFeed
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
 
-            (NS::DublinCore, "date") => feed.published = handle_timestamp(child),
+            (NS::DublinCore, "date") => feed.published = util::handle_timestamp(parser, child),
 
             (NS::DublinCore, "language") => feed.language = child.child_as_text(),
 
@@ -81,7 +79,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 }
 
 // Handles <item>
-fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>> {
+fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
     // Per https://www.w3.org/wiki/RssContent:
@@ -102,7 +100,7 @@ fn handle_item<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Entry>
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
-            (NS::DublinCore, "date") => entry.published = handle_timestamp(child),
+            (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
 
             (NS::DublinCore, "description") => {
                 if entry.summary.is_none() {
@@ -146,13 +144,4 @@ fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
 // Handles <title>, <description>
 fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
     element.child_as_text().map(Text::new)
-}
-
-// Handles date/time
-fn handle_timestamp<R: BufRead>(element: Element<R>) -> Option<DateTime<Utc>> {
-    if let Some(text) = element.child_as_text() {
-        timestamp_rfc2822_lenient(&text)
-    } else {
-        None
-    }
 }
