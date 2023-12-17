@@ -231,15 +231,18 @@ pub struct Builder {
 }
 
 impl Builder {
+    /// Create a new instance of the builder
     pub fn new() -> Builder {
         Builder::default()
     }
 
+    /// Source of the content, used to resolve relative URLs in XML based feeds
     pub fn base_uri<S: AsRef<str>>(&mut self, uri: S) -> &mut Self {
         self.base_uri = Some(uri.as_ref().to_string());
         self
     }
 
+    /// Create a new instance of the parser
     pub fn build(self) -> Parser {
         Parser {
             base_uri: self.base_uri,
