@@ -103,7 +103,7 @@ impl fmt::Display for ParseErrorKind {
 /// Parser for various feed formats
 pub struct Parser {
     base_uri: Option<String>,
-    timestamp_parser: TimestampParser,
+    timestamp_parser: Box<TimestampParser>,
 }
 
 impl Parser {
@@ -222,7 +222,7 @@ pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<
 /// Builder to create instances of `FeedParser`
 pub struct Builder {
     base_uri: Option<String>,
-    timestamp_parser: TimestampParser,
+    timestamp_parser: Box<TimestampParser>,
 }
 
 impl Builder {
@@ -241,13 +241,16 @@ impl Builder {
     pub fn build(self) -> Parser {
         Parser {
             base_uri: self.base_uri,
-            timestamp_parser: self.timestamp_parser,
+            timestamp_parser: Box::new(self.timestamp_parser),
         }
     }
 
     /// Registers a custom timestamp parser
-    pub fn timestamp_parser(mut self, ts_parser: TimestampParser) -> Self {
-        self.timestamp_parser = ts_parser;
+    pub fn timestamp_parser<F>(mut self, ts_parser: F) -> Self
+    where
+        F: Fn(&str) -> Option<DateTime<Utc>> + 'static,
+    {
+        self.timestamp_parser = Box::new(ts_parser);
         self
     }
 }
@@ -257,7 +260,7 @@ impl Default for Builder {
     fn default() -> Self {
         Builder {
             base_uri: None,
-            timestamp_parser: util::parse_timestamp_lenient,
+            timestamp_parser: Box::new(util::parse_timestamp_lenient),
         }
     }
 }
