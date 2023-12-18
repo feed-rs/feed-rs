@@ -65,7 +65,7 @@ lazy_static! {
 static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
 /// Generified timestamp parser
-pub(crate) type TimestampParser = fn(&str) -> Option<DateTime<Utc>>;
+pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>>;
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
