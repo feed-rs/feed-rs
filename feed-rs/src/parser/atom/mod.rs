@@ -125,7 +125,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
         Some(ct) => {
             if let Ok(mime) = ct.parse::<Mime>() {
                 element
-                    .child_as_text()
+                    .children_as_string()?
                     .map(|body| {
                         let content = Content {
                             body: Some(body),
