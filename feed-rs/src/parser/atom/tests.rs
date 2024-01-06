@@ -542,3 +542,18 @@ fn test_reddit() {
     let media_obj = &entry.media[0];
     assert_eq!(media_obj, &expected);
 }
+
+// Handle text/html specified as a mime type on content
+#[test]
+fn test_scattered() {
+    let test_data = test::fixture_as_string("atom/atom_scattered.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
+    assert!(actual.entries[0]
+        .content
+        .as_ref()
+        .unwrap()
+        .body
+        .as_ref()
+        .unwrap()
+        .contains("there are no strings on me"));
+}
