@@ -95,7 +95,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
     // from http://www.atomenabled.org/developers/syndication/#contentElement
     match content_type.as_deref() {
         // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
-        Some("text") | Some("html") | Some("xhtml") | None => {
+        Some("text") | Some("html") | Some("xhtml") | Some("text/html") | None => {
             handle_text(element)?
                 .map(|text| {
                     let mut content = Content::default();
@@ -283,7 +283,7 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 
     let mime = match type_attr {
         "text" => Ok(mime::TEXT_PLAIN),
-        "html" | "xhtml" => Ok(mime::TEXT_HTML),
+        "html" | "xhtml" | "text/html" => Ok(mime::TEXT_HTML),
 
         // Unknown content type
         _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),
