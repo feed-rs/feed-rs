@@ -73,7 +73,7 @@ pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult
 }
 
 // Handles "xml:lang" as an attribute (e.g. in Atom feeds)
-pub fn handle_language_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
+pub(crate) fn handle_language_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
     element.attr_value("xml:lang")
 }
 
