@@ -16,6 +16,9 @@ mod tests;
 /// Parses an Atom feed into our model
 pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
+
+    feed.language = util::handle_language_attr(&root);
+
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {
@@ -162,7 +165,10 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
 
             (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
 
-            (NS::Atom, "content") => entry.content = handle_content(child)?,
+            (NS::Atom, "content") => {
+                entry.language = util::handle_language_attr(&child);
+                entry.content = handle_content(child)?;
+            }
 
             (NS::Atom, "link") => if_some_then(handle_link(child), |link| entry.links.push(link)),
 

@@ -72,6 +72,11 @@ pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult
     Ok(element.children_as_string()?.map(Text::html))
 }
 
+// Handles "xml:lang" as an attribute (e.g. in Atom feeds)
+pub fn handle_language_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
+    element.attr_value("xml:lang")
+}
+
 // Handles <link>
 pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
     element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))

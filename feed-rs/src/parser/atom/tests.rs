@@ -26,6 +26,7 @@ fn test_example_1() {
                 .id("tag:example.org,2003:3.2397")
                 .title(Text::new("Atom draft-07 snapshot".into()))
                 .updated_parsed("2005-07-31T12:29:29Z")
+                .language("en")
                 .author(Person::new("Mark Pilgrim").uri("http://example.org/").email("f8dy@example.com"))
                 .link(Link::new("http://example.org/2005/04/02/atom", None).rel("alternate").media_type("text/html"))
                 .link(
@@ -55,6 +56,7 @@ fn test_example_2() {
 
     let expected = Feed::new(FeedType::Atom)
         .id("tag:theregister.co.uk,2005:feed/theregister.co.uk/science/")
+        .language("en")
         .title(Text::new("The Register - Science".into()))
         .link(Link::new("https://www.theregister.co.uk/science/headlines.atom", None)
             .rel("self")
@@ -122,6 +124,7 @@ fn test_example_3() {
             .rel("hub"))
         .entry(Entry::default()
             .title(Text::new("Time to Transfer Risk: Why Security Complexity & VPNs Are No Longer Sustainable".into()))
+            .language("en-us")
             .link(Link::new("http://feedproxy.google.com/~r/TheAkamaiBlog/~3/NnQEuqRSyug/time-to-transfer-risk-why-security-complexity-vpns-are-no-longer-sustainable.html", None)
                 .rel("alternate")
                 .media_type("text/html"))
@@ -223,6 +226,7 @@ fn test_example_6() {
 
     let expected = Feed::new(FeedType::Atom)
         .id("tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases")
+        .language("en-US")
         .link(
             Link::new("https://github.com/feed-rs/feed-rs/releases", None)
                 .rel("alternate")
