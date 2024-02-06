@@ -299,6 +299,9 @@ pub struct Entry {
 
     /// Atom (optional): The language specified on the item
     pub language: Option<String>,
+    /// Atom (optional): The base url specified on the item to resolve any relative
+    /// references found within the scope on the item
+    pub base: Option<String>,
 }
 
 impl Default for Entry {
@@ -318,6 +321,7 @@ impl Default for Entry {
             rights: None,
             media: Vec::new(),
             language: None,
+            base: None,
         }
     }
 }
@@ -391,6 +395,11 @@ impl Entry {
 
     pub fn language(mut self, language: &str) -> Self {
         self.language = Some(language.to_owned());
+        self
+    }
+
+    pub fn base(mut self, url: &str) -> Self {
+        self.base = Some(url.to_owned());
         self
     }
 }

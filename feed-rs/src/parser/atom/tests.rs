@@ -27,6 +27,7 @@ fn test_example_1() {
                 .title(Text::new("Atom draft-07 snapshot".into()))
                 .updated_parsed("2005-07-31T12:29:29Z")
                 .language("en")
+                .base("http://diveintomark.org/")
                 .author(Person::new("Mark Pilgrim").uri("http://example.org/").email("f8dy@example.com"))
                 .link(Link::new("http://example.org/2005/04/02/atom", None).rel("alternate").media_type("text/html"))
                 .link(
@@ -125,6 +126,7 @@ fn test_example_3() {
         .entry(Entry::default()
             .title(Text::new("Time to Transfer Risk: Why Security Complexity & VPNs Are No Longer Sustainable".into()))
             .language("en-us")
+            .base("https://blogs.akamai.com/")
             .link(Link::new("http://feedproxy.google.com/~r/TheAkamaiBlog/~3/NnQEuqRSyug/time-to-transfer-risk-why-security-complexity-vpns-are-no-longer-sustainable.html", None)
                 .rel("alternate")
                 .media_type("text/html"))
@@ -560,4 +562,12 @@ fn test_scattered() {
         .as_ref()
         .unwrap()
         .contains("there are no strings on me"));
+}
+
+// Handle xml:base attribute on content
+#[test]
+fn test_atom_content_xml_base() {
+    let test_data = test::fixture_as_string("atom/atom_xml_base.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    assert!(actual.entries[0].base.as_ref().unwrap().eq("https://numi.st/post/2022/travel-uke/"));
 }
