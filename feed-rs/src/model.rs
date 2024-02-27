@@ -230,7 +230,7 @@ impl Hash for Feed {
         self.updated.hash(state);
         self.authors
             .iter()
-            .map(|author| author.email.clone().unwrap() + &author.name)
+            .map(|author| author.email.clone().unwrap_or_default() + &author.name)
             .collect::<String>()
             .hash(state);
 
@@ -431,7 +431,7 @@ impl Hash for Entry {
         self.updated.hash(state);
         self.authors
             .iter()
-            .map(|author| author.email.clone().unwrap() + &author.name)
+            .map(|author| author.email.clone().unwrap_or_default() + &author.name)
             .collect::<String>()
             .hash(state);
 
