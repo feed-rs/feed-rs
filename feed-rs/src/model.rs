@@ -1034,3 +1034,9 @@ impl Text {
         self
     }
 }
+
+impl Default for Text {
+    fn default() -> Self {
+        Text::new(String::new())
+    }
+}
