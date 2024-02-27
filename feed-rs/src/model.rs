@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{hash::Hash, time::Duration};
 
 use chrono::{DateTime, Utc};
 use mime::Mime;
@@ -31,7 +31,7 @@ use url::Url;
 ///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq)]
 pub struct Feed {
     /// Type of this feed (e.g. RSS2, Atom etc)
     pub feed_type: FeedType,
@@ -218,6 +218,35 @@ impl Feed {
     }
 }
 
+impl PartialEq for Feed {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+impl Hash for Feed {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+        self.title.clone().unwrap_or(Text::new("".to_string())).content.hash(state);
+        self.updated.hash(state);
+        self.authors
+            .iter()
+            .map(|author| author.email.clone().unwrap() + &author.name)
+            .collect::<String>()
+            .hash(state);
+
+        self.description.clone().unwrap_or(Text::new("".to_string())).content.hash(state);
+        self.links.iter().map(|link| link.href.clone()).collect::<String>().hash(state);
+        self.language.hash(state);
+        self.published.hash(state);
+    }
+}
+
+impl PartialOrd for Feed {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.updated.partial_cmp(&other.updated)
+    }
+}
+
 /// Type of a feed (RSS, Atom etc)
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FeedType {
@@ -229,7 +258,7 @@ pub enum FeedType {
 }
 
 /// An item within a feed
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
     /// A unique identifier for this item with a feed. If not supplied it is initialised to a hash of the first link or a UUID if not available.
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
@@ -392,6 +421,23 @@ impl Entry {
     pub fn language(mut self, language: &str) -> Self {
         self.language = Some(language.to_owned());
         self
+    }
+}
+
+impl Hash for Entry {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+        self.title.clone().unwrap_or(Text::new("".to_string())).content.hash(state);
+        self.updated.hash(state);
+        self.authors
+            .iter()
+            .map(|author| author.email.clone().unwrap() + &author.name)
+            .collect::<String>()
+            .hash(state);
+
+        self.links.iter().map(|link| link.href.clone()).collect::<String>().hash(state);
+        self.language.hash(state);
+        self.published.hash(state);
     }
 }
 
@@ -667,7 +713,7 @@ impl Link {
 
 /// The top-level representation of a media object
 /// i.e. combines "media:*" elements from the RSS Media spec such as those under a media:group
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct MediaObject {
     /// Title of the object (from the media:title element)
     pub title: Option<Text>,
@@ -750,6 +796,8 @@ pub struct MediaCommunity {
     pub stats_views: Option<u64>,
     pub stats_favorites: Option<u64>,
 }
+
+impl Eq for MediaCommunity {}
 
 impl MediaCommunity {
     pub(crate) fn new() -> MediaCommunity {
