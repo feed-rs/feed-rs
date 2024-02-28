@@ -220,7 +220,7 @@ impl Feed {
 
 impl PartialEq for Feed {
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
+        self.id == other.id && self.title == other.title && self.published == other.published
     }
 }
 impl Hash for Feed {
