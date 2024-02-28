@@ -560,6 +560,45 @@ impl Hash for Entry {
     }
 }
 
+#[cfg(test)]
+mod cmp_entry_tests {
+    use std::hash::Hasher;
+
+    use crate::parser;
+
+    use super::*;
+
+    #[test]
+    fn test_hash_entry() {
+        let manual_entry = Entry::default();
+
+        //  Hasher needs:
+        //  id, title, updated, authors, links, language, published
+        //  to generate hash
+        //  so we only need these fields to be equal to generate a valid and equal hash
+
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_1.xml").unwrap();
+        let parsed_feed = parser::parse(file).unwrap();
+
+        let manual_entry = manual_entry
+            .id(&parsed_feed.entries[0].id)
+            .title(Text::new("Example entry".to_string()))
+            .published("Sun, 06 Sep 2009 16:20:00 +0000")
+            .updated(Some(DateTime::parse_from_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000").unwrap().into()))
+            .link(Link::new("http://www.example.com/blog/post/1", None));
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        manual_entry.hash(&mut state);
+        let manual_hash = state.finish();
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        parsed_feed.entries[0].hash(&mut state);
+        let parsed_hash = state.finish();
+
+        assert_eq!(manual_hash, parsed_hash);
+    }
+}
+
 /// Represents the category of a feed or entry
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#category
