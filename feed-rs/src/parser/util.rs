@@ -77,6 +77,11 @@ pub(crate) fn handle_language_attr<R: BufRead>(element: &Element<R>) -> Option<S
     element.attr_value("xml:lang")
 }
 
+// Handles "xml:base" as an attribute (e.g. in Atom feeds)
+pub(crate) fn handle_base_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
+    element.attr_value("xml:base")
+}
+
 // Handles <link>
 pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
     element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))

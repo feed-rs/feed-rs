@@ -166,6 +166,7 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
             (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
 
             (NS::Atom, "content") => {
+                entry.base = util::handle_base_attr(&child);
                 entry.language = util::handle_language_attr(&child);
                 entry.content = handle_content(child)?;
             }
