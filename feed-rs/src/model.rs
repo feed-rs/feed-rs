@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{hash::Hash, time::Duration};
 
 use chrono::{DateTime, Utc};
 use mime::Mime;
@@ -31,7 +31,7 @@ use url::Url;
 ///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq)]
 pub struct Feed {
     /// Type of this feed (e.g. RSS2, Atom etc)
     pub feed_type: FeedType,
@@ -218,6 +218,154 @@ impl Feed {
     }
 }
 
+impl PartialEq for Feed {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id && self.title == other.title && self.published == other.published
+    }
+}
+impl Hash for Feed {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+        self.title.clone().unwrap_or(Text::new("".to_string())).content.hash(state);
+        self.updated.hash(state);
+        self.authors
+            .iter()
+            .map(|author| author.email.clone().unwrap_or_default() + &author.name)
+            .collect::<String>()
+            .hash(state);
+
+        self.description.clone().unwrap_or(Text::new("".to_string())).content.hash(state);
+        self.links.iter().map(|link| link.href.clone()).collect::<String>().hash(state);
+        self.language.hash(state);
+        self.published.hash(state);
+    }
+}
+
+impl PartialOrd for Feed {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.updated.partial_cmp(&other.updated)
+    }
+}
+
+#[cfg(test)]
+mod cmp_feed_tests {
+    use std::hash::Hasher;
+
+    use crate::parser;
+
+    use super::*;
+
+    #[test]
+    fn test_feed_equality() {
+        let manual_feed = Feed::new(FeedType::RSS2);
+
+        // Only need id (hash from link in rss), title and date published equal to be equal
+
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_1.xml").unwrap();
+        let parsed_feed = parser::parse(file).unwrap();
+
+        let manual_feed = manual_feed
+            .id(&parsed_feed.id)
+            .title(Text::new("RSS Title".to_string()))
+            .published("Sun, 06 Sep 2009 16:20:00 +0000")
+            .description(Text::new("This is an example of an RSS feed".to_string()))
+            .link(Link::new("http://www.example.com/main.html", None));
+
+        assert_eq!(manual_feed, parsed_feed);
+    }
+
+    #[test]
+    fn test_feed_inequality() {
+        let manual_feed = Feed::new(FeedType::RSS2);
+
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_1.xml").unwrap();
+        let parsed_feed = parser::parse(file).unwrap();
+
+        let manual_feed = manual_feed
+            .id(&parsed_feed.id)
+            .title(Text::new("Another title".to_string()))
+            .published("Sun, 06 Sep 2009 16:20:00 +0000")
+            .description(Text::new("This is an example of an RSS feed".to_string()))
+            .link(Link::new("http://www.example.com/main.html", None));
+
+        assert_ne!(manual_feed, parsed_feed);
+    }
+
+    #[test]
+    fn test_hash_feed() {
+        let manual_feed = Feed::new(FeedType::RSS2);
+
+        //  Hasher needs:
+        //  id, title, updated, authors, description, links, language, published
+        // to generate hash
+        //  so we only need these fields to be equal to generate a valid and equal hash
+
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_1.xml").unwrap();
+        let parsed_feed = parser::parse(file).unwrap();
+
+        let manual_feed = manual_feed
+            .id(&parsed_feed.id)
+            .title(Text::new("RSS Title".to_string()))
+            .published("Sun, 06 Sep 2009 16:20:00 +0000")
+            .updated(Some(DateTime::parse_from_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000").unwrap().into()))
+            .description(Text::new("This is an example of an RSS feed".to_string()))
+            .link(Link::new("http://www.example.com/main.html", None));
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        manual_feed.hash(&mut state);
+        let manual_hash = state.finish();
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        parsed_feed.hash(&mut state);
+        let parsed_hash = state.finish();
+
+        assert_eq!(manual_hash, parsed_hash);
+    }
+
+    #[test]
+    fn test_diff_hash_feed() {
+        let manual_feed = Feed::new(FeedType::RSS2);
+
+        //  Hasher needs:
+        //  id, title, updated, authors, description, links, language, published
+        // to generate hash
+        //  so we only need these fields to be equal to generate a valid and equal hash
+
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_1.xml").unwrap();
+        let parsed_feed = parser::parse(file).unwrap();
+
+        let manual_feed = manual_feed
+            .id(&parsed_feed.id)
+            .title(Text::new("RSS Title".to_string()))
+            .published("Sun, 06 Sep 2009 16:20:00 +0000")
+            .updated(Some(DateTime::parse_from_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000").unwrap().into()))
+            .description(Text::new("This is an example of an RSS feed".to_string()))
+            .link(Link::new("http://other_rss.site.com", None));
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        manual_feed.hash(&mut state);
+        let manual_hash = state.finish();
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        parsed_feed.hash(&mut state);
+        let parsed_hash = state.finish();
+
+        assert_ne!(manual_hash, parsed_hash);
+    }
+
+    #[test]
+    fn test_feed_ordering() {
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_1.xml").unwrap();
+        let parsed_feed = parser::parse(file).unwrap();
+
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_2.xml").unwrap();
+        let parsed_feed_2 = parser::parse(file).unwrap();
+        let parsed_feed_2 = parsed_feed_2.updated(Some(DateTime::parse_from_rfc2822("Mon, 06 Sep 2010 00:01:01 +0000").unwrap().into())); // 1 second later
+
+        assert!(parsed_feed_2 > parsed_feed);
+    }
+}
+
 /// Type of a feed (RSS, Atom etc)
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FeedType {
@@ -229,7 +377,7 @@ pub enum FeedType {
 }
 
 /// An item within a feed
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
     /// A unique identifier for this item with a feed. If not supplied it is initialised to a hash of the first link or a UUID if not available.
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
@@ -401,6 +549,62 @@ impl Entry {
     pub fn base(mut self, url: &str) -> Self {
         self.base = Some(url.to_owned());
         self
+    }
+}
+
+impl Hash for Entry {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+        self.title.clone().unwrap_or(Text::new("".to_string())).content.hash(state);
+        self.updated.hash(state);
+        self.authors
+            .iter()
+            .map(|author| author.email.clone().unwrap_or_default() + &author.name)
+            .collect::<String>()
+            .hash(state);
+
+        self.links.iter().map(|link| link.href.clone()).collect::<String>().hash(state);
+        self.language.hash(state);
+        self.published.hash(state);
+    }
+}
+
+#[cfg(test)]
+mod cmp_entry_tests {
+    use std::hash::Hasher;
+
+    use crate::parser;
+
+    use super::*;
+
+    #[test]
+    fn test_hash_entry() {
+        let manual_entry = Entry::default();
+
+        //  Hasher needs:
+        //  id, title, updated, authors, links, language, published
+        //  to generate hash
+        //  so we only need these fields to be equal to generate a valid and equal hash
+
+        let file = std::fs::File::open("fixture/rss2/rss_2.0_example_1.xml").unwrap();
+        let parsed_feed = parser::parse(file).unwrap();
+
+        let manual_entry = manual_entry
+            .id(&parsed_feed.entries[0].id)
+            .title(Text::new("Example entry".to_string()))
+            .published("Sun, 06 Sep 2009 16:20:00 +0000")
+            .updated(Some(DateTime::parse_from_rfc2822("Mon, 06 Sep 2010 00:01:00 +0000").unwrap().into()))
+            .link(Link::new("http://www.example.com/blog/post/1", None));
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        manual_entry.hash(&mut state);
+        let manual_hash = state.finish();
+
+        let mut state = std::collections::hash_map::DefaultHasher::new();
+        parsed_feed.entries[0].hash(&mut state);
+        let parsed_hash = state.finish();
+
+        assert_eq!(manual_hash, parsed_hash);
     }
 }
 
@@ -676,7 +880,7 @@ impl Link {
 
 /// The top-level representation of a media object
 /// i.e. combines "media:*" elements from the RSS Media spec such as those under a media:group
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct MediaObject {
     /// Title of the object (from the media:title element)
     pub title: Option<Text>,
@@ -759,6 +963,8 @@ pub struct MediaCommunity {
     pub stats_views: Option<u64>,
     pub stats_favorites: Option<u64>,
 }
+
+impl Eq for MediaCommunity {}
 
 impl MediaCommunity {
     pub(crate) fn new() -> MediaCommunity {
@@ -993,5 +1199,11 @@ impl Text {
     pub fn content_type(mut self, content_type: &str) -> Self {
         self.content_type = content_type.parse::<Mime>().unwrap();
         self
+    }
+}
+
+impl Default for Text {
+    fn default() -> Self {
+        Text::new(String::new())
     }
 }
