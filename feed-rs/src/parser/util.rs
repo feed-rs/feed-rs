@@ -17,8 +17,8 @@ use fixes::PatSub;
 
 /// Set of regular expressions we use to clean up broken dates
 mod fixes {
-    use super::Regex;
     use super::OnceLock;
+    use super::Regex;
     pub struct PatSub(pub Regex, pub &'static str);
 
     // Feeds may not comply with the specification
@@ -42,19 +42,15 @@ mod fixes {
                 // RFC 2822 mandates a +/- 4 digit offset, or UT/GMT (obsolete) but feeds have "UTC" or "-0000"
                 // Suffixes that are not handled by the parser are trimmed and replaced with the corresponding value timezone.
                 PatSub(Regex::new("(UTC|-0000$)").unwrap(), "+0000"),
-
                 // The short weekday can be wrong e.g. "Wed, 25 Aug 2012" was actually a Saturday - https://www.timeanddate.com/calendar/monthly.html?year=2012&month=8
                 // or it can be something other than a short weekday name e.g. "Thurs, 13 Jul 2011 07:38:00 GMT"
                 // As its extraneous, we just remove it
                 PatSub(Regex::new("(Sun|Mon|Tue|Wed|Thu|Fri|Sat)[a-z]*, ").unwrap(), ""),
-
                 // Long month names are not allowed, so replace them with short
                 PatSub(Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*").unwrap(), "$1"),
-
                 // Some timestamps have an hours component adjusted by 24h, while not adjusting the day so we just reset to start of day
                 #[allow(clippy::trivial_regex)]
                 PatSub(Regex::new(" 24:").unwrap(), " 00:"),
-
                 // Single digit hours are padded
                 PatSub(Regex::new(" ([0-9]):").unwrap(), " 0${1}:"),
             ]
@@ -69,11 +65,10 @@ mod fixes {
                 // inserts missing colon in timezone
                 PatSub(Regex::new(r"(\+|-)(\d{2})(\d{2})").unwrap(), "${1}${2}:${3}"),
                 // appends time (midnight) and timezone (utc) if missing
-                PatSub(Regex::new(r"-\d{2}$").unwrap(), "${0}T00:00:00+00:00")
+                PatSub(Regex::new(r"-\d{2}$").unwrap(), "${0}T00:00:00+00:00"),
             ]
         })
     }
-
 }
 
 // RFC-1123 format e.g. Tue, 15 Nov 2022 20:15:04 Z
