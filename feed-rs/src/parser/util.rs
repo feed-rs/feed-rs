@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::io::BufRead;
 use std::ops::Add;
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use chrono::{DateTime, Utc};
@@ -12,52 +13,62 @@ use crate::model::{Link, Text};
 use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
 
-lazy_static! {
-    // Initialise the set of regular expressions we use to clean up broken dates
+use fixes::PatSub;
+
+/// Set of regular expressions we use to clean up broken dates
+mod fixes {
+    use super::OnceLock;
+    use super::Regex;
+    pub struct PatSub(pub Regex, pub &'static str);
 
     // Feeds may not comply with the specification
-    static ref RFC1123_FIXES: Vec<(Regex, &'static str)> = {
-        vec!(
-            // replaces the trailing " Z" with UTC offset
-            (Regex::new(" Z$").unwrap(), " +0000"),
-            // drop the week day name
-            (Regex::new("^[[:alpha:]]{3}, ").unwrap(), ""),
-        )
-    };
+    pub fn rfc1123() -> &'static [PatSub] {
+        static RFC1123: OnceLock<Vec<PatSub>> = OnceLock::new();
+        RFC1123.get_or_init(|| {
+            vec![
+                // replaces the trailing " Z" with UTC offset
+                PatSub(Regex::new(" Z$").unwrap(), " +0000"),
+                // drop the week day name
+                PatSub(Regex::new("^[[:alpha:]]{3}, ").unwrap(), ""),
+            ]
+        })
+    }
 
     // Feeds may not comply with the specification in various ways (https://tools.ietf.org/html/rfc2822#page-14)
-    static ref RFC2822_FIXES: Vec<(Regex, &'static str)> = {
-        vec!(
-            // RFC 2822 mandates a +/- 4 digit offset, or UT/GMT (obsolete) but feeds have "UTC" or "-0000"
-            // Suffixes that are not handled by the parser are trimmed and replaced with the corresponding value timezone.
-            (Regex::new("(UTC|-0000$)").unwrap(), "+0000"),
-
-            // The short weekday can be wrong e.g. "Wed, 25 Aug 2012" was actually a Saturday - https://www.timeanddate.com/calendar/monthly.html?year=2012&month=8
-            // or it can be something other than a short weekday name e.g. "Thurs, 13 Jul 2011 07:38:00 GMT"
-            // As its extraneous, we just remove it
-            (Regex::new("(Sun|Mon|Tue|Wed|Thu|Fri|Sat)[a-z]*, ").unwrap(), ""),
-
-            // Long month names are not allowed, so replace them with short
-            (Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*").unwrap(), "$1"),
-
-            // Some timestamps have an hours component adjusted by 24h, while not adjusting the day so we just reset to start of day
-            #[allow(clippy::trivial_regex)]
-            (Regex::new(" 24:").unwrap(), " 00:"),
-
-            // Single digit hours are padded
-            (Regex::new(" ([0-9]):").unwrap(), " 0${1}:"),
-        )
-    };
+    pub fn rfc2822() -> &'static [PatSub] {
+        static RFC2822: OnceLock<Vec<PatSub>> = OnceLock::new();
+        RFC2822.get_or_init(|| {
+            vec![
+                // RFC 2822 mandates a +/- 4 digit offset, or UT/GMT (obsolete) but feeds have "UTC" or "-0000"
+                // Suffixes that are not handled by the parser are trimmed and replaced with the corresponding value timezone.
+                PatSub(Regex::new("(UTC|-0000$)").unwrap(), "+0000"),
+                // The short weekday can be wrong e.g. "Wed, 25 Aug 2012" was actually a Saturday - https://www.timeanddate.com/calendar/monthly.html?year=2012&month=8
+                // or it can be something other than a short weekday name e.g. "Thurs, 13 Jul 2011 07:38:00 GMT"
+                // As its extraneous, we just remove it
+                PatSub(Regex::new("(Sun|Mon|Tue|Wed|Thu|Fri|Sat)[a-z]*, ").unwrap(), ""),
+                // Long month names are not allowed, so replace them with short
+                PatSub(Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*").unwrap(), "$1"),
+                // Some timestamps have an hours component adjusted by 24h, while not adjusting the day so we just reset to start of day
+                #[allow(clippy::trivial_regex)]
+                PatSub(Regex::new(" 24:").unwrap(), " 00:"),
+                // Single digit hours are padded
+                PatSub(Regex::new(" ([0-9]):").unwrap(), " 0${1}:"),
+            ]
+        })
+    }
 
     // Feeds may not comply with the specification (https://tools.ietf.org/html/rfc3339)
-    static ref RFC3339_FIXES: Vec<(Regex, &'static str)> = {
-        vec!(
-            // inserts missing colon in timezone
-            (Regex::new(r"(\+|-)(\d{2})(\d{2})").unwrap(), "${1}${2}:${3}"),
-            // appends time (midnight) and timezone (utc) if missing
-            (Regex::new(r"-\d{2}$").unwrap(), "${0}T00:00:00+00:00")
-        )
-    };
+    pub fn rfc3339() -> &'static [PatSub] {
+        static RFC3339: OnceLock<Vec<PatSub>> = OnceLock::new();
+        RFC3339.get_or_init(|| {
+            vec![
+                // inserts missing colon in timezone
+                PatSub(Regex::new(r"(\+|-)(\d{2})(\d{2})").unwrap(), "${1}${2}:${3}"),
+                // appends time (midnight) and timezone (utc) if missing
+                PatSub(Regex::new(r"-\d{2}$").unwrap(), "${0}T00:00:00+00:00"),
+            ]
+        })
+    }
 }
 
 // RFC-1123 format e.g. Tue, 15 Nov 2022 20:15:04 Z
@@ -156,7 +167,7 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
 // its the internet, why follow standards?
 fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
     let mut cleaned = original.trim().to_string();
-    for (regex, replacement) in RFC1123_FIXES.iter() {
+    for PatSub(regex, replacement) in fixes::rfc1123() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
@@ -167,7 +178,7 @@ fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> 
 fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
     // Clean the input string by applying each of the regex fixes
     let mut cleaned = original.trim().to_string();
-    for (regex, replacement) in RFC2822_FIXES.iter() {
+    for PatSub(regex, replacement) in fixes::rfc2822() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
@@ -178,7 +189,7 @@ fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> 
 fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
     // Clean the input string by applying each of the regex fixes
     let mut cleaned = original.trim().to_string();
-    for (regex, replacement) in RFC3339_FIXES.iter() {
+    for PatSub(regex, replacement) in fixes::rfc3339() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
@@ -190,24 +201,16 @@ pub(crate) fn uuid_gen() -> String {
     Uuid::new_v4().to_string()
 }
 
-lazy_static! {
-    // Initialise the set of regular expressions we use to parse the NPT format
-    // See "3.6 Normal Play Time" in https://www.ietf.org/rfc/rfc2326.txt
-    static ref NPT_HHMMSS: Regex = {
-        // Extract hours (h), minutes (m), seconds (s) and fractional seconds (f)
-        Regex::new(r"(?P<h>\d+):(?P<m>\d{2}):(?P<s>\d{2})(\.(?P<f>\d+))?").unwrap()
-    };
-    static ref NPT_SEC: Regex = {
-        // Extract seconds (s) and fractional seconds (f)
-        Regex::new(r"(?P<s>\d+)(\.(?P<f>\d+))?").unwrap()
-    };
-}
-
 /// Parses "normal play time" per the RSS media spec
 /// NPT has a second or sub-second resolution. It is specified as H:M:S.h (npt-hhmmss) or S.h (npt-sec), where H=hours, M=minutes, S=second and h=fractions of a second.
 pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     // Try npt-hhmmss format first
-    if let Some(captures) = NPT_HHMMSS.captures(text) {
+    static NPT_HHMMSS: OnceLock<Regex> = OnceLock::new();
+    let npt_hhmmss = NPT_HHMMSS.get_or_init(|| {
+        // Extract hours (h), minutes (m), seconds (s) and fractional seconds (f)
+        Regex::new(r"(?P<h>\d+):(?P<m>\d{2}):(?P<s>\d{2})(\.(?P<f>\d+))?").unwrap()
+    });
+    if let Some(captures) = npt_hhmmss.captures(text) {
         let h = captures.name("h");
         let m = captures.name("m");
         let s = captures.name("s");
@@ -227,7 +230,12 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     }
 
     // Next try npt-sec
-    if let Some(captures) = NPT_SEC.captures(text) {
+    static NPT_SEC: OnceLock<Regex> = OnceLock::new();
+    let npt_sec = NPT_SEC.get_or_init(|| {
+        // Extract seconds (s) and fractional seconds (f)
+        Regex::new(r"(?P<s>\d+)(\.(?P<f>\d+))?").unwrap()
+    });
+    if let Some(captures) = npt_sec.captures(text) {
         if let Some(s) = captures.name("s") {
             // Parse the seconds
             let seconds = s.as_str().parse::<u64>().unwrap();
