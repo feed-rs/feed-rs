@@ -419,6 +419,8 @@ pub struct Category {
     pub scheme: Option<String>,
     /// Atom (optional): Provides a human-readable label for display.
     pub label: Option<String>,
+    /// Sub-categories (typically from the iTunes namespace i.e. https://help.apple.com/itc/podcasts_connect/#/itcb54353390)
+    pub subcategories: Vec<Category>,
 }
 
 impl Category {
@@ -427,6 +429,7 @@ impl Category {
             term: term.trim().into(),
             scheme: None,
             label: None,
+            subcategories: Vec::new(),
         }
     }
 }

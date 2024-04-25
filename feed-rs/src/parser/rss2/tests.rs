@@ -765,3 +765,16 @@ fn test_custom_timestamp_parser() {
     let entry = actual.entries.get(0).expect("feed has 1 entry");
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 12, 16, 19, 2, 33).unwrap());
 }
+
+// Verifies we correctly extract subcategories from the iTunes NS
+#[test]
+fn test_subcategories() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_anchorfm.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let category = &actual.categories[0];
+    assert_eq!("Kids & Family", category.term.as_str());
+
+    let subcat = &category.subcategories[0];
+    assert_eq!("Parenting", subcat.term.as_str());
+}
