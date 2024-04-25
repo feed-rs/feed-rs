@@ -8,8 +8,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Test stable + version used in freedesktop sdk - tracks https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/components/rust.bst#L134
-        rust: [stable, 1.75.0]
+        # Test stable + version used in freedesktop sdk - tracks https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/blob/master/elements/components/rust.bst#L125
+        rust: [stable, 1.77.2]
         experimental: [false]
 
         # also test on beta + nightly for advance warning of breakage
