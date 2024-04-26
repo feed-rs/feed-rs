@@ -1,13 +1,14 @@
-use chrono::{DateTime, Utc};
 use std::error::Error;
 use std::fmt;
+use std::fmt::Debug;
 use std::hash::Hasher;
 use std::io::{BufRead, BufReader, Read};
 
+use chrono::{DateTime, Utc};
 use siphasher::sip128::{Hasher128, SipHasher};
 
 use crate::model;
-use crate::parser::util::TimestampParser;
+use crate::parser::util::{IdGenerator, TimestampParser};
 use crate::xml;
 use crate::xml::NS;
 
@@ -21,7 +22,7 @@ pub(crate) mod itunes;
 pub(crate) mod mediarss;
 pub(crate) mod util;
 
-pub type ParseFeedResult<T> = std::result::Result<T, ParseFeedError>;
+pub type ParseFeedResult<T> = Result<T, ParseFeedError>;
 
 /// An error returned when parsing a feed from a source fails
 #[derive(Debug)]
@@ -30,11 +31,11 @@ pub enum ParseFeedError {
     ParseError(ParseErrorKind),
     // IO error
     IoError(std::io::Error),
-    // Underlying issue with JSON (poorly formatted etc)
+    // Underlying issue with JSON (poorly formatted etc.)
     JsonSerde(serde_json::error::Error),
     // Unsupported version of the JSON feed
     JsonUnsupportedVersion(String),
-    // Underlying issue with XML (poorly formatted etc)
+    // Underlying issue with XML (poorly formatted etc.)
     XmlReader(xml::XmlError),
 }
 
@@ -82,9 +83,9 @@ impl Error for ParseFeedError {
 /// Underlying cause of the parse failure
 #[derive(Debug)]
 pub enum ParseErrorKind {
-    /// Could not find the expected root element (e.g. "channel" for RSS 2, a JSON node etc)
+    /// Could not find the expected root element (e.g. "channel" for RSS 2, a JSON node etc.)
     NoFeedRoot,
-    /// The content type is unsupported and we cannot parse the value into a known representation
+    /// The content type is unsupported, and we cannot parse the value into a known representation
     UnknownMimeType(String),
     /// Required content within the source was not found e.g. the XML child text element for a "content" element
     MissingContent(&'static str),
@@ -103,6 +104,7 @@ impl fmt::Display for ParseErrorKind {
 /// Parser for various feed formats
 pub struct Parser {
     base_uri: Option<String>,
+    id_generator: Box<IdGenerator>,
     timestamp_parser: Box<TimestampParser>,
 }
 
@@ -154,7 +156,7 @@ impl Parser {
 
         // Post processing as required
         if let Ok(mut feed) = result {
-            assign_missing_ids(&mut feed, self.base_uri.as_deref());
+            assign_missing_ids(&self.id_generator, &mut feed, self.base_uri.as_deref());
 
             Ok(feed)
         } else {
@@ -222,6 +224,7 @@ pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<
 /// Builder to create instances of `FeedParser`
 pub struct Builder {
     base_uri: Option<String>,
+    id_generator: Box<IdGenerator>,
     timestamp_parser: Box<TimestampParser>,
 }
 
@@ -241,8 +244,18 @@ impl Builder {
     pub fn build(self) -> Parser {
         Parser {
             base_uri: self.base_uri,
-            timestamp_parser: Box::new(self.timestamp_parser),
+            id_generator: self.id_generator,
+            timestamp_parser: self.timestamp_parser,
         }
+    }
+
+    /// Registers an ID generator
+    pub fn id_generator<F>(mut self, generator: F) -> Self
+    where
+        F: Fn(&[model::Link], &Option<model::Text>, Option<&str>) -> String + 'static,
+    {
+        self.id_generator = Box::new(generator);
+        self
     }
 
     /// Registers a custom timestamp parser
@@ -260,20 +273,21 @@ impl Default for Builder {
     fn default() -> Self {
         Builder {
             base_uri: None,
+            id_generator: Box::new(generate_id),
             timestamp_parser: Box::new(util::parse_timestamp_lenient),
         }
     }
 }
 
 // Assigns IDs to missing feed + entries as required
-fn assign_missing_ids(feed: &mut model::Feed, uri: Option<&str>) {
+fn assign_missing_ids(id_generator: &IdGenerator, feed: &mut model::Feed, uri: Option<&str>) {
     if feed.id.is_empty() {
-        feed.id = create_id(&feed.links, &feed.title, uri);
+        feed.id = id_generator(&feed.links, &feed.title, uri);
     }
 
     for entry in feed.entries.iter_mut() {
         if entry.id.is_empty() {
-            entry.id = create_id(&entry.links, &entry.title, uri);
+            entry.id = id_generator(&entry.links, &entry.title, uri);
         }
     }
 }
@@ -281,29 +295,40 @@ fn assign_missing_ids(feed: &mut model::Feed, uri: Option<&str>) {
 const LINK_HASH_KEY1: u64 = 0x5d78_4074_2887_2d60;
 const LINK_HASH_KEY2: u64 = 0x90ee_ca4c_90a5_e228;
 
-// Creates a unique ID from the first link, or a UUID if no links are available
-fn create_id(links: &[model::Link], title: &Option<model::Text>, uri: Option<&str>) -> String {
-    if let Some(link) = links.iter().next() {
-        // Generate a stable ID for this item based on the first link
-        let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
-        hasher.write(link.href.as_bytes());
-        if let Some(title) = title {
-            hasher.write(title.content.as_bytes());
-        }
-        let hash = hasher.finish128();
-        format!("{:x}{:x}", hash.h1, hash.h2)
+// Creates a unique ID by trying the following in order:
+// 1) the first link + optional title
+// 2) the uri + title provided
+// 3) a UUID
+pub fn generate_id(links: &[model::Link], title: &Option<model::Text>, uri: Option<&str>) -> String {
+    if let Some(link) = links.first() {
+        generate_id_from_link_and_title(link, title)
     } else if let (Some(uri), Some(title)) = (uri, title) {
-        // if no links were provided by the feed use the optional URI passed by the caller
-        let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
-        hasher.write(uri.as_bytes());
-        hasher.write(title.content.as_bytes());
-        let hash = hasher.finish128();
-        format!("{:x}{:x}", hash.h1, hash.h2)
+        generate_id_from_uri_and_title(uri, title)
     } else {
         // Generate a UUID as last resort
         util::uuid_gen()
     }
 }
 
+// Generate an ID from the link + title
+pub fn generate_id_from_link_and_title(link: &model::Link, title: &Option<model::Text>) -> String {
+    let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
+    hasher.write(link.href.as_bytes());
+    if let Some(title) = title {
+        hasher.write(title.content.as_bytes());
+    }
+    let hash = hasher.finish128();
+    format!("{:x}{:x}", hash.h1, hash.h2)
+}
+
+// Generate an ID from the URI and title
+pub fn generate_id_from_uri_and_title(uri: &str, title: &model::Text) -> String {
+    let mut hasher = SipHasher::new_with_keys(LINK_HASH_KEY1, LINK_HASH_KEY2);
+    hasher.write(uri.as_bytes());
+    hasher.write(title.content.as_bytes());
+    let hash = hasher.finish128();
+    format!("{:x}{:x}", hash.h1, hash.h2)
+}
+
 #[cfg(test)]
-mod fuzz;
+mod tests;

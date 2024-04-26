@@ -4,12 +4,13 @@ use std::ops::Add;
 use std::sync::OnceLock;
 use std::time::Duration;
 
+use crate::model;
 use chrono::{DateTime, Utc};
+use model::{Link, Text};
 use regex::{Captures, Regex};
 use url::Url;
 use uuid::Uuid;
 
-use crate::model::{Link, Text};
 use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
 
@@ -75,8 +76,11 @@ mod fixes {
 // but without the day of week (since it is superfluous and often in languages other than English)
 static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
-/// Generified timestamp parser
-pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>>;
+/// Pluggable timestamp parser
+pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>> + 'static;
+
+/// Pluggable ID (feed or entry) generator
+pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> String;
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
