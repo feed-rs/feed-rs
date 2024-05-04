@@ -68,7 +68,7 @@ fn accumulate_author(authors: &mut Vec<Person>, ja: &JsonAuthor) {
     if let Some(name) = &ja.name {
         if !authors.iter().any(|a| a.name.as_str() == name) {
             let mut person = Person::new(name);
-            person.uri = ja.url.clone();
+            person.uri.clone_from(&ja.url);
 
             authors.push(person);
         }
