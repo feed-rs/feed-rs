@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "feed-rs",
-    "testurls"
+    "tools"
 ]
 resolver = "2"
