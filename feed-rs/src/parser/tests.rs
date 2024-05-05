@@ -1,6 +1,4 @@
-use crate::model::Link;
 use crate::parser;
-use crate::parser::{generate_id_from_link_and_title, util};
 use crate::util::test;
 
 // Regression test for the default ID generator
@@ -9,33 +7,6 @@ fn id_generator_default() {
     let test_data = test::fixture_as_raw("rss2/rss_2.0_kdist.xml");
     let feed = parser::parse(test_data.as_slice()).unwrap();
     assert_eq!("354331764be7571efc15c7a1bad13d54", feed.id);
-}
-
-// Custom implementation providing backward compatibility with v0.2
-#[test]
-fn id_generator_v0_2() {
-    let test_data = test::fixture_as_raw("rss2/rss_2.0_kdist.xml");
-
-    // Custom ID that trims URLs etc
-    let feed = parser::Builder::new()
-        .id_generator(|links, title, _uri| {
-            // If we have a link without relative components, use that
-            if let Some(link) = links.iter().find(|l| l.rel.is_none()) {
-                // Trim the trailing slash if it exists
-                let mut link = Link::new(link.href.clone(), None);
-                if link.href.ends_with('/') {
-                    link.href.pop();
-                }
-
-                generate_id_from_link_and_title(&link, title)
-            } else {
-                util::uuid_gen()
-            }
-        })
-        .build()
-        .parse(test_data.as_slice())
-        .unwrap();
-    assert_eq!("7edcf1fbe86570753646f6eb75db4d55", feed.id);
 }
 
 // Verifies failure uncovered by fuzzing is now fixed

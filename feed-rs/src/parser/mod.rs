@@ -258,6 +258,24 @@ impl Builder {
         self
     }
 
+    /// Registers an ID generator compatible with v0.2 of feed-rs
+    pub fn id_generator_v0_2(self) -> Self {
+        self.id_generator(|links, title, _uri| {
+            // If we have a link without relative components, use that
+            if let Some(link) = links.iter().find(|l| l.rel.is_none()) {
+                // Trim the trailing slash if it exists
+                let mut link = model::Link::new(link.href.clone(), None);
+                if link.href.ends_with('/') {
+                    link.href.pop();
+                }
+
+                generate_id_from_link_and_title(&link, title)
+            } else {
+                util::uuid_gen()
+            }
+        })
+    }
+
     /// Registers a custom timestamp parser
     pub fn timestamp_parser<F>(mut self, ts_parser: F) -> Self
     where
