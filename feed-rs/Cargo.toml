@@ -1,6 +1,6 @@
 [package]
 name = "feed-rs"
-version = "1.5.2"
+version = "2.0.0-beta.0"
 edition = '2021'
 authors = ["Hiroki Kumamoto <kumabook@live.jp>", "Mark Pritchard <mpritcha@gmail.com>"]
 include = [
