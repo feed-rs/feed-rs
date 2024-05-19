@@ -1,12 +1,12 @@
 use std::time::Duration;
 
 use chrono::{DateTime, Utc};
-use mime::Mime;
+use mediatype::{names, MediaTypeBuf};
+use url::Url;
 
-use crate::parser::util;
 #[cfg(test)]
 use crate::parser::util::parse_timestamp_lenient;
-use url::Url;
+use crate::parser::util::parse_uri;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -461,7 +461,7 @@ pub struct Content {
     /// Type of content
     /// * Atom: The type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs.
     /// * RSS 2: Type says what its type is, a standard MIME type
-    pub content_type: Mime,
+    pub content_type: MediaTypeBuf,
     /// RSS 2.0: Length of the content in bytes
     pub length: Option<u64>,
     /// Source of the content
@@ -474,7 +474,7 @@ impl Default for Content {
     fn default() -> Content {
         Content {
             body: None,
-            content_type: mime::TEXT_PLAIN,
+            content_type: MediaTypeBuf::new(names::TEXT, names::PLAIN),
             length: None,
             src: None,
         }
@@ -489,7 +489,7 @@ impl Content {
     }
 
     pub fn content_type(mut self, content_type: &str) -> Self {
-        self.content_type = content_type.parse::<Mime>().unwrap();
+        self.content_type = content_type.parse::<MediaTypeBuf>().unwrap();
         self
     }
 
@@ -631,7 +631,7 @@ pub struct Link {
 
 impl Link {
     pub(crate) fn new<S: AsRef<str>>(href: S, base: Option<&Url>) -> Link {
-        let href = match util::parse_uri(href.as_ref(), base) {
+        let href = match parse_uri(href.as_ref(), base) {
             Some(uri) => uri.to_string(),
             None => href.as_ref().to_string(),
         }
@@ -799,7 +799,7 @@ pub struct MediaContent {
     /// The direct URL
     pub url: Option<Url>,
     /// Standard MIME type
-    pub content_type: Option<Mime>,
+    pub content_type: Option<MediaTypeBuf>,
     /// Height and width
     pub height: Option<u32>,
     pub width: Option<u32>,
@@ -814,7 +814,7 @@ pub struct MediaContent {
 #[cfg(test)]
 impl MediaContent {
     pub fn content_type(mut self, content_type: &str) -> Self {
-        self.content_type = Some(content_type.parse::<Mime>().unwrap());
+        self.content_type = Some(content_type.parse::<MediaTypeBuf>().unwrap());
         self
     }
 
@@ -968,7 +968,7 @@ impl Person {
 /// Textual content, or link to the content, for a given entry.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Text {
-    pub content_type: Mime,
+    pub content_type: MediaTypeBuf,
     pub src: Option<String>,
     pub content: String,
 }
@@ -976,7 +976,7 @@ pub struct Text {
 impl Text {
     pub(crate) fn new(content: String) -> Text {
         Text {
-            content_type: mime::TEXT_PLAIN,
+            content_type: MediaTypeBuf::new(names::TEXT, names::PLAIN),
             src: None,
             content: content.trim().to_string(),
         }
@@ -984,7 +984,7 @@ impl Text {
 
     pub(crate) fn html(content: String) -> Text {
         Text {
-            content_type: mime::TEXT_HTML,
+            content_type: MediaTypeBuf::new(names::TEXT, names::HTML),
             src: None,
             content: content.trim().to_string(),
         }
@@ -994,7 +994,7 @@ impl Text {
 #[cfg(test)]
 impl Text {
     pub fn content_type(mut self, content_type: &str) -> Self {
-        self.content_type = content_type.parse::<Mime>().unwrap();
+        self.content_type = content_type.parse::<MediaTypeBuf>().unwrap();
         self
     }
 }

@@ -23,7 +23,7 @@ travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
 chrono = { version = "0.4.38", default-features = false }
-mime = "0.3.17"
+mediatype = "0.19.18"
 quick-xml = { version = "0.31.0", features = ["encoding"] }
 regex = "1.10.4"
 serde = { version = "1.0.198", features = ["derive"] }

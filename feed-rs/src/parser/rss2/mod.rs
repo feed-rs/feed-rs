@@ -1,6 +1,6 @@
 use std::io::BufRead;
 
-use mime::Mime;
+use mediatype::{names, MediaTypeBuf};
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person};
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
@@ -123,7 +123,7 @@ fn handle_enclosure<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject
         match tag_name {
             "url" => content.url = util::parse_uri(&attr.value, element.xml_base.as_ref()),
             "length" => content.size = attr.value.parse::<u64>().ok(),
-            "type" => if_ok_then_some(attr.value.parse::<Mime>(), |mime| content.content_type = mime),
+            "type" => if_ok_then_some(attr.value.parse::<MediaTypeBuf>(), |mime| content.content_type = mime),
 
             // Nothing required for unknown elements
             _ => {}
@@ -186,7 +186,7 @@ fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
         } else {
             Some(Content {
                 body: Some(string),
-                content_type: mime::TEXT_HTML,
+                content_type: MediaTypeBuf::new(names::TEXT, names::HTML),
                 src,
                 ..Default::default()
             })

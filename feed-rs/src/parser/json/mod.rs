@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use mime::Mime;
+use mediatype::{names, MediaTypeBuf};
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser::util::if_some_then;
@@ -100,7 +100,7 @@ fn handle_authors(accumulated: &mut Vec<Person>, author: &Option<JsonAuthor>, au
 }
 
 // Handles HTML or plain text content
-fn handle_content(content: Option<String>, content_type: Mime) -> Option<Content> {
+fn handle_content(content: Option<String>, content_type: MediaTypeBuf) -> Option<Content> {
     content.map(|body| Content {
         length: Some(body.as_bytes().len() as u64),
         body: Some(body.trim().into()),
@@ -123,9 +123,9 @@ fn handle_item(parser: &Parser, ji: JsonItem) -> Entry {
     if_some_then(ji.title, |text| entry.title = Some(Text::new(text)));
 
     // Content HTML, content text and summary are mapped across to our model with the preference toward HTML and explicit summary fields
-    entry.content = handle_content(ji.content_html, mime::TEXT_HTML);
+    entry.content = handle_content(ji.content_html, MediaTypeBuf::new(names::TEXT, names::HTML));
     entry.summary = ji.summary.map(Text::new);
-    if let Some(content_text) = handle_content(ji.content_text, mime::TEXT_PLAIN) {
+    if let Some(content_text) = handle_content(ji.content_text, MediaTypeBuf::new(names::TEXT, names::PLAIN)) {
         // If we don't have HTML content, use the text content as the entry content
         // otherwise, if the summary was not provided, we push the text there
 
