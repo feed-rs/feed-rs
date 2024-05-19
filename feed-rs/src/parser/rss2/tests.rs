@@ -1,11 +1,13 @@
-use chrono::{TimeZone, Utc};
 use std::time::Duration;
+
+use chrono::{TimeZone, Utc};
+use mediatype::{names, MediaType};
+use url::Url;
 
 use crate::model::*;
 use crate::parser;
 use crate::parser::util;
 use crate::util::test;
-use url::Url;
 
 // Basic example from various sources (Wikipedia etc).
 #[test]
@@ -330,7 +332,7 @@ fn test_heated() {
     let feed = parser::parse(test_data.as_slice()).unwrap();
     let content = &feed.entries[0].content.as_ref().unwrap();
     assert!(content.body.as_ref().unwrap().contains("I have some good news and some bad news"));
-    assert_eq!(content.content_type, "text/html");
+    assert_eq!(content.content_type, MediaType::new(names::TEXT, names::HTML));
 }
 
 // Check reported issue that RockPaperShotgun does not extract summary

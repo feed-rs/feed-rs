@@ -1,10 +1,11 @@
+use std::io::BufRead;
+use std::time::Duration;
+
 use crate::model::{Category, Feed, Image, MediaCredit, MediaObject, MediaRating, MediaThumbnail, Person};
 use crate::parser::atom;
 use crate::parser::util::{if_some_then, parse_npt};
 use crate::parser::ParseFeedResult;
 use crate::xml::{Element, NS};
-use std::io::BufRead;
-use std::time::Duration;
 
 // Process <itunes> elements at channel level updating the Feed object as required
 pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, feed: &mut Feed) -> ParseFeedResult<()> {
