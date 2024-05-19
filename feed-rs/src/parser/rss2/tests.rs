@@ -677,6 +677,7 @@ fn test_ghost_no_ws() {
         assert!(entry.content.is_some());
     }
 }
+
 // Verifies that we extract the 'content:encoded' element correctly from a variety of problematic feeds
 #[test]
 fn test_ghost_feeds() {
