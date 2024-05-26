@@ -402,7 +402,11 @@ fn test_spec_1() {
 #[test]
 fn test_relative_example() {
     let test_data = test::fixture_as_string("atom/atom_relative.xml");
-    let feed = parser::parse_with_uri(test_data.as_bytes(), Some("https://example.com/blog/feed.xml")).unwrap();
+    let feed = parser::Builder::new()
+        .base_uri(Some("https://example.com/blog/feed.xml"))
+        .build()
+        .parse(test_data.as_bytes())
+        .unwrap();
 
     let feed_alternate_link = feed
         .links

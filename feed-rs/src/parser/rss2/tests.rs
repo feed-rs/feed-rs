@@ -627,7 +627,7 @@ fn test_ch9() {
 fn test_relurl_1() {
     // This example feed uses the xml:base standard so we don't need to pass the source URI
     let test_data = test::fixture_as_string("rss2/rss_2.0_relurl_1.xml");
-    let actual = parser::parse_with_uri(test_data.as_bytes(), None).unwrap();
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Check the links in the feed
     let content = actual.entries[0].content.as_ref().unwrap();
@@ -647,7 +647,11 @@ fn test_relurl_1() {
 fn test_relurl_2() {
     // This example feed does not use the xml:base standard so we test using a provided feed URI
     let test_data = test::fixture_as_string("rss2/rss_2.0_relurl_2.xml");
-    let actual = parser::parse_with_uri(test_data.as_bytes(), Some("http://example.com")).unwrap();
+    let actual = parser::Builder::new()
+        .base_uri(Some("http://example.com"))
+        .build()
+        .parse(test_data.as_bytes())
+        .unwrap();
 
     // The link for the enclosure should be absolute
     let content = &actual.entries[0].media[0].content[0];
