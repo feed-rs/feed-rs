@@ -14,7 +14,7 @@ Add the dependency to your `Cargo.toml`.
 
 ```toml
 [dependencies]
-feed-rs = "1.5.2"
+feed-rs = "1.5.3"
 ```
 
 ## Reading
