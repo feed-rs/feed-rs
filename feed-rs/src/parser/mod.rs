@@ -211,14 +211,11 @@ impl Parser {
     }
 }
 
-/// Convenience during transition to the builder
+/// Parses the provided source with the defaults
+///
+/// Customisation of the parser (e.g. base URI, custom timestamp parsers etc. can be configured through the builder.
 pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
-    parse_with_uri(source, None)
-}
-
-/// Convenience during transition to the builder
-pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<model::Feed> {
-    Builder::new().base_uri(uri).build().parse(source)
+    Builder::new().build().parse(source)
 }
 
 /// Builder to create instances of `FeedParser`

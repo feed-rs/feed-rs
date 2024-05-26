@@ -67,7 +67,11 @@ fn test_0_91_encoding_2() {
 #[test]
 fn test_0_91_missing_id() {
     let test_data = test::fixture_as_raw("rss0/rss_0.91_missing_id.xml");
-    let feed = parser::parse_with_uri(test_data.as_slice(), Some("https://feeds.feedburner.com/ingreso_dival")).unwrap();
+    let feed = parser::Builder::new()
+        .base_uri(Some("https://feeds.feedburner.com/ingreso_dival"))
+        .build()
+        .parse(test_data.as_slice())
+        .unwrap();
     assert_eq!(feed.id, "f17ff7bbd6c6bd74733bbf47cb8592d5");
     assert_eq!(feed.title.unwrap().content, "Servicio de Personal - Ingreso - Diputación de valencia");
     assert_eq!(feed.entries[0].id, "a30a565dde9ff8cb7063e0e8ad5db62");
