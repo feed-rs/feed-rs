@@ -211,12 +211,15 @@ impl Parser {
     }
 }
 
-/// Convenience during transition to the builder
+/// Parses the provided source with the defaults
+///
+/// Customisation of the parser (e.g. base URI, custom timestamp parsers etc can be configured through the builder.
 pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
     parse_with_uri(source, None)
 }
 
 /// Convenience during transition to the builder
+#[deprecated(since = "1.5.3", note = "Replaced with base_uri() function on the builder")]
 pub fn parse_with_uri<R: Read>(source: R, uri: Option<&str>) -> ParseFeedResult<model::Feed> {
     Builder::new().base_uri(uri).build().parse(source)
 }
@@ -251,8 +254,8 @@ impl Builder {
 
     /// Registers an ID generator
     pub fn id_generator<F>(mut self, generator: F) -> Self
-    where
-        F: Fn(&[model::Link], &Option<model::Text>, Option<&str>) -> String + 'static,
+        where
+            F: Fn(&[model::Link], &Option<model::Text>, Option<&str>) -> String + 'static,
     {
         self.id_generator = Box::new(generator);
         self
@@ -278,8 +281,8 @@ impl Builder {
 
     /// Registers a custom timestamp parser
     pub fn timestamp_parser<F>(mut self, ts_parser: F) -> Self
-    where
-        F: Fn(&str) -> Option<DateTime<Utc>> + 'static,
+        where
+            F: Fn(&str) -> Option<DateTime<Utc>> + 'static,
     {
         self.timestamp_parser = Box::new(ts_parser);
         self
