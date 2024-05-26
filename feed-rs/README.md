@@ -4,7 +4,7 @@
 [![Crates.io Status](https://img.shields.io/crates/v/feed-rs.svg)](https://crates.io/crates/feed-rs)
 
 Library for parsing various forms of feeds such as Atom, RSS and JSON Feed.
-It also supports extensions such as iTunes, Dublin Core and Media RSS.
+It also supports extensions such as iTunes, Dublin Core and Media RSS and serialisation/deserialisation via serde.
 
 [Documentation](https://docs.rs/feed-rs/)
 
@@ -14,7 +14,7 @@ Add the dependency to your `Cargo.toml`.
 
 ```toml
 [dependencies]
-feed-rs = "2.0.0-beta.0"
+feed-rs = "2.0.0"
 ```
 
 ## Reading
