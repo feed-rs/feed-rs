@@ -1,6 +1,6 @@
 use std::io::BufRead;
 
-use mime::Mime;
+use mediatype::{names, MediaTypeBuf};
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaObject, Person, Text};
 use crate::parser::mediarss::handle_media_element;
@@ -116,7 +116,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
                 .map(|body| {
                     let mut content = Content::default();
                     content.body = Some(body.content);
-                    content.content_type = mime::TEXT_XML;
+                    content.content_type = MediaTypeBuf::new(names::TEXT, names::XML);
                     Some(content)
                 })
                 // The XML is required for an XML content element
@@ -126,7 +126,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
         // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline." and
         // also handles base64 encoded document of the indicated mime type per "Otherwise, a base64 encoded document of the indicated media type is contained inline."
         Some(ct) => {
-            if let Ok(mime) = ct.parse::<Mime>() {
+            if let Ok(mime) = ct.parse::<MediaTypeBuf>() {
                 element
                     .child_as_text()
                     .map(|body| {
@@ -289,8 +289,8 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
     let type_attr = element.attributes.iter().find(|a| &a.name == "type").map_or("text", |a| a.value.as_str());
 
     let mime = match type_attr {
-        "text" => Ok(mime::TEXT_PLAIN),
-        "html" | "xhtml" | "text/html" => Ok(mime::TEXT_HTML),
+        "text" => Ok(MediaTypeBuf::new(names::TEXT, names::PLAIN)),
+        "html" | "xhtml" | "text/html" => Ok(MediaTypeBuf::new(names::TEXT, names::HTML)),
 
         // Unknown content type
         _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),

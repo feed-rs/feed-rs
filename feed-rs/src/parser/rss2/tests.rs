@@ -1,11 +1,13 @@
-use chrono::{TimeZone, Utc};
 use std::time::Duration;
+
+use chrono::{TimeZone, Utc};
+use mediatype::{names, MediaType};
+use url::Url;
 
 use crate::model::*;
 use crate::parser;
 use crate::parser::util;
 use crate::util::test;
-use url::Url;
 
 // Basic example from various sources (Wikipedia etc).
 #[test]
@@ -330,7 +332,7 @@ fn test_heated() {
     let feed = parser::parse(test_data.as_slice()).unwrap();
     let content = &feed.entries[0].content.as_ref().unwrap();
     assert!(content.body.as_ref().unwrap().contains("I have some good news and some bad news"));
-    assert_eq!(content.content_type, "text/html");
+    assert_eq!(content.content_type, MediaType::new(names::TEXT, names::HTML));
 }
 
 // Check reported issue that RockPaperShotgun does not extract summary
@@ -625,7 +627,7 @@ fn test_ch9() {
 fn test_relurl_1() {
     // This example feed uses the xml:base standard so we don't need to pass the source URI
     let test_data = test::fixture_as_string("rss2/rss_2.0_relurl_1.xml");
-    let actual = parser::parse_with_uri(test_data.as_bytes(), None).unwrap();
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Check the links in the feed
     let content = actual.entries[0].content.as_ref().unwrap();
@@ -645,7 +647,11 @@ fn test_relurl_1() {
 fn test_relurl_2() {
     // This example feed does not use the xml:base standard so we test using a provided feed URI
     let test_data = test::fixture_as_string("rss2/rss_2.0_relurl_2.xml");
-    let actual = parser::parse_with_uri(test_data.as_bytes(), Some("http://example.com")).unwrap();
+    let actual = parser::Builder::new()
+        .base_uri(Some("http://example.com"))
+        .build()
+        .parse(test_data.as_bytes())
+        .unwrap();
 
     // The link for the enclosure should be absolute
     let content = &actual.entries[0].media[0].content[0];

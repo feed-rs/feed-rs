@@ -4,22 +4,23 @@ use std::ops::Add;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use crate::model;
 use chrono::{DateTime, Utc};
-use model::{Link, Text};
 use regex::{Captures, Regex};
 use url::Url;
 use uuid::Uuid;
 
+use fixes::PatSub;
+use model::{Link, Text};
+
+use crate::model;
 use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
-
-use fixes::PatSub;
 
 /// Set of regular expressions we use to clean up broken dates
 mod fixes {
     use super::OnceLock;
     use super::Regex;
+
     pub struct PatSub(pub Regex, pub &'static str);
 
     // Feeds may not comply with the specification

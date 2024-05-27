@@ -1,9 +1,9 @@
+use std::error::Error;
 use std::io::BufRead;
 
 use crate::util::test;
 
 use super::*;
-use std::error::Error;
 
 type TestResult = std::result::Result<(), Box<dyn Error>>;
 

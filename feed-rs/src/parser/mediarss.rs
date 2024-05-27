@@ -1,7 +1,7 @@
 use std::io::BufRead;
 use std::time::Duration;
 
-use mime::Mime;
+use mediatype::{names, MediaTypeBuf};
 
 use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaRating, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
@@ -113,7 +113,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
         match attr.name.as_str() {
             "url" => content.url = util::parse_uri(&attr.value, element.xml_base.as_ref()),
 
-            "type" => if_ok_then_some(attr.value.parse::<Mime>(), |v| content.content_type = v),
+            "type" => if_ok_then_some(attr.value.parse::<MediaTypeBuf>(), |v| content.content_type = v),
 
             "width" => if_ok_then_some(attr.value.parse::<u32>(), |v| content.width = v),
             "height" => if_ok_then_some(attr.value.parse::<u32>(), |v| content.height = v),
@@ -190,8 +190,8 @@ fn handle_media_text<R: BufRead>(element: Element<R>) -> Option<MediaText> {
             "end" => if_some_then(parse_npt(&attr.value), |npt| end_time = Some(npt)),
             "type" => {
                 mime = match attr.value.as_str() {
-                    "plain" => Some(mime::TEXT_PLAIN),
-                    "html" => Some(mime::TEXT_HTML),
+                    "plain" => Some(MediaTypeBuf::new(names::TEXT, names::PLAIN)),
+                    "html" => Some(MediaTypeBuf::new(names::TEXT, names::HTML)),
                     _ => None,
                 }
             }
@@ -204,7 +204,7 @@ fn handle_media_text<R: BufRead>(element: Element<R>) -> Option<MediaText> {
     element.child_as_text().map(|t| {
         // Parse out the actual text of this element
         let mut text = Text::new(t);
-        text.content_type = mime.map_or(mime::TEXT_PLAIN, |m| m);
+        text.content_type = mime.map_or(MediaTypeBuf::new(names::TEXT, names::PLAIN), |m| m);
         let mut media_text = MediaText::new(text);
 
         // Add the time boundaries if we found them
@@ -257,8 +257,8 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
     let type_attr = element.attributes.iter().find(|a| &a.name == "type").map_or("plain", |a| a.value.as_str());
 
     let mime = match type_attr {
-        "plain" => Ok(mime::TEXT_PLAIN),
-        "html" => Ok(mime::TEXT_HTML),
+        "plain" => Ok(MediaTypeBuf::new(names::TEXT, names::PLAIN)),
+        "html" => Ok(MediaTypeBuf::new(names::TEXT, names::HTML)),
 
         // Unknown content type
         _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),

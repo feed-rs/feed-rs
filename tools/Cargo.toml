@@ -1,9 +1,9 @@
 [package]
-name = "testurls"
+name = "tools"
 version = "0.1.0"
 edition = "2021"
 authors = ["Mark Pritchard <mpritcha@gmail.com>"]
 
 [dependencies]
 feed-rs = { path = "../feed-rs" }
-reqwest = { version = "0.11", features = ["blocking"] }
+reqwest = { version = "0.12.4", features = ["blocking"] }

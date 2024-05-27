@@ -1,6 +1,6 @@
 [package]
 name = "feed-rs"
-version = "1.5.3"
+version = "2.0.0"
 edition = '2021'
 authors = ["Hiroki Kumamoto <kumabook@live.jp>", "Mark Pritchard <mpritcha@gmail.com>"]
 include = [
@@ -23,11 +23,11 @@ travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
 chrono = { version = "0.4.38", default-features = false }
-mime = "0.3.17"
+mediatype = "0.19.18"
 quick-xml = { version = "0.31.0", features = ["encoding"] }
 regex = "1.10.4"
-serde = { version = "1.0.198", features = ["derive"] }
-serde_json = "1.0.116"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.117"
 siphasher = "1.0.1"
 url = "2.5.0"
 uuid = { version = "1.8.0", features = ["v4"] }
