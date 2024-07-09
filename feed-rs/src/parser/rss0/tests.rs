@@ -10,7 +10,7 @@ fn test_0_91_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let entry0 = actual.entries.get(0).unwrap();
+    let entry0 = actual.entries.first().unwrap();
     let entry1 = actual.entries.get(1).unwrap();
     let expected = Feed::new(FeedType::RSS0)
         .id(actual.id.as_ref())     // not present in the test data
@@ -89,7 +89,7 @@ fn test_0_92_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let entry0 = actual.entries.get(0).unwrap();
+    let entry0 = actual.entries.first().unwrap();
     let entry1 = actual.entries.get(1).unwrap();
     let entry2 = actual.entries.get(2).unwrap();
     let expected = Feed::new(FeedType::RSS0)

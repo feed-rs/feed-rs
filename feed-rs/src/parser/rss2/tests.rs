@@ -249,11 +249,11 @@ fn test_wirecutter() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_wirecutter.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let entry = actual.entries.get(0).expect("sample feed has one entry");
-    let category = entry.categories.get(0).expect("entry has one category");
+    let entry = actual.entries.first().expect("sample feed has one entry");
+    let category = entry.categories.first().expect("entry has one category");
     assert_eq!(category.term, "Uncategorized");
 
-    let author = entry.authors.get(0).expect("entry has one author");
+    let author = entry.authors.first().expect("entry has one author");
     assert_eq!(author.name, "James Austin");
 }
 
@@ -699,7 +699,7 @@ fn test_ghost_feeds() {
 fn test_matrix() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_matrix.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
 
     // The content should not be present
     assert!(entry.content.is_none());
@@ -710,7 +710,7 @@ fn test_matrix() {
 fn test_rfc1123_ilgiornale() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_ilgiornale.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap());
@@ -721,7 +721,7 @@ fn test_rfc1123_ilgiornale() {
 fn test_rfc1123_ilmessaggero() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_ilmessaggero.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap());
@@ -736,10 +736,10 @@ fn test_trim_whitespace_text_nodes() {
 
     assert!(actual.description.unwrap().content.starts_with("<p>Twice-monthly community updates"));
 
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
     assert!(entry.summary.as_ref().unwrap().content.starts_with("<p>The University of What It Is"));
 
-    let media = entry.media.get(0).expect("entry has 1 media item");
+    let media = entry.media.first().expect("entry has 1 media item");
     assert!(media.description.as_ref().unwrap().content.starts_with("The University of What It Is"));
 }
 
@@ -748,7 +748,7 @@ fn test_trim_whitespace_text_nodes() {
 fn test_published_from_dc_date() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_dbengines.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
 }
 
@@ -768,7 +768,7 @@ fn test_custom_timestamp_parser() {
         .build()
         .parse(test_data.as_bytes())
         .unwrap();
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
     assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 12, 16, 19, 2, 33).unwrap());
 }
 
