@@ -351,7 +351,8 @@ fn test_example_7() {
     let test_data = test::fixture_as_string("atom/atom_example_7.xml");
     let feed = parser::parse(test_data.as_bytes()).unwrap();
     let body = feed
-        .entries.first()
+        .entries
+        .first()
         .map(|e| e.content.as_ref())
         .unwrap()
         .map(|c| c.body.as_ref())
