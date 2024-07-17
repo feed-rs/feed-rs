@@ -32,7 +32,10 @@ impl<R: BufRead> ElementSource<R> {
     pub(crate) fn new(xml_data: R, xml_base_uri: Option<&str>) -> XmlResult<ElementSource<R>> {
         // Create the XML parser
         let mut reader = NsReader::from_reader(xml_data);
-        reader.expand_empty_elements(true).trim_markup_names_in_closing_tags(true).trim_text(false);
+        let config = reader.config_mut();
+        config.expand_empty_elements = true;
+        config.trim_markup_names_in_closing_tags = true;
+        config.trim_text(false);
 
         let state = RefCell::new(SourceState::new(reader, xml_base_uri)?);
         Ok(ElementSource { state })
@@ -151,8 +154,8 @@ impl<R: BufRead> ElementSource<R> {
 
         // Hit the end of the document
         if state.current_depth > 0 {
-            let msg = format!("documented terminated at depth {}", state.current_depth);
-            let e = quick_xml::Error::UnexpectedEof(msg);
+            // let msg = format!("documented terminated at depth {}", state.current_depth);
+            let e = quick_xml::Error::Syntax(quick_xml::errors::SyntaxError::UnclosedTag);
             Err(XmlError::Parser { e })
         } else {
             Ok(None)

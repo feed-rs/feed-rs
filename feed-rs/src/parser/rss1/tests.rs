@@ -12,7 +12,7 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let entry0 = actual.entries.get(0).unwrap();
+    let entry0 = actual.entries.first().unwrap();
     let entry1 = actual.entries.get(1).unwrap();
     let expected = Feed::new(FeedType::RSS1)
         .id(actual.id.as_ref()) // not present in the test data
@@ -74,7 +74,7 @@ fn test_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let entry0 = actual.entries.get(0).unwrap();
+    let entry0 = actual.entries.first().unwrap();
     let entry1 = actual.entries.get(1).unwrap();
     let expected = Feed::new(FeedType::RSS1)
         .id(actual.id.as_ref())     // not present in the test data
@@ -110,7 +110,7 @@ fn test_spec_2() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let entry0 = actual.entries.get(0).unwrap();
+    let entry0 = actual.entries.first().unwrap();
     let expected = Feed::new(FeedType::RSS1)
         .id(actual.id.as_ref()) // not present in the test data
         .title(Text::new("Meerkat".into()))
@@ -146,7 +146,7 @@ fn test_spec_2() {
 fn test_debian() {
     let test_data = test::fixture_as_string("rss1/rss_1.0_debian.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
 
     assert!(entry.published.is_some());
 }
@@ -156,7 +156,7 @@ fn test_debian() {
 fn test_iso8859() {
     let test_data = test::fixture_as_raw("rss1/rss_1.0_iso8859.xml");
     let actual = parser::parse(test_data.as_slice()).unwrap();
-    let entry = actual.entries.get(0).expect("feed has 1 entry");
+    let entry = actual.entries.first().expect("feed has 1 entry");
 
     let expected = "Ab April soll es wieder Förderung für den Ausbau von Glasfaser geben.";
     let summary = &entry.summary.as_ref().unwrap().content;
