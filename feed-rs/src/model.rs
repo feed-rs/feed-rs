@@ -244,7 +244,7 @@ pub struct Entry {
     pub title: Option<Text>,
     /// Time at which this item was last modified. If not provided in the source, or invalid, it is `None`.
     /// * Atom (required): Indicates the last time the entry was modified in a significant way.
-    /// * RSS doesn't specify this field.
+    /// * RSS doesn't specify this field, so we copy it from the entry 'published' field for consistency.
     /// * JSON Feed: the last modification date of this item
     pub updated: Option<DateTime<Utc>>,
 
