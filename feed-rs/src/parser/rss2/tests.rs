@@ -32,7 +32,7 @@ fn test_example_1() {
                 .link(Link::new("http://www.example.com/blog/post/1", None))
                 .id("7bd204c6-1655-4c27-aeee-53f933c5395f")
                 .published("Sun, 06 Sep 2009 16:20:00 +0000")
-                .updated_parsed("Mon, 06 Sep 2010 00:01:00 +0000"),
+                .updated_parsed("Sun, 06 Sep 2009 16:20:00 +0000"),
         ); // copy from feed
 
     // Check
@@ -69,7 +69,7 @@ fn test_example_2() {
             "#.to_owned()))
             .id("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship")
             .published("Thu, 01 Aug 2019 16:15 EDT")
-            .updated(actual.updated)
+            .updated_parsed("Thu, 01 Aug 2019 16:15 EDT")
             .media(MediaObject::default()
                 .content(MediaContent::new()
                     .url("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
@@ -107,7 +107,7 @@ fn test_example_3() {
             .summary(Text::html("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
             .category(Category::new("News / Q. & A."))
             .published("Fri, 02 Aug 2019 15:35:34 +0000")
-            .updated(actual.updated)
+            .updated_parsed("Fri, 02 Aug 2019 15:35:34 +0000")
             .media(MediaObject::default()
                 .thumbnail(MediaThumbnail::new(Image::new("https://media.newyorker.com/photos/5d4211a4ba8a9c0009a57cfd/master/pass/Chotiner-ReaganRacismNaftali-3.jpg".into()).width(2560).height(1819)))
             )
@@ -193,6 +193,7 @@ fn test_example_5() {
                 ))
                 .link(Link::new("https://arstechnica.com/?p=1546121", None))
                 .published("Mon, 05 Aug 2019 23:11:09 +0000")
+                .updated_parsed("Mon, 05 Aug 2019 23:11:09 +0000")
                 .category(Category::new("Tech"))
                 .category(Category::new("alphabet"))
                 .category(Category::new("apple"))
@@ -204,8 +205,7 @@ fn test_example_5() {
                     Content::default()
                         .body("Google co-founder Larry Page is now CEO of Alphabet.")
                         .content_type("text/html"),
-                )
-                .updated(actual.updated),
+                ),
         );
 
     // Check
@@ -237,8 +237,8 @@ fn test_example_6() {
                 .body(r#"<span style="font-size: 16px; font-weight: 900; text-decoration: underline;">Vitalina Varela - Trailer</span>"#)
                 .content_type("text/html"))
             .published("2020-02-06T08:00:00Z")
-            .id("73226f21f249d758bd97a1fac90897d2")        // hash of the link
-            .updated(actual.updated));
+            .updated_parsed("2020-02-06T08:00:00Z")
+            .id("73226f21f249d758bd97a1fac90897d2")); // hash of the link
 
     // Check
     assert_eq!(actual, expected);
@@ -287,8 +287,8 @@ fn test_spec_1() {
                     .to_owned(),
                 ))
                 .published("Sun, 29 Sep 2002 19:59:01 GMT")
-                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM")
-                .updated_parsed("Mon, 30 Sep 2002 11:00:00 GMT"),
+                .updated_parsed("Sun, 29 Sep 2002 19:59:01 GMT")
+                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM"),
         ) // copy from feed
         .entry(
             Entry::default()
@@ -300,8 +300,8 @@ fn test_spec_1() {
                     .to_owned(),
                 ))
                 .published("Mon, 30 Sep 2002 01:52:02 GMT")
-                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM")
-                .updated_parsed("Mon, 30 Sep 2002 11:00:00 GMT"),
+                .updated_parsed("Mon, 30 Sep 2002 01:52:02 GMT")
+                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM"),
         ); // copy from feed
 
     // Check
@@ -390,6 +390,7 @@ fn test_spiegel() {
                 .summary(Text::html("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \nSee omnystudio.com/listener for privacy information.".into()))
                 .link(Link::new("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri", None))
                 .published("2021-02-06T23:01:00Z")
+                .updated_parsed("2021-02-06T23:01:00Z")
                 .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
                 // <enclosure>, media: and itunes: tags
                 .media(MediaObject::default()
@@ -463,6 +464,7 @@ fn test_bbc() {
                 .title(Text::new("Marcus Aurelius".into()))
                 .summary(Text::html("Melvyn Bragg and guests discuss...".into()))
                 .published("Thu, 25 Feb 2021 10:15:00 +0000")
+                .updated_parsed("Thu, 25 Feb 2021 10:15:00 +0000")
                 .id("urn:bbc:podcast:m000sjxt")
                 .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt", None))
                 // <enclosure>,  media: and itunes: tags
@@ -532,7 +534,7 @@ fn test_ch9() {
                     None,
                 ))
                 .published("Fri, 26 Feb 2021 20:00:00 GMT")
-                .updated_parsed("Sat, 27 Feb 2021 06:55:01 GMT")
+                .updated_parsed("Fri, 26 Feb 2021 20:00:00 GMT")
                 .id("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope")
                 .author(Person::new("Scott Hanselman, Rob Caron"))
                 .category(Category::new("Azure"))

@@ -73,11 +73,6 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
         }
     }
 
-    // RSS 2.0 defines <lastBuildDate> on an item as optional so for completeness we set them to the updated date of the feed
-    for entry in feed.entries.iter_mut() {
-        entry.updated = feed.updated;
-    }
-
     Ok(feed)
 }
 
@@ -252,6 +247,11 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
     // If a media:content item with content exists, then emit it
     if media_obj.has_content() {
         entry.media.push(media_obj);
+    }
+
+    // If we have a published date, copy this to updated too for consistency
+    if entry.updated.is_none() && entry.published.is_some() {
+        entry.updated = entry.published;
     }
 
     Ok(Some(entry))
