@@ -2,7 +2,7 @@
 name = "feed-rs"
 version = "2.1.0"
 edition = '2021'
-authors = ["Hiroki Kumamoto <kumabook@live.jp>", "Mark Pritchard <mpritcha@gmail.com>"]
+authors = ["Mark Pritchard <mpritcha@gmail.com>"]
 include = [
     "**/*.rs",
     "Cargo.toml",
