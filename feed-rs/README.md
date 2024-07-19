@@ -73,3 +73,8 @@ MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 Any contribution intentionally submitted for inclusion in the work by you, 
 shall be licensed as above, without any additional terms or conditions.
+
+## Original author
+
+This crate was originally created by Hiroki Kumamoto. I would like to pay my respects to Kumamoto-san, and say thank you for allowing me to take over the crate and its ongoing maintenance.
+ありがとう ございます!
