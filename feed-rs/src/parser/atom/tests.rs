@@ -568,6 +568,30 @@ fn test_scattered() {
         .contains("there are no strings on me"));
 }
 
+// Handle Atom atomOutOfLineContent
+#[test]
+fn test_atom_content_src() {
+    let test_data = test::fixture_as_string("atom/atom_content_src.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert_eq!(
+        actual.entries[0].content,
+        Some(Content {
+            body: None,
+            content_type: "text/plain".parse().unwrap(),
+            src: Some(Link {
+                href: "https://elly.town/d/blog/2024-03-08-x509-certificates.txt".into(),
+                rel: None,
+                media_type: Some("text/plain".into()),
+                href_lang: None,
+                title: None,
+                length: None,
+            }),
+            ..Default::default()
+        }),
+    );
+}
+
 // Handle xml:base attribute on content
 #[test]
 fn test_atom_content_xml_base() {
