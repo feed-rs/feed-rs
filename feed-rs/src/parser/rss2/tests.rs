@@ -399,7 +399,7 @@ fn test_spiegel() {
                     .credit("DER SPIEGEL")
                     .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())))
                     .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
+                        .url("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri/embed")
                         .content_type("audio/mpeg")
                     )
                     .content(MediaContent::new()
@@ -785,4 +785,15 @@ fn test_subcategories() {
 
     let subcat = &category.subcategories[0];
     assert_eq!("Parenting", subcat.term.as_str());
+}
+
+// Verifies that 'media:content' elements without a URL are parsed via the child media:player info
+#[test]
+fn test_media_content_player() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_vimeo_media.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let entry = &actual.entries[0];
+    let content_url = entry.media[0].content[0].url.as_ref().unwrap();
+    assert_eq!("https://player.vimeo.com/video/1013595996?h=b1b80eff69", content_url.as_str());
 }

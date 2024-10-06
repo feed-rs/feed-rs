@@ -109,6 +109,7 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
     let mut content = MediaContent::new();
 
+    // Extract attributes from the content element
     for attr in &element.attributes {
         match attr.name.as_str() {
             "url" => content.url = util::parse_uri(&attr.value, element.xml_base.as_ref()),
@@ -127,38 +128,50 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
         }
     }
 
-    // If we found a URL, we consider this a valid content element, and need to parse its children for content related info (e.g. rating)
-    // or sub-elements from the media spec
-    if content.url.is_some() {
-        for child in element.children() {
-            let child = child?;
-            match child.ns_and_tag() {
-                (NS::MediaRSS, "rating") => content.rating = handle_media_rating(child),
-
-                // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
-                (NS::MediaRSS, "title") => {
-                    if media_obj.title.is_none() {
-                        media_obj.title = handle_text(child)?
+    // Extract information from the child elements
+    for child in element.children() {
+        let child = child?;
+        match child.ns_and_tag() {
+            (NS::MediaRSS, "player") => {
+                // According to the spec at https://www.rssboard.org/media-rss#media-content
+                // "url should specify the direct URL to the media object. If not included, a <media:player> element must be specified."
+                // So if we find a player element here, and it has a URL then we assign it
+                if let Some(player_url) = child.attr_value("url") {
+                    let player_url = util::parse_uri(&player_url, element.xml_base.as_ref());
+                    if player_url.is_some() {
+                        content.url = player_url;
                     }
                 }
-                (NS::MediaRSS, "description") => {
-                    if media_obj.description.is_none() {
-                        media_obj.description = handle_text(child)?
-                    }
-                }
-
-                // These elements are accumulated in the corresponding field of the parent MediaObject
-                (NS::MediaRSS, "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
-                (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
-
-                // Other elements in the namespace are handled recursively
-                (NS::MediaRSS, _) => handle_media_element(child, media_obj)?,
-
-                // Nothing required for unknown elements
-                _ => {}
             }
-        }
 
+            (NS::MediaRSS, "rating") => content.rating = handle_media_rating(child),
+
+            // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
+            (NS::MediaRSS, "title") => {
+                if media_obj.title.is_none() {
+                    media_obj.title = handle_text(child)?
+                }
+            }
+            (NS::MediaRSS, "description") => {
+                if media_obj.description.is_none() {
+                    media_obj.description = handle_text(child)?
+                }
+            }
+
+            // These elements are accumulated in the corresponding field of the parent MediaObject
+            (NS::MediaRSS, "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
+            (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
+
+            // Other elements in the namespace are handled recursively
+            (NS::MediaRSS, _) => handle_media_element(child, media_obj)?,
+
+            // Nothing required for unknown elements
+            _ => {}
+        }
+    }
+
+    // If we found a URL from the content element or the player, we consider this valid
+    if content.url.is_some() {
         // Emit this parsed content
         media_obj.content.push(content);
     }
