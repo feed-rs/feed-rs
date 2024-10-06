@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/"
+     xml:lang="en-US">
+    <channel>
+        <title>Vimeo / Failla Wines’s videos</title>
+        <link>https://vimeo.com/user110157601/videos</link>
+        <description>Videos uploaded by Failla Wines on Vimeo.</description>
+        <pubDate>Fri, 27 Sep 2024 12:29:11 -0400</pubDate>
+        <generator>Vimeo</generator>
+        <atom:link rel="self" href="https://vimeo.com/user110157601/videos/user110157601/videos/rss"/>
+        <atom:link rel="hub" href="http://vimeo.superfeedr.com"/>
+        <atom:link rel="hub" href="https://pubsubhubbub.appspot.com/"/>
+        <image>
+            <url>
+                https://i.vimeocdn.com/portrait/37345511_100x100?sig=7ea22cf7ad2c5ec6d16ca5351f582c363ff31e80edcd1013068b8840546565ae&amp;v=1
+            </url>
+            <title>Vimeo / Failla Wines’s videos</title>
+            <link>https://vimeo.com/user110157601/videos</link>
+        </image>
+        <item>
+            <title>Oregon Harvest Update and Fall Release Date Set</title>
+            <pubDate>Fri, 27 Sep 2024 12:29:11 -0400</pubDate>
+            <link>https://vimeo.com/1013595996</link>
+            <description>Also check the email for a few important dates in October you&amp;#039;ll want to mark on your
+                calendar!
+            </description>
+            <guid isPermaLink="false">tag:vimeo,2024-09-27:clip1013595996</guid>
+            <media:content medium="video" duration="610">
+                <media:player url="https://player.vimeo.com/video/1013595996?h=b1b80eff69"/>
+                <media:credit role="author" scheme="urn:ebu">Failla Wines</media:credit>
+                <media:thumbnail height="540" width="960"
+                                 url="https://i.vimeocdn.com/video/1931613648-ea51f2799c4a4a4e058ed673e5587a0449778336fb866fad28a1ef7703a848dc-d_960"/>
+                <media:title>Oregon Harvest Update and Fall Release Date Set</media:title>
+            </media:content>
+        </item>
+    </channel>
+</rss>
