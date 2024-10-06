@@ -294,6 +294,7 @@ pub struct Entry {
     /// A MediaObject will be created in two cases:
     /// 1) each "media:group" element encountered in the feed
     /// 2) a default for any other "media:*" elements found at the item level
+    ///
     /// See the Atom tests for youtube and newscred for examples
     pub media: Vec<MediaObject>,
 
@@ -610,7 +611,6 @@ impl Image {
 ///
 /// [Atom spec]: http://www.atomenabled.org/developers/syndication/#link
 #[derive(Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Link {
     /// Link to additional content
     /// * Atom: The URI of the referenced resource (typically a Web page).
