@@ -1,3 +1,9 @@
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use uuid::Uuid;
+
+use crate::model::Feed;
 use crate::parser;
 use crate::util::test;
 
@@ -23,4 +29,59 @@ fn fuzz_parse() {
 
     let result = parser::parse(data.as_slice());
     assert!(result.is_err());
+}
+
+// Verifies that a round-trip through the parser + serde works correctly over time
+#[test]
+fn serde_regression() {
+    let fixture_root_dir = test::fixture_dir();
+    find_fixture_files(&fixture_root_dir, |source_path, json_path| {
+        // Parse the original fixture file
+        let data = fs::read(&source_path).unwrap();
+        let parser = parser::Builder::new().build();
+        let mut feed = parser.parse(data.as_slice()).unwrap();
+
+        // Parse the previously serialised form
+        let serde_data = fs::read(&json_path).unwrap();
+        let mut serde_feed = serde_json::from_slice(&serde_data).unwrap();
+
+        // Basic check, and then try with replaced IDs too
+        if feed != serde_feed {
+            // Replace the IDs in the serialised form if UUIDs
+            replace_ids(&mut feed, &mut serde_feed);
+
+            assert_eq!(feed, serde_feed);
+        }
+    });
+}
+
+fn find_fixture_files(fixture_root: &PathBuf, callback: fn(&Path, &Path)) {
+    fs::read_dir(fixture_root).unwrap().map(|entry| entry.unwrap()).for_each(|entry| {
+        let source_path = entry.path();
+        if source_path.is_dir() {
+            find_fixture_files(&source_path, callback);
+        } else {
+            // Process the xml + json base files
+            let path_str = source_path.to_str().unwrap();
+            if path_str.ends_with(".xml") || path_str.ends_with(".json") {
+                // Ignore if no serde companion file
+                let json_path = source_path.with_extension("serde.json");
+                if json_path.exists() {
+                    callback(&source_path, &json_path);
+                }
+            }
+        }
+    });
+}
+
+fn replace_ids(expected: &mut Feed, actual: &mut Feed) {
+    if Uuid::parse_str(&expected.id).is_ok() {
+        actual.id = expected.id.clone();
+    }
+
+    for (expected_entry, actual_entry) in expected.entries.iter().zip(actual.entries.iter_mut()) {
+        if Uuid::parse_str(&expected_entry.id).is_ok() {
+            actual_entry.id = expected_entry.id.clone();
+        }
+    }
 }

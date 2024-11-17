@@ -23,6 +23,7 @@
 
 #[macro_use]
 extern crate serde;
+extern crate core;
 
 mod util;
 mod xml;

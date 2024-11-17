@@ -7,3 +7,4 @@ authors = ["Mark Pritchard <mpritcha@gmail.com>"]
 [dependencies]
 feed-rs = { path = "../feed-rs" }
 reqwest = { version = "0.12.4", features = ["blocking"] }
+serde_json = "1.0.116"
