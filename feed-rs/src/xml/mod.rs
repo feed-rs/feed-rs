@@ -7,7 +7,7 @@ use std::mem;
 
 use quick_xml::events::{BytesCData, BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::name::ResolveResult;
-use quick_xml::{escape, NsReader, Reader};
+use quick_xml::{NsReader, Reader};
 use url::Url;
 
 #[cfg(test)]
@@ -450,6 +450,8 @@ pub(crate) struct NameValue {
 pub enum XmlError {
     Parser { e: quick_xml::Error },
     Url { e: url::ParseError },
+    Encoding { e: quick_xml::encoding::EncodingError },
+    Escape { e: quick_xml::escape::EscapeError },
 }
 
 impl fmt::Display for XmlError {
@@ -457,6 +459,8 @@ impl fmt::Display for XmlError {
         match self {
             XmlError::Parser { e } => write!(f, "Parser error: {}", e),
             XmlError::Url { e } => write!(f, "Url error: {}", e),
+            XmlError::Encoding { e } => write!(f, "Encoding error: {}", e),
+            XmlError::Escape { e } => write!(f, "Escape error: {}", e),
         }
     }
 }
@@ -472,6 +476,18 @@ impl From<quick_xml::Error> for XmlError {
 impl From<url::ParseError> for XmlError {
     fn from(e: url::ParseError) -> Self {
         XmlError::Url { e }
+    }
+}
+
+impl From<quick_xml::encoding::EncodingError> for XmlError {
+    fn from(e: quick_xml::encoding::EncodingError) -> Self {
+        XmlError::Encoding { e }
+    }
+}
+
+impl From<quick_xml::escape::EscapeError> for XmlError {
+    fn from(e: quick_xml::escape::EscapeError) -> Self {
+        XmlError::Escape { e }
     }
 }
 
@@ -524,7 +540,9 @@ impl XmlEvent {
                         Ok(decoded) => decoded,
                         Err(_) => return None,
                     };
-                    let value = escape::unescape(&decoded_value).unwrap_or_else(|_| decoded_value.clone()).to_string();
+                    let value = quick_xml::escape::unescape(&decoded_value)
+                        .unwrap_or_else(|_| decoded_value.clone())
+                        .to_string();
 
                     Some(NameValue { name: name.into(), value })
                 } else {
@@ -542,7 +560,7 @@ impl XmlEvent {
             Ok(None)
         } else {
             let escaped_text = reader.decoder().decode(text)?;
-            let unescaped_text = escape::unescape(&escaped_text).map_err(quick_xml::Error::EscapeError)?;
+            let unescaped_text = quick_xml::escape::unescape(&escaped_text)?;
 
             Ok(Some(XmlEvent::Text(unescaped_text.to_string())))
         }
