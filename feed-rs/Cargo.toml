@@ -22,12 +22,12 @@ readme = "README.md"
 travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
-chrono = { version = "0.4.38", default-features = false }
-mediatype = "0.19.18"
-quick-xml = { version = "0.36.0", features = ["encoding"] }
-regex = "1.10.5"
-serde = { version = "1.0.204", features = ["derive"] }
-serde_json = "1.0.120"
+chrono = { version = "0.4.38", features = ["serde"] }
+mediatype = { version = "0.19.18", features = ["serde"] }
+quick-xml = { version = "0.37.0", features = ["encoding"] }
+regex = "1.11.1"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
 siphasher = "1.0.1"
-url = "2.5.2"
-uuid = { version = "1.10.0", features = ["v4"] }
+url = { version = "2.5.3", features = ["serde"] }
+uuid = { version = "1.11.0", features = ["v4"] }
