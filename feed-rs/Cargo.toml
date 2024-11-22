@@ -1,6 +1,6 @@
 [package]
 name = "feed-rs"
-version = "2.2.0"
+version = "2.2.1"
 edition = '2021'
 authors = ["Mark Pritchard <mpritcha@gmail.com>"]
 include = [
@@ -22,6 +22,7 @@ readme = "README.md"
 travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
+ammonia = { version = "4", optional = true }
 chrono = { version = "0.4.38", features = ["serde"] }
 mediatype = { version = "0.19.18", features = ["serde"] }
 quick-xml = { version = "0.37.0", features = ["encoding"] }
@@ -31,3 +32,6 @@ serde_json = "1.0.133"
 siphasher = "1.0.1"
 url = { version = "2.5.3", features = ["serde"] }
 uuid = { version = "1.11.0", features = ["v4"] }
+
+[features]
+sanitize = ["dep:ammonia"]

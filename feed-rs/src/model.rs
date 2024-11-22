@@ -483,6 +483,24 @@ impl Default for Content {
     }
 }
 
+impl Content {
+    pub fn sanitize(&mut self) {
+        // We're dealing with a broader variety of possible content types than
+        // in Text, since the possibility exists that we'll be dealing with a base64-encode
+        // image or the like, so we'll target a correspondingly tighter set: text/html
+        // and application/xhtml+xml.
+        #[cfg(feature = "sanitize")]
+        {
+            let content_type = self.content_type.as_str();
+            if content_type == "text/html" || content_type == "application/xhtml+xml" {
+                if let Some(body) = &self.body {
+                    self.body = Some(ammonia::clean(body.as_str()));
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 impl Content {
     pub fn body(mut self, body: &str) -> Self {
@@ -988,6 +1006,15 @@ impl Text {
             content_type: MediaTypeBuf::new(names::TEXT, names::HTML),
             src: None,
             content: content.trim().to_string(),
+        }
+    }
+
+    pub fn sanitize(&mut self) {
+        #[cfg(feature = "sanitize")]
+        {
+            if self.content_type.as_str() != "text/plain" {
+                self.content = ammonia::clean(&self.content);
+            }
         }
     }
 }
