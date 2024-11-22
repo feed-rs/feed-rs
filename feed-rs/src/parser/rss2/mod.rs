@@ -73,6 +73,12 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
         }
     }
 
+    if parser.sanitize_content {
+        if let Some(t) = feed.description.as_mut() { t.sanitize() }
+        if let Some(t) = feed.rights.as_mut() { t.sanitize() }
+        if let Some(t) = feed.title.as_mut() { t.sanitize() }
+    }
+
     Ok(feed)
 }
 
@@ -242,6 +248,13 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
             // Nothing required for unknown elements
             _ => {}
         }
+    }
+
+    if parser.sanitize_content {
+        if let Some(c) = entry.content.as_mut() { c.sanitize() }
+        if let Some(t) = entry.rights.as_mut() { t.sanitize() }
+        if let Some(t) = entry.summary.as_mut() { t.sanitize() }
+        if let Some(t) = entry.title.as_mut() { t.sanitize() }
     }
 
     // If a media:content item with content exists, then emit it

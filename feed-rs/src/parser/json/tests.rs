@@ -52,9 +52,11 @@ fn test_example_1() {
 // Verify we can parse the specification example
 #[test]
 fn test_spec_1() {
-    // Parse the feed
+    // Parse the feed; note that the result with sanitization active differs from the expected,
+    // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("jsonfeed/jsonfeed_spec_1.json");
-    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
     let expected = Feed::new(FeedType::JSON)

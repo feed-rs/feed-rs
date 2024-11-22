@@ -105,6 +105,7 @@ impl fmt::Display for ParseErrorKind {
 pub struct Parser {
     base_uri: Option<String>,
     id_generator: Box<IdGenerator>,
+    sanitize_content: bool,
     timestamp_parser: Box<TimestampParser>,
 }
 
@@ -222,6 +223,7 @@ pub fn parse<R: Read>(source: R) -> ParseFeedResult<model::Feed> {
 pub struct Builder {
     base_uri: Option<String>,
     id_generator: Box<IdGenerator>,
+    sanitize_content: bool,
     timestamp_parser: Box<TimestampParser>,
 }
 
@@ -242,6 +244,7 @@ impl Builder {
         Parser {
             base_uri: self.base_uri,
             id_generator: self.id_generator,
+            sanitize_content: self.sanitize_content,
             timestamp_parser: self.timestamp_parser,
         }
     }
@@ -273,6 +276,13 @@ impl Builder {
         })
     }
 
+    /// Registers the flag for sanitizing content when the "sanitize" feature
+    /// is available
+    pub fn sanitize_content(mut self, flag: bool) -> Self {
+        self.sanitize_content = flag;
+        self
+    }
+
     /// Registers a custom timestamp parser
     pub fn timestamp_parser<F>(mut self, ts_parser: F) -> Self
     where
@@ -289,6 +299,7 @@ impl Default for Builder {
         Builder {
             base_uri: None,
             id_generator: Box::new(generate_id),
+            sanitize_content: true,
             timestamp_parser: Box::new(util::parse_timestamp_lenient),
         }
     }

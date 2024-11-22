@@ -38,7 +38,7 @@ fn serde_regression() {
     find_fixture_files(&fixture_root_dir, |source_path, json_path| {
         // Parse the original fixture file
         let data = fs::read(&source_path).unwrap();
-        let parser = parser::Builder::new().build();
+        let parser = parser::Builder::default().sanitize_content(false).build();
         let mut feed = parser.parse(data.as_slice()).unwrap();
 
         // Parse the previously serialised form

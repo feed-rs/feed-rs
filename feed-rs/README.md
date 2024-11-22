@@ -14,7 +14,17 @@ Add the dependency to your `Cargo.toml`.
 
 ```toml
 [dependencies]
-feed-rs = "2.2.0"
+feed-rs = "2.2.1"
+```
+
+To automatically sanitize parsed HTML content, use the `sanitize` feature. Note
+that fields with a media type of `text/plain` will not be sanitized, to avoid
+potential data loss and should be sanitized by the consumer of the feed if
+rendered as HTML.
+
+```toml
+[dependencies]
+feed-rs = { version = "2.2.1", features = ["sanitize"] }
 ```
 
 ## Reading
