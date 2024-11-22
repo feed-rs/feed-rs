@@ -53,6 +53,12 @@ pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> Parse
         }
     }
 
+    if parser.sanitize_content {
+        feed.description.as_mut().map(|t| Some(t.sanitize()));
+        feed.rights.as_mut().map(|t| Some(t.sanitize()));
+        feed.title.as_mut().map(|t| Some(t.sanitize()));
+    }
+
     Ok(feed)
 }
 
@@ -229,6 +235,13 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
             // Nothing required for unknown elements
             _ => {}
         }
+    }
+
+    if parser.sanitize_content {
+        entry.content.as_mut().map(|c| Some(c.sanitize()));
+        entry.rights.as_mut().map(|t| Some(t.sanitize()));
+        entry.summary.as_mut().map(|t| Some(t.sanitize()));
+        entry.title.as_mut().map(|t| Some(t.sanitize()));
     }
 
     // If a media:content or media:thumbnail item was found in this entry, then attach it

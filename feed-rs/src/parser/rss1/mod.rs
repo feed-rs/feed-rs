@@ -53,6 +53,12 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
         }
     }
 
+    if parser.sanitize_content {
+        feed.description.as_mut().map(|t| Some(t.sanitize()));
+        feed.rights.as_mut().map(|t| Some(t.sanitize()));
+        feed.title.as_mut().map(|t| Some(t.sanitize()));
+    }
+
     Ok(())
 }
 
@@ -89,6 +95,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
     for child in element.children() {
         let child = child?;
+        println!("{:?}", child.ns_and_tag());
         match child.ns_and_tag() {
             (NS::RSS, "title") => entry.title = util::handle_text(child),
 
@@ -125,6 +132,13 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
                 src: ce.src.map(|s| Link::new(s, element.xml_base.as_ref())),
             });
         }
+    }
+
+    if parser.sanitize_content {
+        entry.content.as_mut().map(|c| c.sanitize());
+        entry.rights.as_mut().map(|t| t.sanitize());
+        entry.summary.as_mut().map(|t| t.sanitize());
+        entry.title.as_mut().map(|t| t.sanitize());
     }
 
     // If we found at least 1 link
