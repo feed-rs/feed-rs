@@ -154,7 +154,9 @@ fn handle_item(parser: &Parser, ji: JsonItem) -> Entry {
     // as such when sanitizing, we will *only* inspect entry.content.
     // it's "text/html".
     if parser.sanitize_content {
-        if let Some(c) = entry.content.as_mut() { c.sanitize() }
+        if let Some(c) = entry.content.as_mut() {
+            c.sanitize()
+        }
     }
 
     entry

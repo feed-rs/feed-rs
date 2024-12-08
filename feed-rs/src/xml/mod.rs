@@ -349,6 +349,8 @@ pub(crate) struct Element<'a, R: BufRead> {
     source: &'a ElementSource<R>,
 }
 
+// TODO this is flagged as needless, but is required in Element... fix this
+#[allow(clippy::needless_lifetimes)]
 impl<'a, R: BufRead> Element<'a, R> {
     /// Returns the value for an attribute if it exists
     pub(crate) fn attr_value(&self, name: &str) -> Option<String> {
@@ -385,6 +387,8 @@ impl<'a, R: BufRead> Element<'a, R> {
     }
 }
 
+// TODO this is flagged as needless, but is required in Element... fix this
+#[allow(clippy::needless_lifetimes)]
 impl<'a, R: BufRead> Debug for Element<'a, R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut buffer = String::new();
