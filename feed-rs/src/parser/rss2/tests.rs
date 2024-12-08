@@ -120,9 +120,11 @@ fn test_example_3() {
 // Structured event data on earthquakes
 #[test]
 fn test_example_4() {
-    // Parse the feed
+    // Parse the feed; note that the result with sanitization active differs from the expected,
+    // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("rss2/rss_2.0_example_4.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
@@ -215,9 +217,11 @@ fn test_example_5() {
 // Trailers from Apple (no UUID)
 #[test]
 fn test_example_6() {
-    // Parse the feed
+    // Parse the feed; note that the result with sanitization active differs from the expected,
+    // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("rss2/rss_2.0_example_6.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
@@ -260,9 +264,11 @@ fn test_wirecutter() {
 // Verify we can parse the example contained in the RSS 2.0 specification
 #[test]
 fn test_spec_1() {
-    // Parse the feed
+    // Parse the feed; note that the result with sanitization active differs from the expected,
+    // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("rss2/rss_2.0_spec_1.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
@@ -352,9 +358,11 @@ fn test_rockpapershotgun() {
 // Verifies that we can handle mixed MediaRSS and itunes/enclosure
 #[test]
 fn test_spiegel() {
-    // Parse the feed
+    // Parse the feed; note that the result with sanitization active differs from the expected,
+    // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("rss2/rss_2.0_spiegel.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)
@@ -496,9 +504,11 @@ fn test_bbc() {
 // Verifies that we can handle mixed MediaRSS and itunes/enclosure
 #[test]
 fn test_ch9() {
-    // Parse the feed
+    // Parse the feed; note that the result with sanitization active differs from the expected,
+    // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("rss2/rss_2.0_ch9.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
     let expected = Feed::new(FeedType::RSS2)

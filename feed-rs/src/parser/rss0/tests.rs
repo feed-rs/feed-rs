@@ -84,9 +84,11 @@ fn test_0_91_missing_id() {
 // Trimmed example of RSS 0.92 from the specification at http://backend.userland.com/rss092
 #[test]
 fn test_0_92_spec_1() {
-    // Parse the feed
+    // Parse the feed; note that the result with sanitization active differs from the expected,
+    // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("rss0/rss_0.92_spec_1.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
     let entry0 = actual.entries.first().unwrap();
