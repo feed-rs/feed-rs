@@ -54,7 +54,7 @@ pub struct Feed {
     /// JSON Feed: specifies the feed author.
     pub authors: Vec<Person>,
     /// Description of the feed
-    /// * Atom (optional): Contains a human-readable description or subtitle for the feed (from <subtitle>).
+    /// * Atom (optional): Contains a human-readable description or subtitle for the feed (from the subtitle element).
     /// * RSS 1 + 2 (required): Phrase or sentence describing the channel.
     /// * JSON Feed: description of the feed
     pub description: Option<Text>,
@@ -291,7 +291,7 @@ pub struct Entry {
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
     pub rights: Option<Text>,
 
-    /// Extension for MediaRSS - https://www.rssboard.org/media-rss
+    /// Extension for MediaRSS - <https://www.rssboard.org/media-rss>
     /// A MediaObject will be created in two cases:
     /// 1) each "media:group" element encountered in the feed
     /// 2) a default for any other "media:*" elements found at the item level
@@ -421,7 +421,7 @@ pub struct Category {
     pub scheme: Option<String>,
     /// Atom (optional): Provides a human-readable label for display.
     pub label: Option<String>,
-    /// Sub-categories (typically from the iTunes namespace i.e. https://help.apple.com/itc/podcasts_connect/#/itcb54353390)
+    /// Sub-categories (typically from the iTunes namespace i.e. <https://help.apple.com/itc/podcasts_connect/#/itcb54353390>)
     pub subcategories: Vec<Category>,
 }
 
