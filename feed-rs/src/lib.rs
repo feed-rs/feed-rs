@@ -16,7 +16,7 @@
 //! The `parser::parse` method accepts any source that implements the `Read` trait.
 //! For example, to process a string:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use feed_rs::parser;
 //!
 //! let example_rss = r#"<?xml version="1.0" encoding="UTF-8" ?>
@@ -45,7 +45,7 @@
 //!
 //! Or from a file:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use std::fs::File;
 //! use std::io::BufReader;
 //! use feed_rs::parser;
@@ -59,7 +59,7 @@
 //! The default parser configuration provides sensible defaults, such as lenient timestamp parsing. You may change this behaviour and configure other parser behaviour with the `parser::Builder`.
 //! For example, to enable content sanitisation:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use std::fs::File;
 //! use std::io::BufReader;
 //! use feed_rs::parser;

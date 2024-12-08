@@ -1,6 +1,6 @@
 [package]
 name = "feed-rs"
-version = "2.2.1"
+version = "2.3.0"
 edition = '2021'
 authors = ["Mark Pritchard <mpritcha@gmail.com>"]
 include = [
@@ -13,8 +13,8 @@ include = [
 license = "MIT"
 homepage = "https://github.com/feed-rs/feed-rs"
 repository = "https://github.com/feed-rs/feed-rs.git"
-description = "A unified feed parser that handles Atom, RSS 2.0, RSS 1.0, RSS 0.x and JSON Feed"
-keywords = ["feed", "rss", "atom", "json", "jsonfeed"]
+description = "A feed parser that handles Atom, RSS 2.0, RSS 1.0, RSS 0.x and JSON Feed"
+keywords = ["rss", "atom", "json", "jsonfeed", "parser"]
 categories = ["parser-implementations"]
 readme = "README.md"
 
@@ -22,15 +22,15 @@ readme = "README.md"
 travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
-ammonia = { version = "4", optional = true }
+ammonia = { version = "4.0.0", optional = true }
 chrono = { version = "0.4.38", features = ["serde"] }
 mediatype = { version = "0.19.18", features = ["serde"] }
-quick-xml = { version = "0.37.0", features = ["encoding"] }
+quick-xml = { version = "0.37.1", features = ["encoding"] }
 regex = "1.11.1"
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
 siphasher = "1.0.1"
-url = { version = "2.5.3", features = ["serde"] }
+url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1.11.0", features = ["v4"] }
 
 [features]
