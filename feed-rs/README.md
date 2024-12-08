@@ -14,7 +14,7 @@ Add the dependency to your `Cargo.toml`.
 
 ```toml
 [dependencies]
-feed-rs = "2.2.1"
+feed-rs = "2.3.0"
 ```
 
 To automatically sanitize parsed HTML content, use the `sanitize` feature. Note
@@ -55,7 +55,7 @@ let json = r#"
 {
   "version": "https://jsonfeed.org/version/1",
   "title": "JSON Feed",
-  "description": "JSON Feed is a pragmatic syndication format for blogs, microblogs, and other time-based content.",
+  "description": "JSON Feed is a pragmatic syndication format for blogs, microblog  s, and other time-based content.",
   "home_page_url": "https://jsonfeed.org/",
   "feed_url": "https://jsonfeed.org/feed.json",
   "author": {
