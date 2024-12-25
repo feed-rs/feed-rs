@@ -101,7 +101,6 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
     for child in element.children() {
         let child = child?;
-        println!("{:?}", child.ns_and_tag());
         match child.ns_and_tag() {
             (NS::RSS, "title") => entry.title = util::handle_text(child),
 
