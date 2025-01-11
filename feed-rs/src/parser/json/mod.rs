@@ -22,7 +22,10 @@ pub(crate) fn parse<R: Read>(parser: &Parser, stream: R) -> ParseFeedResult<Feed
 
 // Convert the JSON Feed into our standard model
 fn convert(parser: &Parser, jf: JsonFeed) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::new(FeedType::JSON);
+    let mut feed = Feed {
+        feed_type: FeedType::JSON,
+        ..Feed::default()
+    };
 
     // If the version exists, it should be something we support
     if !jf.version.starts_with("https://jsonfeed.org/version/1") {

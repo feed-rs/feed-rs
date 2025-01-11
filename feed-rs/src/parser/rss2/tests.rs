@@ -17,23 +17,26 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref()) // not present in the test data
-        .title(Text::new("RSS Title".into()))
-        .description(Text::new("This is an example of an RSS feed".into()))
-        .link(Link::new("http://www.example.com/main.html", None))
-        .updated_parsed("Mon, 06 Sep 2010 00:01:00 +0000")
-        .published("Sun, 06 Sep 2009 16:20:00 +0000")
-        .ttl(1800)
-        .entry(
-            Entry::default()
-                .title(Text::new("Example entry".into()))
-                .summary(Text::html("Here is some text containing an interesting description.".into()))
-                .link(Link::new("http://www.example.com/blog/post/1", None))
-                .id("7bd204c6-1655-4c27-aeee-53f933c5395f")
-                .published("Sun, 06 Sep 2009 16:20:00 +0000")
-                .updated_parsed("Sun, 06 Sep 2009 16:20:00 +0000"),
-        ); // copy from feed
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
+    .id(actual.id.as_ref()) // not present in the test data
+    .title(Text::new("RSS Title".into()))
+    .description(Text::new("This is an example of an RSS feed".into()))
+    .link(Link::new("http://www.example.com/main.html", None))
+    .updated_parsed("Mon, 06 Sep 2010 00:01:00 +0000")
+    .published("Sun, 06 Sep 2009 16:20:00 +0000")
+    .ttl(1800)
+    .entry(
+        Entry::default()
+            .title(Text::new("Example entry".into()))
+            .summary(Text::html("Here is some text containing an interesting description.".into()))
+            .link(Link::new("http://www.example.com/blog/post/1", None))
+            .id("7bd204c6-1655-4c27-aeee-53f933c5395f")
+            .published("Sun, 06 Sep 2009 16:20:00 +0000")
+            .updated_parsed("Sun, 06 Sep 2009 16:20:00 +0000"),
+    ); // copy from feed
 
     // Check
     assert_eq!(actual, expected);
@@ -47,34 +50,45 @@ fn test_example_2() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected: Feed = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref())     // not present in the test data
-        .updated(actual.updated)    // not present in the test data
-        .title(Text::new("NASA Breaking News".into()))
-        .description(Text::new("A RSS news feed containing the latest NASA news articles and press releases.".into()))
-        .link(Link::new("http://www.nasa.gov/", None))
-        .link(Link::new("http://www.nasa.gov/rss/dyn/breaking_news.rss", None)
-            .rel("self"))
-        .language("en-us")
-        .contributor(Person::new("managingEditor")
-            .email("jim.wilson@nasa.gov"))
-        .contributor(Person::new("webMaster")
-            .email("brian.dunbar@nasa.gov"))
-        .entry(Entry::default()
+    let expected: Feed = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
+    .id(actual.id.as_ref()) // not present in the test data
+    .updated(actual.updated) // not present in the test data
+    .title(Text::new("NASA Breaking News".into()))
+    .description(Text::new("A RSS news feed containing the latest NASA news articles and press releases.".into()))
+    .link(Link::new("http://www.nasa.gov/", None))
+    .link(Link::new("http://www.nasa.gov/rss/dyn/breaking_news.rss", None).rel("self"))
+    .language("en-us")
+    .contributor(Person::new("managingEditor").email("jim.wilson@nasa.gov"))
+    .contributor(Person::new("webMaster").email("brian.dunbar@nasa.gov"))
+    .entry(
+        Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".into()))
-            .link(Link::new("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship", None))
-            .summary(Text::html(r#"More than three months after delivering several tons of supplies and scientific experiments to
+            .link(Link::new(
+                "http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship",
+                None,
+            ))
+            .summary(Text::html(
+                r#"More than three months after delivering several tons of supplies and scientific experiments to
                 the International Space Station, Northrop Grumman’s Cygnus cargo spacecraft, the SS Roger Chaffee, will
                 depart the orbiting laboratory Tuesday, Aug. 6.
-            "#.to_owned()))
+            "#
+                .to_owned(),
+            ))
             .id("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship")
             .published("Thu, 01 Aug 2019 16:15 EDT")
             .updated_parsed("Thu, 01 Aug 2019 16:15 EDT")
-            .media(MediaObject::default()
-                .content(MediaContent::new()
-                    .url("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
-                    .content_type("image/jpeg")
-                    .size(892854))));
+            .media(
+                MediaObject::default().content(
+                    MediaContent::new()
+                        .url("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
+                        .content_type("image/jpeg")
+                        .size(892854),
+                ),
+            ),
+    );
 
     // Check
     assert_eq!(actual, expected);
@@ -88,7 +102,10 @@ fn test_example_3() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("News, Politics, Opinion, Commentary, and Analysis".into()))
         .description(Text::new("In-depth reporting, commentary on breaking news, political analysis, and opinion from The New\n            Yorker.".into()))
@@ -127,7 +144,10 @@ fn test_example_4() {
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Earthquakes today".into()))
         .link(Link::new("http://www.earthquakenewstoday.com/feed/", None)
@@ -165,50 +185,53 @@ fn test_example_5() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref()) // not present in the test data
-        .title(Text::new("Ars Technica".into()))
-        .link(Link::new("https://arstechnica.com", None))
-        .link(
-            Link::new("http://feeds.arstechnica.com/arstechnica/index", None)
-                .rel("self")
-                .media_type("application/rss+xml"),
-        )
-        .link(Link::new("http://pubsubhubbub.appspot.com/", None).rel("hub"))
-        .description(Text::new(
-            "Serving the Technologist for more than a decade. IT news, reviews, and analysis.".into(),
-        ))
-        .updated_parsed("Tue, 06 Aug 2019 00:03:56 +0000")
-        .language("en-us")
-        .generator(Generator::new("https://wordpress.org/?v=4.8.3"))
-        .logo(
-            Image::new("https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-32x32.png".into())
-                .title("Ars Technica")
-                .link("https://arstechnica.com")
-                .width(32)
-                .height(32),
-        )
-        .entry(
-            Entry::default()
-                .title(Text::new(
-                    "Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter".into(),
-                ))
-                .link(Link::new("https://arstechnica.com/?p=1546121", None))
-                .published("Mon, 05 Aug 2019 23:11:09 +0000")
-                .updated_parsed("Mon, 05 Aug 2019 23:11:09 +0000")
-                .category(Category::new("Tech"))
-                .category(Category::new("alphabet"))
-                .category(Category::new("apple"))
-                .category(Category::new("google"))
-                .id("https://arstechnica.com/?p=1546121")
-                .author(Person::new("Samuel Axon"))
-                .summary(Text::html("Alphabet has $117 billion in cash on hand.".into()))
-                .content(
-                    Content::default()
-                        .body("Google co-founder Larry Page is now CEO of Alphabet.")
-                        .content_type("text/html"),
-                ),
-        );
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
+    .id(actual.id.as_ref()) // not present in the test data
+    .title(Text::new("Ars Technica".into()))
+    .link(Link::new("https://arstechnica.com", None))
+    .link(
+        Link::new("http://feeds.arstechnica.com/arstechnica/index", None)
+            .rel("self")
+            .media_type("application/rss+xml"),
+    )
+    .link(Link::new("http://pubsubhubbub.appspot.com/", None).rel("hub"))
+    .description(Text::new(
+        "Serving the Technologist for more than a decade. IT news, reviews, and analysis.".into(),
+    ))
+    .updated_parsed("Tue, 06 Aug 2019 00:03:56 +0000")
+    .language("en-us")
+    .generator(Generator::new("https://wordpress.org/?v=4.8.3"))
+    .logo(
+        Image::new("https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-32x32.png".into())
+            .title("Ars Technica")
+            .link("https://arstechnica.com")
+            .width(32)
+            .height(32),
+    )
+    .entry(
+        Entry::default()
+            .title(Text::new(
+                "Apple isn’t the most cash-rich company in the world anymore, but it doesn’t matter".into(),
+            ))
+            .link(Link::new("https://arstechnica.com/?p=1546121", None))
+            .published("Mon, 05 Aug 2019 23:11:09 +0000")
+            .updated_parsed("Mon, 05 Aug 2019 23:11:09 +0000")
+            .category(Category::new("Tech"))
+            .category(Category::new("alphabet"))
+            .category(Category::new("apple"))
+            .category(Category::new("google"))
+            .id("https://arstechnica.com/?p=1546121")
+            .author(Person::new("Samuel Axon"))
+            .summary(Text::html("Alphabet has $117 billion in cash on hand.".into()))
+            .content(
+                Content::default()
+                    .body("Google co-founder Larry Page is now CEO of Alphabet.")
+                    .content_type("text/html"),
+            ),
+    );
 
     // Check
     assert_eq!(actual, expected);
@@ -224,7 +247,10 @@ fn test_example_6() {
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
         .id("b2ef47d837e6c0d9d757e14852e5bde")     // hash of the link
         .title(Text::new("Latest Movie Trailers".into()))
         .link(Link::new("https://trailers.apple.com/", None))
@@ -271,44 +297,47 @@ fn test_spec_1() {
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref()) // not present in the test data
-        .title(Text::new("Scripting News".into()))
-        .link(Link::new("http://www.scripting.com/", None))
-        .description(Text::new("A weblog about scripting and stuff like that.".into()))
-        .language("en-us")
-        .rights(Text::new("Copyright 1997-2002 Dave Winer".into()))
-        .updated_parsed("Mon, 30 Sep 2002 11:00:00 GMT")
-        .generator(Generator::new("Radio UserLand v8.0.5"))
-        .category(Category::new("1765").scheme("Syndic8"))
-        .contributor(Person::new("managingEditor").email("dave@userland.com"))
-        .contributor(Person::new("webMaster").email("dave@userland.com"))
-        .ttl(40)
-        .entry(
-            Entry::default()
-                .summary(Text::html(
-                    r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
+    .id(actual.id.as_ref()) // not present in the test data
+    .title(Text::new("Scripting News".into()))
+    .link(Link::new("http://www.scripting.com/", None))
+    .description(Text::new("A weblog about scripting and stuff like that.".into()))
+    .language("en-us")
+    .rights(Text::new("Copyright 1997-2002 Dave Winer".into()))
+    .updated_parsed("Mon, 30 Sep 2002 11:00:00 GMT")
+    .generator(Generator::new("Radio UserLand v8.0.5"))
+    .category(Category::new("1765").scheme("Syndic8"))
+    .contributor(Person::new("managingEditor").email("dave@userland.com"))
+    .contributor(Person::new("webMaster").email("dave@userland.com"))
+    .ttl(40)
+    .entry(
+        Entry::default()
+            .summary(Text::html(
+                r#"Joshua Allen: <a href="http://www.netcrucible.com/blog/2002/09/29.html#a243">Who
                 loves namespaces?</a>
             "#
-                    .to_owned(),
-                ))
-                .published("Sun, 29 Sep 2002 19:59:01 GMT")
-                .updated_parsed("Sun, 29 Sep 2002 19:59:01 GMT")
-                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM"),
-        ) // copy from feed
-        .entry(
-            Entry::default()
-                .summary(Text::html(
-                    r#"<a href="http://www.docuverse.com/blog/donpark/2002/09/29.html#a68">Don Park</a>:
+                .to_owned(),
+            ))
+            .published("Sun, 29 Sep 2002 19:59:01 GMT")
+            .updated_parsed("Sun, 29 Sep 2002 19:59:01 GMT")
+            .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:12:59:01PM"),
+    ) // copy from feed
+    .entry(
+        Entry::default()
+            .summary(Text::html(
+                r#"<a href="http://www.docuverse.com/blog/donpark/2002/09/29.html#a68">Don Park</a>:
                 "It is too easy for engineer to anticipate too much and XML Namespace is a frequent host of
                 over-anticipation."
             "#
-                    .to_owned(),
-                ))
-                .published("Mon, 30 Sep 2002 01:52:02 GMT")
-                .updated_parsed("Mon, 30 Sep 2002 01:52:02 GMT")
-                .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM"),
-        ); // copy from feed
+                .to_owned(),
+            ))
+            .published("Mon, 30 Sep 2002 01:52:02 GMT")
+            .updated_parsed("Mon, 30 Sep 2002 01:52:02 GMT")
+            .id("http://scriptingnews.userland.com/backissues/2002/09/29#When:6:52:02PM"),
+    ); // copy from feed
 
     // Check
     assert_eq!(actual, expected);
@@ -365,7 +394,10 @@ fn test_spiegel() {
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
         .id(actual.id.as_ref()) // not present in the test data
         .language("de")
         .title(Text::new("SPIEGEL Update – Die Nachrichten".into()))
@@ -446,56 +478,59 @@ fn test_bbc() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref()) // not present in the test data
-        .title(Text::new("In Our Time".into()))
-        .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl", None))
-        .link(
-            Link::new("http://www.bbc.co.uk/programmes/b006qykl/episodes/downloads.rss", None)
-                .rel("self")
-                .media_type("application/rss+xml"),
-        )
-        .category(Category::new("History"))
-        .description(Text::new("Melvyn Bragg and guests discuss the history of ideas".into()))
-        .author(Person::new("BBC Radio 4"))
-        .contributor(Person::new("BBC").email("RadioMusic.Support@bbc.co.uk"))
-        .language("en")
-        .logo(
-            Image::new("http://ichef.bbci.co.uk/images/ic/3000x3000/p087hyhs.jpg".into())
-                .title("In Our Time")
-                .link("http://www.bbc.co.uk/programmes/b006qykl"),
-        )
-        .rights(Text::new("(C) BBC 2021".into()))
-        .published("Thu, 25 Feb 2021 10:15:00 +0000")
-        .entry(
-            Entry::default()
-                .title(Text::new("Marcus Aurelius".into()))
-                .summary(Text::html("Melvyn Bragg and guests discuss...".into()))
-                .published("Thu, 25 Feb 2021 10:15:00 +0000")
-                .updated_parsed("Thu, 25 Feb 2021 10:15:00 +0000")
-                .id("urn:bbc:podcast:m000sjxt")
-                .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt", None))
-                // <enclosure>,  media: and itunes: tags
-                .media(
-                    MediaObject::default()
-                        .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...")
-                        .duration(Duration::from_secs(3156))
-                        .content(
-                            MediaContent::new()
-                                .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
-                                .size(50496000)
-                                .content_type("audio/mpeg"),
-                        )
-                        .content(
-                            MediaContent::new()
-                                .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
-                                .size(50496000)
-                                .content_type("audio/mpeg")
-                                .duration(Duration::from_secs(3156)),
-                        )
-                        .credit("BBC Radio 4"),
-                ),
-        );
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
+    .id(actual.id.as_ref()) // not present in the test data
+    .title(Text::new("In Our Time".into()))
+    .link(Link::new("http://www.bbc.co.uk/programmes/b006qykl", None))
+    .link(
+        Link::new("http://www.bbc.co.uk/programmes/b006qykl/episodes/downloads.rss", None)
+            .rel("self")
+            .media_type("application/rss+xml"),
+    )
+    .category(Category::new("History"))
+    .description(Text::new("Melvyn Bragg and guests discuss the history of ideas".into()))
+    .author(Person::new("BBC Radio 4"))
+    .contributor(Person::new("BBC").email("RadioMusic.Support@bbc.co.uk"))
+    .language("en")
+    .logo(
+        Image::new("http://ichef.bbci.co.uk/images/ic/3000x3000/p087hyhs.jpg".into())
+            .title("In Our Time")
+            .link("http://www.bbc.co.uk/programmes/b006qykl"),
+    )
+    .rights(Text::new("(C) BBC 2021".into()))
+    .published("Thu, 25 Feb 2021 10:15:00 +0000")
+    .entry(
+        Entry::default()
+            .title(Text::new("Marcus Aurelius".into()))
+            .summary(Text::html("Melvyn Bragg and guests discuss...".into()))
+            .published("Thu, 25 Feb 2021 10:15:00 +0000")
+            .updated_parsed("Thu, 25 Feb 2021 10:15:00 +0000")
+            .id("urn:bbc:podcast:m000sjxt")
+            .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt", None))
+            // <enclosure>,  media: and itunes: tags
+            .media(
+                MediaObject::default()
+                    .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...")
+                    .duration(Duration::from_secs(3156))
+                    .content(
+                        MediaContent::new()
+                            .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
+                            .size(50496000)
+                            .content_type("audio/mpeg"),
+                    )
+                    .content(
+                        MediaContent::new()
+                            .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
+                            .size(50496000)
+                            .content_type("audio/mpeg")
+                            .duration(Duration::from_secs(3156)),
+                    )
+                    .credit("BBC Radio 4"),
+            ),
+    );
 
     // Check
     assert_eq!(actual, expected);
@@ -511,124 +546,127 @@ fn test_ch9() {
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref()) // not present in the test data
-        .title(Text::new("Azure Friday (HD) - Channel 9".into()))
-        .logo(
-            Image::new("https://f.ch9.ms/thumbnail/4761e196-da48-4b41-abfe-e56e0509f04d.png".into())
-                .title("Azure Friday (HD) - Channel 9")
-                .link("https://s.ch9.ms/Shows/Azure-Friday"),
-        )
-        .description(Text::new(
-            "Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights."
-                .into(),
-        ))
-        .link(
-            Link::new("https://s.ch9.ms/Shows/Azure-Friday/feed/mp4high", None)
-                .rel("self")
-                .media_type("application/rss+xml"),
-        )
-        .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday", None))
-        .category(Category::new("Technology"))
-        .language("en")
-        .published("Sat, 27 Feb 2021 06:55:01 GMT")
-        .updated_parsed("Sat, 27 Feb 2021 06:55:01 GMT")
-        .author(Person::new("Microsoft"))
-        .generator(Generator::new("Rev9"))
-        .entry(
-            Entry::default()
-                .title(Text::new("Troubleshoot AKS cluster issues with AKS Diagnostics and AKS Periscope".into()))
-                .summary(Text::html("<p>Yun Jung Choi shows Scott Hanselman...".into()))
-                .link(Link::new(
-                    "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope",
-                    None,
-                ))
-                .published("Fri, 26 Feb 2021 20:00:00 GMT")
-                .updated_parsed("Fri, 26 Feb 2021 20:00:00 GMT")
-                .id("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope")
-                .author(Person::new("Scott Hanselman, Rob Caron"))
-                .category(Category::new("Azure"))
-                .category(Category::new("Kubernetes"))
-                .category(Category::new("aft"))
-                // <media:group>
-                .media(
-                    MediaObject::default()
-                        .content(
-                            MediaContent::new()
-                                .url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4")
-                                .duration(Duration::from_secs(867))
-                                .size(1)
-                                .content_type("video/mp4"),
-                        )
-                        .content(
-                            MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp3")
-                                .duration(Duration::from_secs(867))
-                                .size(13878646)
-                                .content_type("audio/mp3"),
-                        )
-                        .content(
-                            MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp4")
-                                .duration(Duration::from_secs(867))
-                                .size(20450133)
-                                .content_type("video/mp4"),
-                        )
-                        .content(
-                            MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")
-                                .duration(Duration::from_secs(867))
-                                .size(126659374)
-                                .content_type("video/mp4"),
-                        )
-                        .content(
-                            MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_mid.mp4")
-                                .duration(Duration::from_secs(867))
-                                .size(49241848)
-                                .content_type("video/mp4"),
-                        )
-                        .content(
-                            MediaContent::new()
-                                .url("https://www.youtube-nocookie.com/embed/E-XqYb88hUY?enablejsapi=1")
-                                .duration(Duration::from_secs(867))
-                                .size(1),
-                        ),
-                )
-                // <enclosure> and <media:*>
-                .media(
-                    MediaObject::default()
-                        .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
-                        .duration(Duration::from_secs(867))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into())
-                                .height(56)
-                                .width(100),
-                        ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into())
-                                .height(123)
-                                .width(220),
-                        ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg".into())
-                                .height(288)
-                                .width(512),
-                        ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg".into())
-                                .height(540)
-                                .width(960),
-                        ))
-                        .content(
-                            MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")
-                                .size(126659374)
-                                .content_type("video/mp4"),
-                        )
-                        .credit("Scott Hanselman, Rob Caron"),
-                ),
-        );
+    let expected = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    }
+    .id(actual.id.as_ref()) // not present in the test data
+    .title(Text::new("Azure Friday (HD) - Channel 9".into()))
+    .logo(
+        Image::new("https://f.ch9.ms/thumbnail/4761e196-da48-4b41-abfe-e56e0509f04d.png".into())
+            .title("Azure Friday (HD) - Channel 9")
+            .link("https://s.ch9.ms/Shows/Azure-Friday"),
+    )
+    .description(Text::new(
+        "Join Scott Hanselman, Donovan Brown, or Lara Rubbelke as they host the engineers who build Azure, demo it, answer questions, and share insights."
+            .into(),
+    ))
+    .link(
+        Link::new("https://s.ch9.ms/Shows/Azure-Friday/feed/mp4high", None)
+            .rel("self")
+            .media_type("application/rss+xml"),
+    )
+    .link(Link::new("https://s.ch9.ms/Shows/Azure-Friday", None))
+    .category(Category::new("Technology"))
+    .language("en")
+    .published("Sat, 27 Feb 2021 06:55:01 GMT")
+    .updated_parsed("Sat, 27 Feb 2021 06:55:01 GMT")
+    .author(Person::new("Microsoft"))
+    .generator(Generator::new("Rev9"))
+    .entry(
+        Entry::default()
+            .title(Text::new("Troubleshoot AKS cluster issues with AKS Diagnostics and AKS Periscope".into()))
+            .summary(Text::html("<p>Yun Jung Choi shows Scott Hanselman...".into()))
+            .link(Link::new(
+                "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope",
+                None,
+            ))
+            .published("Fri, 26 Feb 2021 20:00:00 GMT")
+            .updated_parsed("Fri, 26 Feb 2021 20:00:00 GMT")
+            .id("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope")
+            .author(Person::new("Scott Hanselman, Rob Caron"))
+            .category(Category::new("Azure"))
+            .category(Category::new("Kubernetes"))
+            .category(Category::new("aft"))
+            // <media:group>
+            .media(
+                MediaObject::default()
+                    .content(
+                        MediaContent::new()
+                            .url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4")
+                            .duration(Duration::from_secs(867))
+                            .size(1)
+                            .content_type("video/mp4"),
+                    )
+                    .content(
+                        MediaContent::new()
+                            .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp3")
+                            .duration(Duration::from_secs(867))
+                            .size(13878646)
+                            .content_type("audio/mp3"),
+                    )
+                    .content(
+                        MediaContent::new()
+                            .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp4")
+                            .duration(Duration::from_secs(867))
+                            .size(20450133)
+                            .content_type("video/mp4"),
+                    )
+                    .content(
+                        MediaContent::new()
+                            .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")
+                            .duration(Duration::from_secs(867))
+                            .size(126659374)
+                            .content_type("video/mp4"),
+                    )
+                    .content(
+                        MediaContent::new()
+                            .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_mid.mp4")
+                            .duration(Duration::from_secs(867))
+                            .size(49241848)
+                            .content_type("video/mp4"),
+                    )
+                    .content(
+                        MediaContent::new()
+                            .url("https://www.youtube-nocookie.com/embed/E-XqYb88hUY?enablejsapi=1")
+                            .duration(Duration::from_secs(867))
+                            .size(1),
+                    ),
+            )
+            // <enclosure> and <media:*>
+            .media(
+                MediaObject::default()
+                    .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
+                    .duration(Duration::from_secs(867))
+                    .thumbnail(MediaThumbnail::new(
+                        Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into())
+                            .height(56)
+                            .width(100),
+                    ))
+                    .thumbnail(MediaThumbnail::new(
+                        Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into())
+                            .height(123)
+                            .width(220),
+                    ))
+                    .thumbnail(MediaThumbnail::new(
+                        Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg".into())
+                            .height(288)
+                            .width(512),
+                    ))
+                    .thumbnail(MediaThumbnail::new(
+                        Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg".into())
+                            .height(540)
+                            .width(960),
+                    ))
+                    .content(
+                        MediaContent::new()
+                            .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")
+                            .size(126659374)
+                            .content_type("video/mp4"),
+                    )
+                    .credit("Scott Hanselman, Rob Caron"),
+            ),
+    );
 
     // Check
     assert_eq!(actual, expected);

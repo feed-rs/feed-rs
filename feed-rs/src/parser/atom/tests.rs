@@ -1,5 +1,5 @@
 use crate::model::{
-    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaText, MediaThumbnail, Person, Text,
+    Category, Content, Entry, Feed, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaText, MediaThumbnail, Person, Text,
 };
 use crate::parser;
 use crate::util::test;
@@ -12,7 +12,7 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::Atom)
+    let expected = Feed::default()
         .title(Text::new("dive into mark".into()))
         .description(Text::new("A <em>lot</em> of effort\n        went into making this effortless".into()).content_type("text/html"))
         .updated_parsed("2005-07-31T12:29:29Z")
@@ -55,7 +55,7 @@ fn test_example_2() {
     let test_data = test::fixture_as_string("atom/atom_example_2.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new(FeedType::Atom)
+    let expected = Feed::default()
         .id("tag:theregister.co.uk,2005:feed/theregister.co.uk/science/")
         .language("en")
         .title(Text::new("The Register - Science".into()))
@@ -111,7 +111,7 @@ fn test_example_3() {
     let p = parser::Builder::new().sanitize_content(false).build();
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new(FeedType::Atom)
+    let expected = Feed::default()
         .title(Text::new("The Akamai Blog".into()))
         .link(Link::new("https://blogs.akamai.com/", None)
             .rel("alternate")
@@ -163,7 +163,7 @@ fn test_example_4() {
     let p = parser::Builder::new().sanitize_content(false).build();
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new(FeedType::Atom)
+    let expected = Feed::default()
         .author(Person::new("ebm-papst"))
         .link(Link::new("http://www.ebmpapst.com/en/ebmpapst_productnews_atom_feed.xml", None)
             .rel("self")
@@ -193,7 +193,7 @@ fn test_example_5() {
     let p = parser::Builder::new().sanitize_content(false).build();
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new(FeedType::Atom)
+    let expected = Feed::default()
         .title(Text::new("USGS Magnitude 2.5+ Earthquakes, Past Hour".into()))
         .updated_parsed("2019-07-31T13:17:27Z")
         .author(Person::new("U.S. Geological Survey")
@@ -232,7 +232,7 @@ fn test_example_6() {
     let test_data = test::fixture_as_string("atom/atom_example_6.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let expected = Feed::new(FeedType::Atom)
+    let expected = Feed::default()
         .id("tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases")
         .language("en-US")
         .link(
@@ -388,7 +388,7 @@ fn test_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::Atom)
+    let expected = Feed::default()
         .id("urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6")
         .title(Text::new("Example Feed".into()))
         .link(Link::new("http://example.org/", None).rel("alternate"))
@@ -447,7 +447,7 @@ fn test_pub_spec_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap().id(""); // Clear randomly generated UUID
 
     // Expected feed
-    let expected = Feed::new(FeedType::Atom).entry(
+    let expected = Feed::default().entry(
         Entry::default()
             .title(Text::new("Atom-Powered Robots Run Amok".into()))
             .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
@@ -466,7 +466,7 @@ fn test_entry() {
     let test_data = test::fixture_as_string("atom/atom_entry_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = Feed::new(FeedType::Atom).entry(
+    let expected = Feed::default().entry(
         Entry::default()
             .title(Text::new("Specifications".into()))
             .id("urn:uuid:988EF5C55CDEA24EDE1251744888912")

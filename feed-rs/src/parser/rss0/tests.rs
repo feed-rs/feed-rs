@@ -12,7 +12,10 @@ fn test_0_91_spec_1() {
     // Expected feed
     let entry0 = actual.entries.first().unwrap();
     let entry1 = actual.entries.get(1).unwrap();
-    let expected = Feed::new(FeedType::RSS0)
+    let expected = Feed {
+        feed_type: FeedType::RSS0,
+        ..Feed::default()
+    }
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("WriteTheWeb".into()))
         .link(Link::new("http://writetheweb.com", None))
@@ -94,7 +97,10 @@ fn test_0_92_spec_1() {
     let entry0 = actual.entries.first().unwrap();
     let entry1 = actual.entries.get(1).unwrap();
     let entry2 = actual.entries.get(2).unwrap();
-    let expected = Feed::new(FeedType::RSS0)
+    let expected = Feed {
+        feed_type: FeedType::RSS0,
+        ..Feed::default()
+    }
         .id(actual.id.as_ref())     // not present in the test data
         .title(Text::new("Dave Winer: Grateful Dead".into()))
         .link(Link::new("http://www.scripting.com/blog/categories/gratefulDead.html", None))

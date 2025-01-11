@@ -32,7 +32,7 @@ use crate::parser::util::parse_timestamp_lenient;
 ///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct Feed {
     /// Type of this feed (e.g. RSS2, Atom etc)
     pub feed_type: FeedType,
@@ -104,31 +104,6 @@ pub struct Feed {
     /// * Atom (optional): Individual entries within the feed (e.g. a blog post)
     /// * RSS 1+2 (optional): Individual items within the channel.
     pub entries: Vec<Entry>,
-}
-
-impl Feed {
-    pub(crate) fn new(feed_type: FeedType) -> Self {
-        Feed {
-            feed_type,
-            id: "".into(),
-            title: None,
-            updated: None,
-            authors: Vec::new(),
-            description: None,
-            links: Vec::new(),
-            categories: Vec::new(),
-            contributors: Vec::new(),
-            generator: None,
-            icon: None,
-            language: None,
-            logo: None,
-            published: None,
-            rating: None,
-            rights: None,
-            ttl: None,
-            entries: Vec::new(),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -220,8 +195,9 @@ impl Feed {
 }
 
 /// Type of a feed (RSS, Atom etc)
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum FeedType {
+    #[default]
     Atom,
     JSON,
     RSS0,
@@ -230,7 +206,7 @@ pub enum FeedType {
 }
 
 /// An item within a feed
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct Entry {
     /// A unique identifier for this item with a feed. If not supplied it is initialised to a hash of the first link or a UUID if not available.
     /// * Atom (required): Identifies the entry using a universally unique and permanent URI.
@@ -304,28 +280,6 @@ pub struct Entry {
     /// Atom (optional): The base url specified on the item to resolve any relative
     /// references found within the scope on the item
     pub base: Option<String>,
-}
-
-impl Default for Entry {
-    fn default() -> Self {
-        Entry {
-            id: "".into(),
-            title: None,
-            updated: None,
-            authors: Vec::new(),
-            content: None,
-            links: Vec::new(),
-            summary: None,
-            categories: Vec::new(),
-            contributors: Vec::new(),
-            published: None,
-            source: None,
-            rights: None,
-            media: Vec::new(),
-            language: None,
-            base: None,
-        }
-    }
 }
 
 #[cfg(test)]

@@ -2,7 +2,7 @@ use std::io::BufRead;
 
 use mediatype::{names, MediaTypeBuf};
 
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaObject, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, Generator, Image, Link, MediaObject, Person, Text};
 use crate::parser::mediarss::handle_media_element;
 use crate::parser::util;
 use crate::parser::util::if_some_then;
@@ -15,9 +15,10 @@ mod tests;
 
 /// Parses an Atom feed into our model
 pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::new(FeedType::Atom);
-
-    feed.language = util::handle_language_attr(&root);
+    let mut feed = Feed {
+        language: util::handle_language_attr(&root),
+        ..Feed::default()
+    };
 
     for child in root.children() {
         let child = child?;
@@ -72,7 +73,7 @@ pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> Parse
 ///
 /// Note that the entry is wrapped in an empty Feed to keep the API consistent
 pub(crate) fn parse_entry<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::new(FeedType::Atom);
+    let mut feed = Feed::default();
 
     if_some_then(handle_entry(parser, root)?, |entry| feed.entries.push(entry));
 

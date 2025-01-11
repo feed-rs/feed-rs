@@ -10,7 +10,10 @@ fn test_example_1() {
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::JSON)
+    let expected = Feed {
+        feed_type: FeedType::JSON,
+        ..Feed::default()
+    }
         .id(&actual.id)                 // not in test content
         .updated(actual.updated)        // not in test content
         .title(Text::new("Daring Fireball".into()))
@@ -59,7 +62,10 @@ fn test_spec_1() {
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
-    let expected = Feed::new(FeedType::JSON)
+    let expected = Feed {
+        feed_type: FeedType::JSON,
+        ..Feed::default()
+    }
         .id(&actual.id)                 // not in test content
         .updated(actual.updated)        // not in test content
         .title(Text::new("JSON Feed".into()))

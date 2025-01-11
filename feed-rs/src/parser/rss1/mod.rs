@@ -10,7 +10,10 @@ mod tests;
 
 /// Parses an RSS 1.0 feed into our model
 pub(crate) fn parse<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::new(FeedType::RSS1);
+    let mut feed = Feed {
+        feed_type: FeedType::RSS1,
+        ..Feed::default()
+    };
 
     for child in root.children() {
         let child = child?;

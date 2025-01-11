@@ -30,7 +30,10 @@ pub(crate) fn parse<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedR
 
 // Handles the <channel> element
 fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeedResult<Feed> {
-    let mut feed = Feed::new(FeedType::RSS2);
+    let mut feed = Feed {
+        feed_type: FeedType::RSS2,
+        ..Feed::default()
+    };
 
     for child in channel.children() {
         let child = child?;
