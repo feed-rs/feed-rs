@@ -19,7 +19,7 @@ pub(crate) fn handle_podcast_channel_element<R: BufRead>(element: Element<R>, fe
     Ok(())
 }
 
-/// Process <podcast> elements at entry level updating the Entry object as required
+/// Process <podcast> elements at entry level updating the MediaObject as required
 pub(crate) fn handle_podcast_item_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
     match element.ns_and_tag() {
         (NS::Podcast, "person") => if_some_then(handle_person(element)?, |person| media_obj.people.push(person)),
