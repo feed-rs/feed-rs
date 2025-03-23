@@ -423,6 +423,7 @@ pub(crate) enum NS {
     DublinCore,
     MediaRSS,
     Itunes,
+    Podcast,
 }
 
 impl NS {
@@ -436,6 +437,7 @@ impl NS {
             "http://purl.org/dc/elements/1.1/" => NS::DublinCore,
             "http://search.yahoo.com/mrss/" => NS::MediaRSS,
             "http://www.itunes.com/dtds/podcast-1.0.dtd" => NS::Itunes,
+            "https://podcastindex.org/namespace/1.0" => NS::Podcast,
 
             // Everything else is ignored
             _ => NS::Unknown,

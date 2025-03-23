@@ -89,6 +89,8 @@ pub enum ParseErrorKind {
     UnknownMimeType(String),
     /// Required content within the source was not found e.g. the XML child text element for a "content" element
     MissingContent(&'static str),
+    /// Unknown enum variant
+    UnknownEnumVariant(String),
 }
 
 impl fmt::Display for ParseErrorKind {
@@ -97,6 +99,7 @@ impl fmt::Display for ParseErrorKind {
             ParseErrorKind::NoFeedRoot => f.write_str("no root element"),
             ParseErrorKind::UnknownMimeType(mime) => write!(f, "unsupported content type {}", mime),
             ParseErrorKind::MissingContent(elem) => write!(f, "missing content element {}", elem),
+            ParseErrorKind::UnknownEnumVariant(val) => write!(f, "unknown enum variant {}", val),
         }
     }
 }
@@ -356,5 +359,6 @@ pub fn generate_id_from_uri_and_title(uri: &str, title: &model::Text) -> String 
     format!("{:x}{:x}", hash.h1, hash.h2)
 }
 
+mod podcast;
 #[cfg(test)]
 mod tests;

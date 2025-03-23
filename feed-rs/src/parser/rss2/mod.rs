@@ -5,6 +5,7 @@ use mediatype::{names, MediaTypeBuf};
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, Person};
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::mediarss::handle_media_element;
+use crate::parser::podcast::{handle_podcast_channel_element, handle_podcast_item_element};
 use crate::parser::util::{if_ok_then_some, if_some_then};
 use crate::parser::{atom, Parser};
 use crate::parser::{mediarss, util};
@@ -67,6 +68,8 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
             (NS::RSS, "item") => if_some_then(handle_item(parser, child)?, |item| feed.entries.push(item)),
 
             (NS::Itunes, _) => handle_itunes_channel_element(child, &mut feed)?,
+
+            (NS::Podcast, _) => handle_podcast_channel_element(child, &mut feed)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -250,6 +253,9 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             // MediaRSS tags that are not grouped are parsed into the default object
             (NS::MediaRSS, _) => handle_media_element(child, &mut media_obj)?,
+
+            // Podcast elements populate the default MediaObject
+            (NS::Podcast, _) => handle_podcast_item_element(child, &mut media_obj)?,
 
             // Nothing required for unknown elements
             _ => {}
