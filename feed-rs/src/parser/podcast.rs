@@ -48,8 +48,7 @@ fn handle_person<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Podc
                 group: element
                     .attr_value("group")
                     .map(|g| Group::from_str(&g))
-                    .transpose()?
-                    .unwrap_or(role.default_group()),
+                    .transpose()?.unwrap_or_default(),
                 img: element.attr_value("img").and_then(|img| Url::parse(&img).ok()),
                 href: element.attr_value("href").and_then(|href| Url::parse(&href).ok()),
             }));
