@@ -1293,6 +1293,12 @@ pub enum Group {
     Writing,
 }
 
+impl Default for Group {
+    fn default() -> Self {
+        Self::Cast
+    }
+}
+
 impl FromStr for Group {
     type Err = ParseFeedError;
 
