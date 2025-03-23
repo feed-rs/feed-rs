@@ -13,6 +13,7 @@ use fixes::PatSub;
 use model::{Link, Text};
 
 use crate::model;
+use crate::model::{Episode, Season};
 use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
 
@@ -334,4 +335,20 @@ mod tests {
         );
         assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
     }
+}
+
+// Handles episode elements in the Podcast or iTunes namespace
+pub fn handle_episode<R: BufRead>(element: Element<R>) -> Option<Episode> {
+    element.child_as_text().and_then(|n| n.parse().ok()).map(|number| Episode {
+        display: element.attr_value("display"),
+        number,
+    })
+}
+
+// Handles season elements in the Podcast or iTunes namespace
+pub fn handle_season<R: BufRead>(element: Element<R>) -> Option<Season> {
+    element.child_as_text().and_then(|n| n.parse().ok()).map(|number| Season {
+        name: element.attr_value("name"),
+        number,
+    })
 }
