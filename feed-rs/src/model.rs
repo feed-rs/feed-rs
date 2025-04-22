@@ -723,6 +723,36 @@ impl MediaObject {
     pub(crate) fn has_content(&self) -> bool {
         self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.thumbnails.is_empty() || !self.texts.is_empty()
     }
+
+    pub(crate) fn apply_to(&self, other: &mut Self) {
+        if other.title.is_none() && self.title.is_some() {
+            other.title = self.title.clone();
+        }
+
+        if other.description.is_none() && self.description.is_some() {
+            other.description = self.description.clone();
+        }
+
+        if other.thumbnails.is_empty() && !self.thumbnails.is_empty() {
+            other.thumbnails = self.thumbnails.clone();
+        }
+
+        if other.texts.is_empty() && !self.texts.is_empty() {
+            other.texts = self.texts.clone();
+        }
+
+        if other.duration.is_none() && self.duration.is_some() {
+            other.duration = self.duration;
+        }
+
+        if other.community.is_none() && self.community.is_some() {
+            other.community = self.community.clone();
+        }
+
+        if other.credits.is_empty() && !self.credits.is_empty() {
+            other.credits = self.credits.clone();
+        }
+    }
 }
 
 #[cfg(test)]

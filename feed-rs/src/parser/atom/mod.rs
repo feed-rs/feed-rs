@@ -197,7 +197,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
 // Handles an Atom <entry>
 fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     // Create a default MediaRSS content object for non-grouped elements
-    let mut media_obj = MediaObject::default();
+    let mut media_rss_obj = MediaObject::default();
 
     // Parse the entry
     let mut entry = Entry::default();
@@ -236,7 +236,7 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
             (NS::MediaRSS, "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
 
             // MediaRSS tags that are not grouped are parsed into the default object
-            (NS::MediaRSS, _) => handle_media_element(child, &mut media_obj)?,
+            (NS::MediaRSS, _) => handle_media_element(child, &mut media_rss_obj)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -258,9 +258,22 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
         }
     }
 
+    // apply top level media rss tags to group content
+    for media in &mut entry.media {
+        if media.title.is_none() {
+            media.title = media_rss_obj.title.clone();
+        }
+        if media.thumbnails.is_empty() {
+            media.thumbnails = media_rss_obj.thumbnails.clone();
+        }
+        if media.description.is_none() {
+            media.description = media_rss_obj.description.clone();
+        }
+    }
+
     // If a media:content or media:thumbnail item was found in this entry, then attach it
-    if !media_obj.content.is_empty() || !media_obj.thumbnails.is_empty() {
-        entry.media.push(media_obj);
+    if !media_rss_obj.content.is_empty() || !media_rss_obj.thumbnails.is_empty() {
+        entry.media.push(media_rss_obj);
     }
 
     Ok(Some(entry))

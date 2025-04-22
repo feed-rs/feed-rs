@@ -108,9 +108,6 @@ fn test_example_3() {
             .category(Category::new("News / Q. & A."))
             .published("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated_parsed("Fri, 02 Aug 2019 15:35:34 +0000")
-            .media(MediaObject::default()
-                .thumbnail(MediaThumbnail::new(Image::new("https://media.newyorker.com/photos/5d4211a4ba8a9c0009a57cfd/master/pass/Chotiner-ReaganRacismNaftali-3.jpg".into()).width(2560).height(1819)))
-            )
         );
 
     // Check
@@ -407,17 +404,17 @@ fn test_spiegel() {
                     .credit("DER SPIEGEL")
                     .thumbnail(MediaThumbnail::new(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())))
                     .content(MediaContent::new()
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
+                        .size(2519606)
+                        .content_type("audio/mpeg")
+                    )
+                    .content(MediaContent::new()
                         .url("https://omny.fm/shows/spiegel-update-die-nachrichten/07-02-die-wochenvorschau-lockdown-verl-ngerung-kri/embed")
                         .content_type("audio/mpeg")
                     )
                     .content(MediaContent::new()
                         .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large")
                         .content_type("image/jpeg")
-                    )
-                    .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
-                        .size(2519606)
-                        .content_type("audio/mpeg")
                     )
                     .duration(Duration::from_secs(312))
                 )
@@ -553,6 +550,26 @@ fn test_ch9() {
                 // <media:group>
                 .media(
                     MediaObject::default()
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into())
+                                .height(56)
+                                .width(100),
+                        ))
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into())
+                                .height(123)
+                                .width(220),
+                        ))
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg".into())
+                                .height(288)
+                                .width(512),
+                        ))
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg".into())
+                                .height(540)
+                                .width(960),
+                        ))
                         .content(
                             MediaContent::new()
                                 .url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4")
@@ -600,26 +617,6 @@ fn test_ch9() {
                     MediaObject::default()
                         .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
                         .duration(Duration::from_secs(867))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into())
-                                .height(56)
-                                .width(100),
-                        ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into())
-                                .height(123)
-                                .width(220),
-                        ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg".into())
-                                .height(288)
-                                .width(512),
-                        ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg".into())
-                                .height(540)
-                                .width(960),
-                        ))
                         .content(
                             MediaContent::new()
                                 .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")

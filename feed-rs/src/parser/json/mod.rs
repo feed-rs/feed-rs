@@ -102,7 +102,7 @@ fn handle_authors(accumulated: &mut Vec<Person>, author: &Option<JsonAuthor>, au
 // Handles HTML or plain text content
 fn handle_content(content: Option<String>, content_type: MediaTypeBuf) -> Option<Content> {
     content.map(|body| Content {
-        length: Some(body.as_bytes().len() as u64),
+        length: Some(body.len() as u64),
         body: Some(body.trim().into()),
         content_type,
         ..Default::default()

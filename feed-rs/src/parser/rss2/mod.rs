@@ -216,8 +216,10 @@ fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedResult<Option<Entry>> {
     let mut entry = Entry::default();
 
-    // Create a default media object e.g. MediaRSS elements that are not within a "<media:group>", enclosures etc
-    let mut media_obj = MediaObject::default();
+    // Create a default media objects for MediaRSS elements that are not within a "<media:group>", enclosures and itune elements
+    let mut enclosure = MediaObject::default();
+    let mut itunes_obj = MediaObject::default();
+    let mut media_rss_obj = MediaObject::default();
 
     for child in element.children() {
         let child = child?;
@@ -234,7 +236,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid.trim().to_string()),
 
-            (NS::RSS, "enclosure") => handle_enclosure(child, &mut media_obj),
+            (NS::RSS, "enclosure") => handle_enclosure(child, &mut enclosure),
 
             (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
 
@@ -243,13 +245,13 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
             (NS::DublinCore, "creator") => if_some_then(child.children_as_string().ok().flatten(), |name| entry.authors.push(Person::new(&name))),
 
             // Itunes elements populate the default MediaObject
-            (NS::Itunes, _) => handle_itunes_item_element(child, &mut media_obj)?,
+            (NS::Itunes, _) => handle_itunes_item_element(child, &mut itunes_obj)?,
 
             // MediaRSS group creates a new object for this group of elements
             (NS::MediaRSS, "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
 
             // MediaRSS tags that are not grouped are parsed into the default object
-            (NS::MediaRSS, _) => handle_media_element(child, &mut media_obj)?,
+            (NS::MediaRSS, _) => handle_media_element(child, &mut media_rss_obj)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -271,9 +273,21 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
         }
     }
 
-    // If a media:content item with content exists, then emit it
-    if media_obj.has_content() {
-        entry.media.push(media_obj);
+    // apply top level media rss tags to group content
+    for media in &mut entry.media {
+        media_rss_obj.apply_to(media);
+    }
+
+    // If a media objects item with content exist, then emit them
+    if media_rss_obj.has_content() {
+        for content in media_rss_obj.content {
+            enclosure.content.push(content);
+        }
+    }
+
+    if enclosure.has_content() {
+        itunes_obj.apply_to(&mut enclosure);
+        entry.media.push(enclosure);
     }
 
     // If we have a published date, copy this to updated too for consistency
