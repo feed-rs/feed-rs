@@ -10,7 +10,7 @@ use url::Url;
 
 #[cfg(test)]
 use crate::parser::util::parse_timestamp_lenient;
-use crate::parser::{util, ParseErrorKind, ParseFeedError};
+use crate::parser::{ParseErrorKind, ParseFeedError, util};
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -1272,13 +1272,14 @@ impl FromStr for Role {
 ///
 /// See the [taxonomy](https://github.com/Podcastindex-org/podcast-namespace/blob/main/taxonomy.json)
 /// for a list of groups.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum Group {
     Administration,
     #[serde(rename = "Audio Post-Production")]
     AudioPostProduction,
     #[serde(rename = "Audio Production")]
     AudioProduction,
+    #[default]
     Cast,
     Community,
     #[serde(rename = "Creative Direction")]
@@ -1291,12 +1292,6 @@ pub enum Group {
     VideoProduction,
     Visuals,
     Writing,
-}
-
-impl Default for Group {
-    fn default() -> Self {
-        Self::Cast
-    }
 }
 
 impl FromStr for Group {
