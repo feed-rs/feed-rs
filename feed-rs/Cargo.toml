@@ -22,7 +22,7 @@ readme = "README.md"
 travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 
 [dependencies]
-ammonia = { version = "4.0.0", optional = true }
+ammonia = { version = "4.1.2", optional = true }
 chrono = { version = "0.4.38", features = ["serde"] }
 mediatype = { version = "0.19.18", features = ["serde"] }
 quick-xml = { version = "0.37.1", features = ["encoding"] }
