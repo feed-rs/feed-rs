@@ -24,7 +24,7 @@ travis-ci = { repository = "feed-rs/feed-rs", branch = "master" }
 [dependencies]
 ammonia = { version = "4.1.0", optional = true }
 chrono = { version = "0.4.41", features = ["serde"] }
-mediatype = { version = "0.20.0", features = ["serde"] }
+mediatype = { version = "0.21.0", features = ["serde"] }
 quick-xml = { version = "0.37.5", features = ["encoding"] }
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
