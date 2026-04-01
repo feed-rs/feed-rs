@@ -85,7 +85,7 @@ pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> St
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
-    Ok(element.children_as_string()?.map(Text::html))
+    Ok(element.child_as_text().map(Text::html))
 }
 
 // Handles "xml:lang" as an attribute (e.g. in Atom feeds)
@@ -105,11 +105,7 @@ pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
 
 // Handles <title>, <description> etc
 pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
-    if let Ok(Some(text)) = element.children_as_string() {
-        Some(Text::new(text))
-    } else {
-        None
-    }
+    element.child_as_text().map(Text::new)
 }
 
 /// Handles date/time

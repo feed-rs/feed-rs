@@ -22,7 +22,7 @@ fn test_sanitize_atom_plain_text() {
   <entry>
     <title type="text">&lt;script&gt;alert('xyzzy');&lt;/script&gt;title</title>
     <link href="http://example.org/2003/12/13/atom03"/>
-    <content><p style="background-color: black;">Sphinx of black quartz, hear my vow!</p><style>p { color: white; }</style></content>
+    <content>&lt;p style="background-color: black;">Sphinx of black quartz, hear my vow!&lt;/p>&lt;style>p { color: white; }&lt;/style></content>
     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
     <updated>2003-12-13T18:30:02Z</updated>
   </entry>
@@ -66,7 +66,7 @@ fn test_sanitize_atom() {
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title type="text/html" mode="escaped">&lt;img src="http://www.ragingplatypus.com/i/cam-full.jpg" onkeydown="location.href='http://www.ragingplatypus.com/';" /></title>
-  <subtitle type="text/html"><div><faketag /><fake>Safe</fake> subtitle</div></subtitle>
+  <subtitle type="text/html">&lt;div>&lt;faketag />&lt;fake>Safe&lt;/fake> subtitle&lt;/div></subtitle>
   <link href="http://example.org/"/>
   <updated>2003-12-13T18:30:02Z</updated>
   <author>
@@ -89,9 +89,9 @@ fn test_sanitize_atom() {
   </rights>
 
   <entry>
-    <title type="text/html" mode="escaped"><a href="http://example.com">Safe&lt;iframe src="http://www.example.com/">&lt;/iframe> title</a></title>
+    <title type="text/html" mode="escaped">&lt;a href="http://example.com">Safe&lt;iframe src="http://www.example.com/">&lt;/iframe> title&lt;/a></title>
     <link href="http://example.org/2003/12/13/atom03"/>
-    <content type="text/html"><p style="background-color: black;">Sphinx of black quartz, hear my vow!</p><style>p { color: white; }</style></content>
+    <content type="text/html">&lt;p style="background-color: black;">Sphinx of black quartz, hear my vow!&lt;/p>&lt;style>p { color: white; }&lt;/style></content>
     <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
     <updated>2003-12-13T18:30:02Z</updated>
     <summary type="text/html">Safe&lt;script type="text/javascript">location.href='http:/'+'/example.com/';&lt;/script> summary.</summary>
