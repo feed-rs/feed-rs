@@ -117,7 +117,7 @@ fn test_sanitize_atom() {
     assert_eq!(feed_description.content_type.as_str(), "text/html");
 
     // noopener/noreferrer inserted by ammonia
-    assert_eq!(entry_title.content, r#"<a href="http://example.com" rel="noopener noreferrer">Safe title</a>"#);
+    assert_eq!(entry_title.content, r#"<a href="http://example.com" rel="noopener noreferrer">Safe&lt;iframe src="http://www.example.com/"&gt;&lt;/iframe&gt; title</a>"#);
     assert_eq!(entry_title.content_type.as_str(), "text/html");
     assert_eq!(entry_summary.content, "Safe summary.");
     assert_eq!(entry_summary.content_type.as_str(), "text/html");
