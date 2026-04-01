@@ -55,10 +55,17 @@ impl<R: BufRead> ElementSource<R> {
     }
 
     // Return the raw XML of all children at or below the nominated depth
-    fn children_as_string(&self, depth: u32, buffer: &mut String) -> XmlResult<()> {
+    fn children_as_xhtml(&self, depth: u32, buffer: &mut String) -> XmlResult<()> {
         // Read nodes at the current depth or greater
         let mut state = self.state.borrow_mut();
         let mut current_depth = depth;
+
+        let buffer_start = buffer.len();
+
+        // Every valid XHTML node contains only a div. But in practice there are lots of invalid feeds and we don't want to assume that. So we first serialize with the div, but then if the feed is valid we strip it after the fact. If the feed isn't just a `div` child then we leave it as-is.
+        let mut first_element = true;
+        let mut div_open = None;
+        let mut div_close = None;
 
         loop {
             // A strange construction, but we need to throw an error if we cannot consume all the children (e.g. malformed XML)
@@ -71,14 +78,38 @@ impl<R: BufRead> ElementSource<R> {
             if let Some(event) = peeked.as_ref().unwrap() {
                 match event {
                     XmlEvent::Start { name, attributes, .. } => {
+                        if current_depth == depth {
+                            if first_element {
+                                if name != "div" {
+                                    // Note: We should also check for xhtml namespace but in practice it is better to just assume that instead of rejecting.
+                                    first_element = false;
+                                }
+                            } else {
+                                div_open = None;
+                                div_close = None;
+                            }
+                        }
+
                         // Note that we have descended into an element
                         current_depth += 1;
 
                         // Append element start to the buffer
                         append_element_start(buffer, name, attributes);
+
+                        if first_element {
+                            first_element = false;
+                            div_open = Some(buffer.len());
+                        }
                     }
 
                     XmlEvent::Text(text) => {
+                        if current_depth == depth && text.as_bytes().iter().any(|c| !c.is_ascii_whitespace()) {
+                            // Text content outside of the root div.
+                            first_element = false;
+                            div_open = None;
+                            div_close = None;
+                        }
+
                         // Append text to the buffer
                         append_element_text(buffer, text);
                     }
@@ -90,8 +121,14 @@ impl<R: BufRead> ElementSource<R> {
                             break;
                         }
 
+                        let close_start = buffer.len();
+
                         // Append this terminating element
                         append_element_end(buffer, name);
+
+                        if current_depth == depth && div_open.is_some() {
+                            div_close = Some(close_start);
+                        }
                     }
                 }
 
@@ -101,6 +138,11 @@ impl<R: BufRead> ElementSource<R> {
                 // In the case where we have no more nodes, we hit the end of the document so we can just break out of this loop
                 break;
             }
+        }
+
+        if let Some((div_open, div_close)) = div_open.zip(div_close) {
+            buffer.truncate(div_close);
+            buffer.drain(buffer_start..div_open);
         }
 
         Ok(())
@@ -166,16 +208,21 @@ impl<R: BufRead> ElementSource<R> {
     fn text_node(&self) -> Option<String> {
         let mut state = self.state.borrow_mut();
 
+        let mut buffer = None;
+
         // If the next event is characters, we have found our text
-        if let Ok(Some(XmlEvent::Text(_text))) = state.peek() {
+        while let Ok(Some(XmlEvent::Text(_text))) = state.peek() {
             // Grab the next event - we know its a Text event from the above
             match state.next() {
-                Ok(Some(XmlEvent::Text(text))) => return Some(text),
+                Ok(Some(XmlEvent::Text(text))) => match buffer {
+                    Some(ref mut b) => *b += text.as_str(),
+                    None => buffer = Some(text),
+                },
                 _ => unreachable!("state.next() did not return expected XmlEvent::Text"),
             }
         }
 
-        None
+        buffer
     }
 
     // Fetches the currently active xml-base
@@ -373,11 +420,10 @@ impl<'a, R: BufRead> Element<'a, R> {
     /// Concatenates the children of this node into a string
     ///
     /// NOTE: the input stream is parsed then re-serialised so the output will not be identical to the input
-    pub(crate) fn children_as_string(&self) -> XmlResult<Option<String>> {
+    pub(crate) fn children_as_xhtml(&self) -> XmlResult<Option<String>> {
         // Fill the buffer with the XML content below this element
         let mut buffer = String::new();
-        self.source.children_as_string(self.depth + 1, &mut buffer)?;
-
+        self.source.children_as_xhtml(self.depth + 1, &mut buffer)?;
         Ok(Some(buffer))
     }
 
@@ -607,5 +653,5 @@ fn append_element_start(buffer: &mut String, name: &str, attributes: &[NameValue
 
 // Appends a text element
 fn append_element_text(buffer: &mut String, text: &str) {
-    buffer.push_str(text);
+    buffer.push_str(&quick_xml::escape::minimal_escape(text));
 }

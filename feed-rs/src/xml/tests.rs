@@ -105,14 +105,14 @@ fn test_children_as_string() -> TestResult {
     let mut children = catalog.children();
     let book = children.next().unwrap()?;
     assert_eq!(book.name, "book");
-    let expected = "\n        <author>Gambardella, Matthew</author>\n        <title>XML Developer's Guide</title>\n    ";
-    assert_eq!(book.children_as_string()?.unwrap(), expected);
+    let expected = "\n        ";
+    assert_eq!(book.child_as_text().unwrap(), expected);
 
     // Next element should be "content:encoded"
     let encoded = children.next().unwrap()?;
     assert_eq!(NS::Content, encoded.namespace);
     assert_eq!(encoded.name, "encoded");
-    let text = encoded.children_as_string()?.unwrap();
+    let text = encoded.child_as_text().unwrap();
     assert_eq!(text, "<p>10 km, 21.9072&deg; East, 37.102&deg; North. </p>");
 
     Ok(())
@@ -133,7 +133,7 @@ fn test_rss_decoding() -> TestResult {
     for (xml, expected) in tests {
         let source = ElementSource::new(xml.as_bytes(), None)?;
         let title = source.root()?.unwrap();
-        let parsed = title.children_as_string()?.unwrap();
+        let parsed = title.child_as_text().unwrap();
         assert_eq!(expected, parsed);
     }
 

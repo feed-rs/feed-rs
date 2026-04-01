@@ -324,21 +324,36 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
     // Find type, defaulting to "text" if not present
     let type_attr = element.attributes.iter().find(|a| &a.name == "type").map_or("text", |a| a.value.as_str());
 
-    let mime = match type_attr {
-        "text" => Ok(MediaTypeBuf::new(names::TEXT, names::PLAIN)),
-        "html" | "xhtml" | "text/html" => Ok(MediaTypeBuf::new(names::TEXT, names::HTML)),
+    match type_attr {
+        "text" => {
+            let s = element
+                .child_as_text()
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))?;
+
+            let mut text = Text::new(s);
+            text.content_type = MediaTypeBuf::new(names::TEXT, names::PLAIN);
+            Ok(Some(text))
+        }
+        "html" | "text/html" => {
+            let s = element
+                .child_as_text()
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))?;
+
+            let mut text = Text::new(s);
+            text.content_type = MediaTypeBuf::new(names::TEXT, names::HTML);
+            Ok(Some(text))
+        }
+        "xhtml" => {
+            let xml = element
+                .children_as_xhtml()?
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))?;
+
+            let mut text = Text::new(xml);
+            text.content_type = MediaTypeBuf::new(names::APPLICATION, names::XHTML);
+            Ok(Some(text))
+        }
 
         // Unknown content type
         _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),
-    }?;
-
-    element
-        .children_as_string()?
-        .map(|content| {
-            let mut text = Text::new(content);
-            text.content_type = mime;
-            Some(text)
-        })
-        // Need the text for a text element
-        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))
+    }
 }
