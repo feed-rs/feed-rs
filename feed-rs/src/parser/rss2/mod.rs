@@ -90,7 +90,7 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
 
 // Handles <category>
 fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
-    element.children_as_string().ok().flatten().map(|text| {
+    element.child_as_text().map(|text| {
         let mut category = Category::new(&text);
         category.scheme = element.attr_value("domain");
         category
@@ -187,7 +187,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     let src = element.xml_base.as_ref().map(|xml_base| Link::new(xml_base, element.xml_base.as_ref()));
 
-    Ok(element.children_as_string()?.and_then(|string| {
+    Ok(element.child_as_text().and_then(|string| {
         if string.is_empty() {
             None
         } else {
@@ -240,7 +240,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
-            (NS::DublinCore, "creator") => if_some_then(child.children_as_string().ok().flatten(), |name| entry.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
             // Itunes elements populate the default MediaObject
             (NS::Itunes, _) => handle_itunes_item_element(child, &mut media_obj)?,

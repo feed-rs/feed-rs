@@ -278,7 +278,7 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
     }?;
 
     element
-        .children_as_string()?
+        .child_as_text()
         .map(|content| {
             let mut text = Text::new(content);
             text.content_type = mime;
