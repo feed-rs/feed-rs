@@ -808,3 +808,68 @@ fn test_media_content_player() {
     let content_url = entry.media[0].content[0].url.as_ref().unwrap();
     assert_eq!("https://player.vimeo.com/video/1013595996?h=b1b80eff69", content_url.as_str());
 }
+
+// Verifies we correctly extract iTunes season and episode objects
+#[test]
+fn test_itunes_episode_season() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_anchorfm.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let media_obj = actual.entries.first().unwrap().media.first().unwrap();
+
+    assert_eq!(media_obj.season, Some(Season { name: None, number: 1 }));
+    assert_eq!(media_obj.episode, Some(Episode { display: None, number: 7.0 }));
+}
+
+// Verifies we correctly extract podcast namespace items
+#[test]
+fn test_podcast_items() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_transistorfm.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let media_obj = actual.entries.first().unwrap().media.first().unwrap();
+
+    assert_eq!(media_obj.season, Some(Season { name: None, number: 5 }));
+    assert_eq!(media_obj.episode, Some(Episode { display: None, number: 10.0 }));
+
+    let mut expected_transcripts = Vec::new();
+    for (extension, content_type, rel) in [
+        (".vtt", "text/vtt", Some(String::from("captions"))),
+        (".srt", "application/x-subrip", Some(String::from("captions"))),
+        (".json", "application/json", Some(String::from("captions"))),
+        (".txt", "text/plain", None),
+        ("", "text/html", None),
+    ] {
+        expected_transcripts.push(Transcript {
+            url: Url::parse(&format!("https://share.transistor.fm/s/59bf46b3/transcription{extension}")).unwrap(),
+            content_type: content_type.parse().unwrap(),
+            language: None,
+            rel,
+        });
+    }
+
+    assert_eq!(expected_transcripts.len(), media_obj.transcripts.len());
+    for transcript in expected_transcripts {
+        assert!(media_obj.transcripts.contains(&transcript))
+    }
+
+    let expected_people = [
+      PodcastPerson {
+          name: String::from("Adam Leventhal"),
+          role: Role::Host,
+          group: Group::Cast,
+          img: Url::parse("https://img.transistor.fm/E-Msi0WvVNEZBkhzuCGyhA-guzdy1j2EPCN77Zw5MHQ/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yYjVl/NDY2NWFlOTNkODgz/MGQ5ZjYwZmFkMzdm/MmVmZC5wbmc.jpg").ok(),
+          href: Url::parse("https://ahl.dtrace.org/").ok(),
+      },
+        PodcastPerson {
+            name: String::from("Bryan Cantrill"),
+            role: Role::Host,
+            group: Group::Cast,
+            img: Url::parse("https://img.transistor.fm/sWb5yGEyJ5R4qi71RQPaBKjJwST46egrouS4o49c7MA/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yNGMy/MTdhMzVjYjM4N2Y5/ODk0OTZjZmFlN2Uy/ZjE3MS5qcGc.jpg").ok(),
+            href: Url::parse("http://dtrace.org/blogs/bmc").ok(),
+        },
+    ];
+
+    assert_eq!(expected_people.len(), media_obj.people.len());
+    for person in expected_people {
+        assert!(media_obj.people.contains(&person));
+    }
+}

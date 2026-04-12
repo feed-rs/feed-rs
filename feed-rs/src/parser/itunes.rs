@@ -4,7 +4,7 @@ use std::time::Duration;
 use crate::model::{Category, Feed, Image, MediaCredit, MediaObject, MediaRating, MediaThumbnail, Person};
 use crate::parser::ParseFeedResult;
 use crate::parser::atom;
-use crate::parser::util::{if_some_then, parse_npt};
+use crate::parser::util::{handle_episode, handle_season, if_some_then, parse_npt};
 use crate::xml::{Element, NS};
 
 // Process <itunes> elements at channel level updating the Feed object as required
@@ -48,6 +48,10 @@ pub(crate) fn handle_itunes_item_element<R: BufRead>(element: Element<R>, media_
         (NS::Itunes, "author") => if_some_then(handle_author(element), |credit| media_obj.credits.push(credit)),
 
         (NS::Itunes, "summary") => media_obj.description = atom::handle_text(element)?,
+
+        (NS::Itunes, "episode") => if_some_then(handle_episode(element), |episode| media_obj.episode = Some(episode)),
+
+        (NS::Itunes, "season") => if_some_then(handle_season(element), |season| media_obj.season = Some(season)),
 
         // Nothing required for unknown elements
         _ => {}
