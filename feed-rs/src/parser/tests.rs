@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 use crate::model::Feed;
-use crate::parser;
+use crate::parser::{self, ParseErrorKind, ParseFeedError};
 use crate::util::test;
 
 // Regression test for the default ID generator
@@ -83,5 +83,170 @@ fn replace_ids(expected: &mut Feed, actual: &mut Feed) {
         if Uuid::parse_str(&expected_entry.id).is_ok() {
             actual_entry.id = expected_entry.id.clone();
         }
+    }
+}
+
+// Verifies line numbers are attached to semantic Atom parse failures
+#[test]
+fn atom_unknown_text_type_reports_line_number() {
+    let xml = concat!(
+        r#"<feed xmlns="http://www.w3.org/2005/Atom">"#,
+        "\n",
+        r#"<title type="[ERROR]">sample feed</title>"#,
+        "\n",
+        r#"<updated>2005-07-31T12:29:29Z</updated>"#,
+        "\n",
+        r#"<id>feed1</id>"#,
+        "\n",
+        r#"</feed>"#,
+    );
+    match parser::parse(xml.as_bytes()) {
+        Err(ParseFeedError::ParseError {
+            kind: ParseErrorKind::UnknownMimeType(mime),
+            line,
+        }) => {
+            assert_eq!(mime, "[ERROR]");
+            assert_eq!(line, Some(2));
+        }
+        other => panic!("unexpected result: {:?}", other),
+    }
+}
+
+// Verifies invalid podcast enum values are reported with the element line number
+#[test]
+fn podcast_invalid_role_reports_line_number() {
+    let xml = concat!(
+        r#"<rss version="2.0" xmlns:podcast="https://podcastindex.org/namespace/1.0">"#,
+        "\n",
+        r#"<channel>"#,
+        "\n",
+        r#"<title>podcast</title>"#,
+        "\n",
+        r#"<link>https://example.com</link>"#,
+        "\n",
+        r#"<description>desc</description>"#,
+        "\n",
+        r#"<podcast:person role="[ERROR]">Alice</podcast:person>"#,
+        "\n",
+        r#"<item>"#,
+        "\n",
+        r#"<title>entry</title>"#,
+        "\n",
+        r#"<link>https://example.com/1</link>"#,
+        "\n",
+        r#"<guid>1</guid>"#,
+        "\n",
+        r#"</item>"#,
+        "\n",
+        r#"</channel>"#,
+        "\n",
+        r#"</rss>"#,
+    );
+    match parser::parse(xml.as_bytes()) {
+        Err(ParseFeedError::ParseError {
+            kind: ParseErrorKind::UnknownEnumVariant(value),
+            line,
+        }) => {
+            assert_eq!(value, "[ERROR]");
+            assert_eq!(line, Some(6));
+        }
+        other => panic!("unexpected result: {:?}", other),
+    }
+}
+
+// Verifies an unrecognised XML root reports the root element line number
+#[test]
+fn unknown_xml_root_reports_line_number() {
+    let xml = concat!(r#"<notafeed>"#, "\n", r#"<title>nope</title>"#, "\n", r#"</notafeed>"#,);
+    match parser::parse(xml.as_bytes()) {
+        Err(ParseFeedError::ParseError {
+            kind: ParseErrorKind::NoFeedRoot,
+            line,
+        }) => {
+            assert_eq!(line, Some(1));
+        }
+        other => panic!("unexpected result: {:?}", other),
+    }
+}
+
+// Verifies failures without an element context do not report a line number
+#[test]
+fn no_feed_root_without_element_has_no_line() {
+    match parser::parse("not a feed".as_bytes()) {
+        Err(ParseFeedError::ParseError {
+            kind: ParseErrorKind::NoFeedRoot,
+            line,
+        }) => {
+            assert_eq!(line, None);
+        }
+        other => panic!("unexpected result: {:?}", other),
+    }
+}
+
+// Verifies MediaRSS parse failures report the element line number
+#[test]
+fn mediarss_invalid_text_type_reports_line_number() {
+    let xml = concat!(
+        r#"<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">"#,
+        "\n",
+        r#"<channel>"#,
+        "\n",
+        r#"<title>feed</title>"#,
+        "\n",
+        r#"<link>https://example.com</link>"#,
+        "\n",
+        r#"<description>desc</description>"#,
+        "\n",
+        r#"<item>"#,
+        "\n",
+        r#"<title>entry</title>"#,
+        "\n",
+        r#"<link>https://example.com/1</link>"#,
+        "\n",
+        r#"<guid>1</guid>"#,
+        "\n",
+        r#"<media:title type="[ERROR]">bad</media:title>"#,
+        "\n",
+        r#"</item>"#,
+        "\n",
+        r#"</channel>"#,
+        "\n",
+        r#"</rss>"#,
+    );
+    match parser::parse(xml.as_bytes()) {
+        Err(ParseFeedError::ParseError {
+            kind: ParseErrorKind::UnknownMimeType(value),
+            line,
+        }) => {
+            assert_eq!(value, "[ERROR]");
+            assert_eq!(line, Some(10));
+        }
+        other => panic!("unexpected result: {:?}", other),
+    }
+}
+
+// Verifies bare-CR line endings still report the correct element line number
+#[test]
+fn atom_unknown_text_type_reports_line_number_with_cr() {
+    let xml = concat!(
+        r#"<feed xmlns="http://www.w3.org/2005/Atom">"#,
+        "\r",
+        r#"<title type="[ERROR]">sample feed</title>"#,
+        "\r",
+        r#"<updated>2005-07-31T12:29:29Z</updated>"#,
+        "\r",
+        r#"<id>feed1</id>"#,
+        "\r",
+        r#"</feed>"#,
+    );
+    match parser::parse(xml.as_bytes()) {
+        Err(ParseFeedError::ParseError {
+            kind: ParseErrorKind::UnknownMimeType(mime),
+            line,
+        }) => {
+            assert_eq!(mime, "[ERROR]");
+            assert_eq!(line, Some(2));
+        }
+        other => panic!("unexpected result: {:?}", other),
     }
 }

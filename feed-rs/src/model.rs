@@ -1263,7 +1263,7 @@ impl FromStr for Role {
             "Assistant Camera" => Ok(Role::AssistantCamera),
             "Editor" => Ok(Role::Editor),
             "Assistant Editor" => Ok(Role::AssistantEditor),
-            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant(s.to_string()))),
+            _ => Err(ParseFeedError::parse(ParseErrorKind::UnknownEnumVariant(s.to_string()))),
         }
     }
 }
@@ -1310,7 +1310,7 @@ impl FromStr for Group {
             "Video Production" => Ok(Group::VideoProduction),
             "Visuals" => Ok(Group::Visuals),
             "Writing" => Ok(Group::Writing),
-            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant(s.to_string()))),
+            _ => Err(ParseFeedError::parse(ParseErrorKind::UnknownEnumVariant(s.to_string()))),
         }
     }
 }

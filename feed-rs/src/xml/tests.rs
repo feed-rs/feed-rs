@@ -257,3 +257,82 @@ fn test_iso8859_decode() -> TestResult {
 
     Ok(())
 }
+
+#[test]
+fn test_element_line_numbers_lf() -> TestResult {
+    let xml = concat!("<root>\n", "  <child>\n", "    <grandchild />\n", "  </child>\n", "  <sibling />\n", "</root>",);
+
+    let source = ElementSource::new(xml.as_bytes(), None)?;
+    let root = source.root()?.unwrap();
+    assert_eq!(root.line_number(), 1);
+
+    let mut root_children = root.children();
+    let child = root_children.next().unwrap()?;
+    assert_eq!(child.name, "child");
+    assert_eq!(child.line_number(), 2);
+
+    let mut child_children = child.children();
+    let grandchild = child_children.next().unwrap()?;
+    assert_eq!(grandchild.name, "grandchild");
+    assert_eq!(grandchild.line_number(), 3);
+    assert!(child_children.next().is_none());
+
+    let sibling = root_children.next().unwrap()?;
+    assert_eq!(sibling.name, "sibling");
+    assert_eq!(sibling.line_number(), 5);
+    assert!(root_children.next().is_none());
+
+    Ok(())
+}
+
+#[test]
+fn test_element_line_numbers_crlf() -> TestResult {
+    let xml = concat!(
+        "<root>\r\n",
+        "  <child>\r\n",
+        "    <grandchild />\r\n",
+        "  </child>\r\n",
+        "  <sibling />\r\n",
+        "</root>",
+    );
+
+    let source = ElementSource::new(xml.as_bytes(), None)?;
+    let root = source.root()?.unwrap();
+    assert_eq!(root.line_number(), 1);
+
+    let mut root_children = root.children();
+    let child = root_children.next().unwrap()?;
+    assert_eq!(child.name, "child");
+    assert_eq!(child.line_number(), 2);
+
+    let mut child_children = child.children();
+    let grandchild = child_children.next().unwrap()?;
+    assert_eq!(grandchild.name, "grandchild");
+    assert_eq!(grandchild.line_number(), 3);
+    assert!(child_children.next().is_none());
+
+    let sibling = root_children.next().unwrap()?;
+    assert_eq!(sibling.name, "sibling");
+    assert_eq!(sibling.line_number(), 5);
+    assert!(root_children.next().is_none());
+
+    Ok(())
+}
+
+#[test]
+fn test_element_line_numbers_with_prelude() -> TestResult {
+    let xml = concat!("<?xml version=\"1.0\"?>\n", "<!-- comment -->\n", "\n", "<root>\n", "  <child />\n", "</root>",);
+
+    let source = ElementSource::new(xml.as_bytes(), None)?;
+    let root = source.root()?.unwrap();
+    assert_eq!(root.name, "root");
+    assert_eq!(root.line_number(), 4);
+
+    let mut children = root.children();
+    let child = children.next().unwrap()?;
+    assert_eq!(child.name, "child");
+    assert_eq!(child.line_number(), 5);
+    assert!(children.next().is_none());
+
+    Ok(())
+}

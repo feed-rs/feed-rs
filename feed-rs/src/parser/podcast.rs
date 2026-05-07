@@ -1,6 +1,6 @@
 use crate::model::{Feed, Group, MediaObject, PodcastPerson, Role, Transcript};
 use crate::parser::util::{if_some_then, parse_uri};
-use crate::parser::{ParseFeedResult, util};
+use crate::parser::{util, ParseFeedResult};
 use crate::xml::{Element, NS};
 use mediatype::MediaTypeBuf;
 use std::io::BufRead;
@@ -36,13 +36,18 @@ pub(crate) fn handle_podcast_item_element<R: BufRead>(element: Element<R>, media
 
 // Handles <podcast:person>
 fn handle_person<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<PodcastPerson>> {
+    let line = element.line_number();
     if let Some(role) = element.attr_value("role") {
-        let role = Role::from_str(&role)?;
+        let role = Role::from_str(&role).map_err(|e| e.with_line(line))?;
         if let Some(name) = element.child_as_text() {
             return Ok(Some(PodcastPerson {
                 name,
                 role,
-                group: element.attr_value("group").map(|g| Group::from_str(&g)).transpose()?.unwrap_or_default(),
+                group: element
+                    .attr_value("group")
+                    .map(|g| Group::from_str(&g).map_err(|e| e.with_line(line)))
+                    .transpose()?
+                    .unwrap_or_default(),
                 img: element.attr_value("img").and_then(|img| Url::parse(&img).ok()),
                 href: element.attr_value("href").and_then(|href| Url::parse(&href).ok()),
             }));

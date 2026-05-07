@@ -2,7 +2,7 @@ use core::fmt;
 use std::cell::RefCell;
 use std::error::Error;
 use std::fmt::Debug;
-use std::io::BufRead;
+use std::io::{self, BufRead, BufReader, Read};
 use std::mem;
 
 use quick_xml::events::{BytesCData, BytesEnd, BytesStart, BytesText, Event};
@@ -15,6 +15,68 @@ mod tests;
 
 /// Iteration over the XML elements may return an error (malformed content etc)
 pub(crate) type XmlResult<T> = Result<T, XmlError>;
+
+///Line Tracking Reader
+pub(crate) struct LineTrackingReader<R> {
+    inner: R,
+    byte_len: u64,
+    line_starts: Vec<u64>,
+    last_was_cr: bool,
+}
+
+impl<R> LineTrackingReader<R> {
+    fn new(inner: R) -> Self {
+        Self {
+            inner,
+            byte_len: 0,
+            line_starts: vec![0],
+            last_was_cr: false,
+        }
+    }
+
+    fn line_for_offset(&self, offset: u64) -> usize {
+        match self.line_starts.binary_search(&offset) {
+            Ok(index) => index + 1,
+            Err(index) => index,
+        }
+    }
+
+    fn record_bytes(&mut self, bytes: &[u8]) {
+    let mut i = 0;
+    while i < bytes.len() {
+        let byte = bytes[i];
+        if self.last_was_cr {
+            if byte == b'\n' {
+                // Complete a CRLF pair: line already counted at CR
+                self.last_was_cr = false;
+                i += 1;
+                continue;
+            }
+            self.last_was_cr = false;
+        }
+        match byte {
+            b'\r' => {
+                self.line_starts.push(self.byte_len + i as u64 + 1);
+                self.last_was_cr = true;
+            }
+            b'\n' => {
+                self.line_starts.push(self.byte_len + i as u64 + 1);
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    self.byte_len += bytes.len() as u64;
+}
+}
+
+impl<R: Read> Read for LineTrackingReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let read = self.inner.read(buf)?;
+        self.record_bytes(&buf[..read]);
+        Ok(read)
+    }
+}
 
 /// Produces elements from the provided source
 pub(crate) struct ElementSource<R: BufRead> {
@@ -31,7 +93,8 @@ impl<R: BufRead> ElementSource<R> {
     /// * `xml_base_uri` - the base URI if known (e.g. Content-Location, feed URI etc)
     pub(crate) fn new(xml_data: R, xml_base_uri: Option<&str>) -> XmlResult<ElementSource<R>> {
         // Create the XML parser
-        let mut reader = NsReader::from_reader(xml_data);
+        let tracking = LineTrackingReader::new(xml_data);
+        let mut reader = NsReader::from_reader(BufReader::new(tracking));
         let config = reader.config_mut();
         config.expand_empty_elements = true;
         config.trim_markup_names_in_closing_tags = true;
@@ -113,7 +176,12 @@ impl<R: BufRead> ElementSource<R> {
         while let Some(node) = state.next()? {
             match node {
                 // The start of an element may be interesting to the iterator
-                XmlEvent::Start { name, attributes, namespace } => {
+                XmlEvent::Start {
+                    name,
+                    attributes,
+                    namespace,
+                    line,
+                } => {
                     // Starting an element increases our depth
                     state.current_depth += 1;
 
@@ -127,6 +195,7 @@ impl<R: BufRead> ElementSource<R> {
                             name,
                             attributes,
                             xml_base: ElementSource::xml_base_fetch(&state),
+                            line,
                             source: self,
                             depth: state.current_depth,
                         };
@@ -227,7 +296,7 @@ impl<R: BufRead> ElementSource<R> {
 
 // Wraps the XML source and current depth of iteration
 struct SourceState<R: BufRead> {
-    reader: NsReader<R>,
+    reader: NsReader<BufReader<LineTrackingReader<R>>>,
     buf_event: Vec<u8>,
     next: XmlResult<Option<XmlEvent>>,
     current_depth: u32,
@@ -237,14 +306,13 @@ struct SourceState<R: BufRead> {
 
 impl<R: BufRead> SourceState<R> {
     // Wrap the reader in additional state (buffers, tree depth etc)
-    fn new(reader: NsReader<R>, xml_base_uri: Option<&str>) -> XmlResult<SourceState<R>> {
+    fn new(reader: NsReader<BufReader<LineTrackingReader<R>>>, xml_base_uri: Option<&str>) -> XmlResult<SourceState<R>> {
         // If we have a base URI, parse it and init at the root
         let mut base_uris = Vec::new();
         if let Some(xml_base_uri) = xml_base_uri {
             let uri = Url::parse(xml_base_uri)?;
             base_uris.push((0, uri));
         }
-
         let buf_event = Vec::with_capacity(512);
         let mut state = SourceState {
             reader,
@@ -258,18 +326,19 @@ impl<R: BufRead> SourceState<R> {
         Ok(state)
     }
 
+    fn line_for_offset(&self, offset: u64) -> usize {
+        self.reader.get_ref().get_ref().line_for_offset(offset)
+    }
+
     // Returns the next event
     fn fetch_next(&mut self) -> XmlResult<Option<XmlEvent>> {
         let decoder = self.reader.decoder();
-        let reader = &mut self.reader;
-
         loop {
-            let (ns_resolution, event) = reader.read_resolved_event_into(&mut self.buf_event)?;
-
+            let event_start = self.reader.buffer_position();
+            let line = self.line_for_offset(event_start);
+            let (ns_resolution, event) = self.reader.read_resolved_event_into(&mut self.buf_event)?;
             match event {
-                // Start of an element
                 Event::Start(ref e) => {
-                    // Parse the namespace
                     let namespace = match ns_resolution {
                         ResolveResult::Bound(ns) => decoder
                             .decode(ns.as_ref())
@@ -278,37 +347,26 @@ impl<R: BufRead> SourceState<R> {
                         ResolveResult::Unknown(_) => self.default_namespace,
                         ResolveResult::Unbound => self.default_namespace,
                     };
-
-                    return Ok(Some(XmlEvent::start(namespace, e, reader)));
+                    return Ok(Some(XmlEvent::start(namespace, e, &self.reader, line)));
                 }
-
-                // End of an element
                 Event::End(ref e) => {
-                    return Ok(Some(XmlEvent::end(e, reader)));
+                    return Ok(Some(XmlEvent::end(e, &self.reader)));
                 }
-
-                // Text
                 Event::Text(ref t) => {
-                    let event = XmlEvent::text(t, reader);
-                    if let Ok(Some(ref _t)) = event {
+                    let event = XmlEvent::text(t, &self.reader);
+                    if let Ok(Some(_)) = event {
                         return event;
                     }
                 }
-
-                // CData is converted to text
                 Event::CData(t) => {
-                    let event = XmlEvent::text_from_cdata(&t, reader);
-                    if let Ok(Some(ref _t)) = event {
+                    let event = XmlEvent::text_from_cdata(&t, &self.reader);
+                    if let Ok(Some(_)) = event {
                         return event;
                     }
                 }
-
-                // The end of the document
                 Event::Eof => {
                     return Ok(None);
                 }
-
-                // Ignore everything else
                 _ => {}
             }
         }
@@ -342,6 +400,9 @@ pub(crate) struct Element<'a, R: BufRead> {
     /// The base URL for this element per the xml:base specification (https://www.w3.org/TR/xmlbase/)
     pub xml_base: Option<Url>,
 
+    /// The line number of the start of the element.
+    line: usize,
+
     // Depth of this element
     depth: u32,
 
@@ -368,6 +429,11 @@ impl<'a, R: BufRead> Element<'a, R> {
             source: self.source,
             depth: self.depth + 1,
         }
+    }
+
+    /// Returns the line number where the tag starts.
+    pub(crate) fn line_number(&self) -> usize {
+        self.line
     }
 
     /// Concatenates the children of this node into a string
@@ -500,9 +566,16 @@ impl From<quick_xml::escape::EscapeError> for XmlError {
 // Abstraction over the underlying XML reader event model
 enum XmlEvent {
     // An XML start tag
-    Start { namespace: NS, name: String, attributes: Vec<NameValue> },
+    Start {
+        namespace: NS,
+        name: String,
+        attributes: Vec<NameValue>,
+        line: usize,
+    },
     // An XML end tag
-    End { name: String },
+    End {
+        name: String,
+    },
     // Text or CData
     Text(String),
 }
@@ -527,7 +600,7 @@ impl XmlEvent {
     }
 
     // Creates a new event corresponding to an XML start-tag
-    fn start<R: BufRead>(namespace: NS, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
+    fn start<R: BufRead>(namespace: NS, event: &BytesStart, reader: &Reader<R>, line: usize) -> XmlEvent {
         // Parse the name
         let name = XmlEvent::parse_name(event.name().as_ref(), reader);
 
@@ -557,7 +630,12 @@ impl XmlEvent {
             })
             .collect::<Vec<NameValue>>();
 
-        XmlEvent::Start { namespace, name, attributes }
+        XmlEvent::Start {
+            namespace,
+            name,
+            attributes,
+            line,
+        }
     }
 
     // Creates a new event corresponding to an XML text node

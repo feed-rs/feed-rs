@@ -25,7 +25,7 @@ pub(crate) fn parse<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedR
     if let Some(channel) = found_channel {
         handle_channel(parser, channel?)
     } else {
-        Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
+        Err(ParseFeedError::parse(ParseErrorKind::NoFeedRoot))
     }
 }
 

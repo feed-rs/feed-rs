@@ -1,6 +1,5 @@
 use std::error::Error;
-use std::fmt;
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
 use std::hash::Hasher;
 use std::io::{BufRead, BufReader, Read};
 
@@ -28,7 +27,7 @@ pub type ParseFeedResult<T> = Result<T, ParseFeedError>;
 #[derive(Debug)]
 pub enum ParseFeedError {
     // TODO add line number/position
-    ParseError(ParseErrorKind),
+    ParseError { kind: ParseErrorKind, line: Option<usize> },
     // IO error
     IoError(std::io::Error),
     // Underlying issue with JSON (poorly formatted etc.)
@@ -37,6 +36,21 @@ pub enum ParseFeedError {
     JsonUnsupportedVersion(String),
     // Underlying issue with XML (poorly formatted etc.)
     XmlReader(xml::XmlError),
+}
+
+impl ParseFeedError {
+    pub(crate) fn parse(kind: ParseErrorKind) -> Self {
+        Self::ParseError { kind, line: None }
+    }
+    pub(crate) fn parse_at_line(kind: ParseErrorKind, line: usize) -> Self {
+        Self::ParseError { kind, line: Some(line) }
+    }
+    pub(crate) fn with_line(self, line: usize) -> Self {
+        match self {
+            Self::ParseError { kind, line: None } => Self::ParseError { kind, line: Some(line) },
+            other => other,
+        }
+    }
 }
 
 impl From<serde_json::error::Error> for ParseFeedError {
@@ -60,7 +74,8 @@ impl From<xml::XmlError> for ParseFeedError {
 impl fmt::Display for ParseFeedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseFeedError::ParseError(pe) => write!(f, "unable to parse feed: {}", pe),
+            ParseFeedError::ParseError { kind, line: Some(line_number) } => write!(f, "unable to parse feed: {} at line {}", kind, line_number),
+            ParseFeedError::ParseError { kind, line: None } => write!(f, "unable to parse deed: {}", kind),
             ParseFeedError::IoError(ie) => write!(f, "unable to read feed: {}", ie),
             ParseFeedError::JsonSerde(je) => write!(f, "unable to parse JSON: {}", je),
             ParseFeedError::JsonUnsupportedVersion(version) => write!(f, "unsupported version: {}", version),
@@ -155,7 +170,7 @@ impl Parser {
 
             Some('{') => self.parse_json(input),
 
-            _ => Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot)),
+            _ => Err(ParseFeedError::parse(ParseErrorKind::NoFeedRoot)),
         };
 
         // Post-processing as required
@@ -188,9 +203,11 @@ impl Parser {
     fn parse_xml<R: BufRead>(&self, source: R) -> ParseFeedResult<model::Feed> {
         // Set up the source of XML elements from the input
         let element_source = xml::ElementSource::new(source, self.base_uri.as_deref())?;
-        if let Ok(Some(root)) = element_source.root() {
+        // Propagate XML errors through ?
+        if let Some(root) = element_source.root()? {
             // Dispatch to the correct parser
             let version = root.attr_value("version");
+            let line = root.line_number();
             match (root.name.as_str(), version.as_deref()) {
                 ("feed", _) => {
                     element_source.set_default_default_namespace(NS::Atom);
@@ -212,12 +229,12 @@ impl Parser {
                     element_source.set_default_default_namespace(NS::RSS);
                     return rss1::parse(self, root);
                 }
-                _ => {}
-            };
+                _ => {
+                    return Err(ParseFeedError::parse_at_line(ParseErrorKind::NoFeedRoot, line));
+                }
+            }
         }
-
-        // Couldn't find a recognised feed within the provided XML stream
-        Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot))
+        Err(ParseFeedError::parse(ParseErrorKind::NoFeedRoot))
     }
 }
 

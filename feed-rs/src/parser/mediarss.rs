@@ -1,11 +1,11 @@
 use std::io::BufRead;
 use std::time::Duration;
 
-use mediatype::{MediaTypeBuf, names};
+use mediatype::{names, MediaTypeBuf};
 
 use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaRating, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
-use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult, util};
+use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::xml::{Element, NS};
 
 // TODO When an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
@@ -268,13 +268,14 @@ fn handle_media_thumbnail<R: BufRead>(element: Element<R>) -> Option<MediaThumbn
 fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
     // Find type, defaulting to "plain" if not present
     let type_attr = element.attributes.iter().find(|a| &a.name == "type").map_or("plain", |a| a.value.as_str());
+    let line = element.line_number();
 
     let mime = match type_attr {
         "plain" => Ok(MediaTypeBuf::new(names::TEXT, names::PLAIN)),
         "html" => Ok(MediaTypeBuf::new(names::TEXT, names::HTML)),
 
         // Unknown content type
-        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),
+        _ => Err(ParseFeedError::parse_at_line(ParseErrorKind::UnknownMimeType(type_attr.into()), line)),
     }?;
 
     element
@@ -285,5 +286,5 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
             Some(text)
         })
         // Need the text for a text element
-        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))
+        .ok_or(ParseFeedError::parse_at_line(ParseErrorKind::MissingContent("text"), line))
 }
