@@ -32,6 +32,7 @@ fn fuzz_parse() {
 }
 
 // Verifies that a round-trip through the parser + serde works correctly over time
+// If you legitimately need to regenerate the serialised fixture data then run: cargo run --bin fixture_serde
 #[test]
 fn serde_regression() {
     let fixture_root_dir = test::fixture_dir();

@@ -713,7 +713,7 @@ impl Link {
 /// i.e. combines "media:*" elements from the RSS Media spec such as those under a media:group
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct MediaObject {
-    #[serde(skip)]
+    // Final post-processed source of this media object
     pub(crate) source: Option<MediaObjectSource>,
 
     /// Title of the object (from the media:title element)
