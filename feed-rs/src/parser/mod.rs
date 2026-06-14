@@ -13,13 +13,12 @@ use crate::xml;
 use crate::xml::NS;
 
 mod atom;
+mod itunes;
 mod json;
+mod mediarss;
 mod rss0;
 mod rss1;
 mod rss2;
-
-pub(crate) mod itunes;
-pub(crate) mod mediarss;
 pub(crate) mod util;
 
 pub type ParseFeedResult<T> = Result<T, ParseFeedError>;
@@ -91,6 +90,8 @@ pub enum ParseErrorKind {
     MissingContent(&'static str),
     /// Unknown enum variant
     UnknownEnumVariant(String),
+    /// Unexpected state
+    IllegalState(String),
 }
 
 impl fmt::Display for ParseErrorKind {
@@ -100,6 +101,7 @@ impl fmt::Display for ParseErrorKind {
             ParseErrorKind::UnknownMimeType(mime) => write!(f, "unsupported content type {}", mime),
             ParseErrorKind::MissingContent(elem) => write!(f, "missing content element {}", elem),
             ParseErrorKind::UnknownEnumVariant(val) => write!(f, "unknown enum variant {}", val),
+            ParseErrorKind::IllegalState(val) => write!(f, "illegal parser state {}", val),
         }
     }
 }
@@ -110,6 +112,9 @@ pub struct Parser {
     id_generator: Box<IdGenerator>,
     sanitize_content: bool,
     timestamp_parser: Box<TimestampParser>,
+
+    // state for MediaRSS handling
+    mediarss: mediarss::MediaRssState,
 }
 
 impl Parser {
@@ -255,6 +260,7 @@ impl Builder {
             id_generator: self.id_generator,
             sanitize_content: self.sanitize_content,
             timestamp_parser: self.timestamp_parser,
+            mediarss: mediarss::MediaRssState::new(),
         }
     }
 

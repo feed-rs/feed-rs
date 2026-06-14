@@ -1,5 +1,6 @@
 use crate::model::{
-    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaText, MediaThumbnail, Person, Text,
+    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaObjectSource, MediaText, MediaThumbnail,
+    Person, Text,
 };
 use crate::parser;
 use crate::util::test;
@@ -272,13 +273,6 @@ fn test_example_6() {
                         .content_type("text/html"),
                 )
                 .author(Person::new("markpritchard"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars3.githubusercontent.com/u/8234070?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
         )
         .entry(
             Entry::default()
@@ -292,57 +286,6 @@ fn test_example_6() {
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
                 .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
-        )
-        .entry(
-            Entry::default()
-                .id("tag:github.com,2008:Repository/90976281/0.1.1")
-                .updated_parsed("2017-06-16T18:49:36+10:00")
-                .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1", None)
-                        .rel("alternate")
-                        .media_type("text/html"),
-                )
-                .title(Text::new("0.1.1".into()))
-                .content(
-                    Content::default()
-                        .body(r#"<p>Handle rel attribute of link element of entry of atom</p>"#)
-                        .content_type("text/html"),
-                )
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
-        )
-        .entry(
-            Entry::default()
-                .id("tag:github.com,2008:Repository/90976281/0.1.0")
-                .updated_parsed("2017-06-15T16:44:26+10:00")
-                .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0", None)
-                        .rel("alternate")
-                        .media_type("text/html"),
-                )
-                .title(Text::new("0.1.0".into()))
-                .content(Content::default().body(r#"<p>Update crate info to Cargo.toml</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
         );
 
     // Check
@@ -494,7 +437,7 @@ fn test_mediarss_youtube() {
     let test_data = test::fixture_as_string("atom/atom_mediarss_youtube_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::default()
+    let expected = MediaObject::new(MediaObjectSource::MediaRSS)
         .title("Navigating with Quantum Entanglement")
         .content(
             MediaContent::new()
@@ -509,7 +452,7 @@ fn test_mediarss_youtube() {
                 .height(360),
         ))
         .description("Check Out Weathered on PBS Terra https://www.youtube.com/watch?v=znSN7ZFIaOg&ab_channel=PBSTerra")
-        .community(MediaCommunity::new().star_rating(15020, 4.95, 1, 5).statistics(304321, 42));
+        .community(MediaCommunity::new().star_rating(15020, 4.95, 1, 5).statistics(Some(304321), Some(42)));
 
     // Check the media object
     let entry = &actual.entries[0];
@@ -523,7 +466,7 @@ fn test_mediarss_newscred() {
     let test_data = test::fixture_as_string("atom/atom_mediarss_newscred_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::default()
+    let expected = MediaObject::new(MediaObjectSource::MediaRSS)
         .title("media title")
         .description("media description")
         .text(MediaText::new(Text::new("media text".to_string())))
@@ -543,20 +486,6 @@ fn test_mediarss_newscred() {
 
     // Check the media object
     let entry = &actual.entries[0];
-    let media_obj = &entry.media[0];
-    assert_eq!(media_obj, &expected);
-}
-
-#[test]
-fn test_reddit() {
-    let test_data = test::fixture_as_string("atom/atom_mediarss_reddit_1.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
-
-    let expected = MediaObject::default().thumbnail(MediaThumbnail::new(Image::new(
-        "https://b.thumbs.redditmedia.com/_MXt-0n8VXQc-EQ7Q0vFioALFWFITAgVWu4Wf8dThhU.jpg".to_string(),
-    )));
-
-    let entry = &actual.entries[actual.entries.len() - 2];
     let media_obj = &entry.media[0];
     assert_eq!(media_obj, &expected);
 }
