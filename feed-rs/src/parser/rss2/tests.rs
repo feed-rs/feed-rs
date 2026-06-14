@@ -70,7 +70,7 @@ fn test_example_2() {
             .id("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship")
             .published("Thu, 01 Aug 2019 16:15 EDT")
             .updated_parsed("Thu, 01 Aug 2019 16:15 EDT")
-            .media(MediaObject::default()
+            .media(MediaObject::new(MediaObjectSource::RSS)
                 .content(MediaContent::new()
                     .url("http://www.nasa.gov/sites/default/files/styles/1x1_cardfeed/public/thumbnails/image/47616261882_4bb534d293_k.jpg?itok=Djjjs81t")
                     .content_type("image/jpeg")
@@ -108,9 +108,6 @@ fn test_example_3() {
             .category(Category::new("News / Q. & A."))
             .published("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated_parsed("Fri, 02 Aug 2019 15:35:34 +0000")
-            .media(MediaObject::default()
-                .thumbnail(MediaThumbnail::new(Image::new("https://media.newyorker.com/photos/5d4211a4ba8a9c0009a57cfd/master/pass/Chotiner-ReaganRacismNaftali-3.jpg".into()).width(2560).height(1819)))
-            )
         );
 
     // Check
@@ -401,7 +398,7 @@ fn test_spiegel() {
                 .updated_parsed("2021-02-06T23:01:00Z")
                 .id("c7e3cca2-665e-4bc4-bcac-acc6011b9fa2")
                 // <enclosure>, media: and itunes: tags
-                .media(MediaObject::default()
+                .media(MediaObject::new(MediaObjectSource::MediaRSS)
                     .title("07.02. – die Wochenvorschau: Lockdown-Verlängerung, Kriegsverbrecher vor Gericht, Super Bowl, Karneval ")
                     .description("Die wichtigsten Nachrichten aus der SPIEGEL-Redaktion. \nSee omnystudio.com/listener for privacy information.")
                     .credit("DER SPIEGEL")
@@ -413,11 +410,6 @@ fn test_spiegel() {
                     .content(MediaContent::new()
                         .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large")
                         .content_type("image/jpeg")
-                    )
-                    .content(MediaContent::new()
-                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
-                        .size(2519606)
-                        .content_type("audio/mpeg")
                     )
                     .duration(Duration::from_secs(312))
                 )
@@ -477,15 +469,9 @@ fn test_bbc() {
                 .link(Link::new("http://www.bbc.co.uk/programmes/m000sjxt", None))
                 // <enclosure>,  media: and itunes: tags
                 .media(
-                    MediaObject::default()
+                    MediaObject::new(MediaObjectSource::MediaRSS)
                         .description("Melvyn Bragg and guests discuss the man who, according to Machiavelli...")
                         .duration(Duration::from_secs(3156))
-                        .content(
-                            MediaContent::new()
-                                .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
-                                .size(50496000)
-                                .content_type("audio/mpeg"),
-                        )
                         .content(
                             MediaContent::new()
                                 .url("http://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download/proto/http/vpid/p097wt5b.mp3")
@@ -552,7 +538,7 @@ fn test_ch9() {
                 .category(Category::new("aft"))
                 // <media:group>
                 .media(
-                    MediaObject::default()
+                    MediaObject::new(MediaObjectSource::MediaRSS)
                         .content(
                             MediaContent::new()
                                 .url("https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4")
@@ -593,39 +579,19 @@ fn test_ch9() {
                                 .url("https://www.youtube-nocookie.com/embed/E-XqYb88hUY?enablejsapi=1")
                                 .duration(Duration::from_secs(867))
                                 .size(1),
-                        ),
-                )
-                // <enclosure> and <media:*>
-                .media(
-                    MediaObject::default()
-                        .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
-                        .duration(Duration::from_secs(867))
+                        )
                         .thumbnail(MediaThumbnail::new(
                             Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into())
-                                .height(56)
-                                .width(100),
+                                .width(100)
+                                .height(56),
                         ))
                         .thumbnail(MediaThumbnail::new(
                             Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into())
-                                .height(123)
-                                .width(220),
+                                .width(220)
+                                .height(123),
                         ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg".into())
-                                .height(288)
-                                .width(512),
-                        ))
-                        .thumbnail(MediaThumbnail::new(
-                            Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg".into())
-                                .height(540)
-                                .width(960),
-                        ))
-                        .content(
-                            MediaContent::new()
-                                .url("https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663_high.mp4")
-                                .size(126659374)
-                                .content_type("video/mp4"),
-                        )
+                        .duration(Duration::from_secs(867))
+                        .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")
                         .credit("Scott Hanselman, Rob Caron"),
                 ),
         );
@@ -825,7 +791,11 @@ fn test_itunes_episode_season() {
 fn test_podcast_items() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_transistorfm.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
-    let media_obj = actual.entries.first().unwrap().media.first().unwrap();
+
+    // We should have merged the various media objects into a single entry
+    assert_eq!(actual.entries.len(), 1);
+    assert_eq!(actual.entries[0].media.len(), 1);
+    let media_obj = &actual.entries[0].media[0];
 
     assert_eq!(media_obj.season, Some(Season { name: None, number: 5 }));
     assert_eq!(media_obj.episode, Some(Episode { display: None, number: 10.0 }));
@@ -872,4 +842,51 @@ fn test_podcast_items() {
     for person in expected_people {
         assert!(media_obj.people.contains(&person));
     }
+}
+
+// Verify we handle MediaRSS objects correctly
+#[test]
+fn test_peertube_mediarss() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_peertube.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // We should only have a single entry
+    assert_eq!(1, actual.entries.len());
+    let entry = &actual.entries[0];
+    assert_eq!("Max schaukelt", entry.title.as_ref().unwrap().content);
+
+    // This entry should only have a single Media RSS object
+    assert_eq!(1, entry.media.len());
+    let actual = &entry.media[0];
+
+    // Optional Media RSS elements occur before and after the content, but all of them should be present on the media object we emit
+    // We should also be copying higher-level elements (such as rating) on to each content item
+    let expected = MediaObject::new(MediaObjectSource::MediaRSS)
+        .community(MediaCommunity::new().statistics(Some(5), None))
+        .content(
+            MediaContent::new()
+                .content_type("video/mp4")
+                .height(2160)
+                .size(26517343)
+                .url("https://media.tube.tchncs.de/videos/e5ae90de-4f23-4795-bdf9-2a7f91fa49b5-2160.mp4")
+                .duration(Duration::new(11, 0))
+                .rating(MediaRating::new("nonadult".into()).urn("urn:simple")),
+        )
+        .content(
+            MediaContent::new()
+                .content_type("video/mp4")
+                .height(1080)
+                .size(7976897)
+                .url("https://media.tube.tchncs.de/videos/428992cc-1ca0-46ad-9e97-97f9f7f6bec2-1080.mp4")
+                .duration(Duration::new(11, 0))
+                .rating(MediaRating::new("nonadult".into()).urn("urn:simple")),
+        )
+        .thumbnail(MediaThumbnail::new(
+            Image::new("https://tube.tchncs.de/lazy-static/thumbnails/2145486d-b02a-443f-9ca7-0766c160c329.jpg".into())
+                .height(1400)
+                .width(1400),
+        ))
+        .title("Max schaukelt (media title)")
+        .description("Max, das bunte Strickhorn, schaukelt mit einem hängenden Erdbeer-Fass. Backlink: https://plushies.social/@maxhorn/116387023010050899");
+    assert_eq!(&expected, actual);
 }

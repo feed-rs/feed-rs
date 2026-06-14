@@ -2,12 +2,11 @@ use std::io::BufRead;
 
 use mediatype::{MediaTypeBuf, names};
 
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaObject, Person, Text};
-use crate::parser::mediarss::handle_media_element;
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
+use crate::parser::Parser;
 use crate::parser::util;
 use crate::parser::util::if_some_then;
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
-use crate::parser::{Parser, mediarss};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
@@ -17,6 +16,7 @@ mod tests;
 pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> ParseFeedResult<Feed> {
     let mut feed = Feed::new(FeedType::Atom);
 
+    // Extract top-level info
     feed.language = util::handle_language_attr(&root);
 
     for child in root.children() {
@@ -184,8 +184,8 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
 
 // Handles an Atom <entry>
 fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedResult<Option<Entry>> {
-    // Create a default MediaRSS content object for non-grouped elements
-    let mut media_obj = MediaObject::default();
+    // Note we have started a new MediaRSS entry scope
+    parser.mediarss.entry_begin();
 
     // Parse the entry
     let mut entry = Entry::default();
@@ -220,21 +220,16 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
 
             (NS::Atom, "rights") => entry.rights = handle_text(child)?,
 
-            // MediaRSS group creates a new object for this group of elements
-            (NS::MediaRSS, "group") => if_some_then(mediarss::handle_media_group(child)?, |obj| entry.media.push(obj)),
-
-            // MediaRSS tags that are not grouped are parsed into the default object
-            (NS::MediaRSS, _) => handle_media_element(child, &mut media_obj)?,
+            // Handle MediaRSS elements
+            (NS::MediaRSS, _) => parser.mediarss.handle_entry_mediarss_element(child)?,
 
             // Nothing required for unknown elements
             _ => {}
         }
     }
 
-    // If a media:content or media:thumbnail item was found in this entry, then attach it
-    if !media_obj.content.is_empty() || !media_obj.thumbnails.is_empty() {
-        entry.media.push(media_obj);
-    }
+    // Handle completion of an entry, potentially emitting media objects if we've found them along the way
+    parser.mediarss.entry_end(&mut entry);
 
     Ok(Some(entry))
 }

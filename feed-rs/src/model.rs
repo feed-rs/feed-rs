@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -35,7 +36,7 @@ use crate::parser::{ParseErrorKind, ParseFeedError, util};
 ///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Deserialize, PartialEq, Serialize)]
 pub struct Feed {
     /// Type of this feed (e.g. RSS2, Atom etc)
     pub feed_type: FeedType,
@@ -137,6 +138,12 @@ impl Feed {
     }
 }
 
+impl Debug for Feed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        f.write_str(serde_json::to_string(self).unwrap().as_str())
+    }
+}
+
 #[cfg(test)]
 impl Feed {
     pub fn author(mut self, person: Person) -> Self {
@@ -225,7 +232,7 @@ impl Feed {
     }
 }
 
-/// Type of a feed (RSS, Atom etc)
+/// Type of feed (RSS, Atom etc)
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum FeedType {
     Atom,
@@ -245,7 +252,7 @@ pub struct Entry {
     /// * JSON Feed: is unique for that item for that feed over time.
     pub id: String,
     /// Title of this item within the feed
-    /// * Atom, RSS 1(required): Contains a human readable title for the entry.
+    /// * Atom, RSS 1(required): Contains a human-readable title for the entry.
     /// * RSS 2 (optional): The title of the item.
     /// * JSON Feed: The title of the item.
     pub title: Option<Text>,
@@ -302,7 +309,7 @@ pub struct Entry {
     /// 1) each "media:group" element encountered in the feed
     /// 2) a default for any other "media:*" elements found at the item level
     ///
-    /// See the Atom tests for youtube and newscred for examples
+    /// See the Atom tests for YouTube and newscred for examples
     pub media: Vec<MediaObject>,
 
     /// Atom (optional): The language specified on the item
@@ -706,6 +713,9 @@ impl Link {
 /// i.e. combines "media:*" elements from the RSS Media spec such as those under a media:group
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct MediaObject {
+    // Final post-processed source of this media object
+    pub(crate) source: Option<MediaObjectSource>,
+
     /// Title of the object (from the media:title element)
     pub title: Option<Text>,
     /// Collection of the media content elements
@@ -725,18 +735,26 @@ pub struct MediaObject {
 
     /// Podcast: People associated with this episode
     pub people: Vec<PodcastPerson>,
-    /// Podcast (optional): Season number
+    /// iTunes + Podcast (optional): Season number
     pub season: Option<Season>,
-    /// Podcast (optional): Episode number
+    /// iTunes + Podcast (optional): Episode number
     pub episode: Option<Episode>,
     /// Podcast: Available transcripts
     pub transcripts: Vec<Transcript>,
 }
 
 impl MediaObject {
-    // Checks if this object has been populated with content
-    pub(crate) fn has_content(&self) -> bool {
-        self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.thumbnails.is_empty() || !self.texts.is_empty()
+    // Checks if this object has been populated with any content (e.g. iTunes, Podcast etc.)
+    pub(crate) fn is_not_empty(&self) -> bool {
+        self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.texts.is_empty() || !self.transcripts.is_empty()
+    }
+
+    // Creates a new instance with the nominated source
+    pub(crate) fn new(source: MediaObjectSource) -> Self {
+        MediaObject {
+            source: Some(source),
+            ..Default::default()
+        }
     }
 }
 
@@ -783,6 +801,14 @@ impl MediaObject {
     }
 }
 
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub(crate) enum MediaObjectSource {
+    RSS,
+    MediaRSS,
+    ITunes,
+    Podcast,
+}
+
 /// Represents a "media:community" item from the RSS Media spec
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct MediaCommunity {
@@ -820,9 +846,9 @@ impl MediaCommunity {
         self
     }
 
-    pub fn statistics(mut self, views: u64, favorites: u64) -> Self {
-        self.stats_views = Some(views);
-        self.stats_favorites = Some(favorites);
+    pub fn statistics(mut self, views: Option<u64>, favorites: Option<u64>) -> Self {
+        self.stats_views = views;
+        self.stats_favorites = favorites;
         self
     }
 }
@@ -874,6 +900,11 @@ impl MediaContent {
 
     pub fn size(mut self, size: u64) -> Self {
         self.size = Some(size);
+        self
+    }
+
+    pub fn rating(mut self, rating: MediaRating) -> Self {
+        self.rating = Some(rating);
         self
     }
 }
