@@ -751,9 +751,10 @@ impl MediaObject {
 
     // Creates a new instance with the nominated source
     pub(crate) fn new(source: MediaObjectSource) -> Self {
-        let mut media_obj = MediaObject::default();
-        media_obj.source = Some(source);
-        media_obj
+        MediaObject {
+            source: Some(source),
+            ..Default::default()
+        }
     }
 }
 

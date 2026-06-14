@@ -3,11 +3,11 @@ use std::io::BufRead;
 use std::mem;
 use std::time::Duration;
 
-use mediatype::{names, MediaTypeBuf};
+use mediatype::{MediaTypeBuf, names};
 
 use crate::model::{Entry, Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaObjectSource, MediaRating, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
-use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult, util};
 use crate::xml::{Element, NS};
 
 pub(crate) struct MediaRssState {
@@ -56,14 +56,14 @@ impl MediaRssState {
 
             Ok(())
         } else {
-            Err(ParseFeedError::ParseError(ParseErrorKind::IllegalState("scope was not setup during mediarss entry parsing".to_string())))
+            Err(ParseFeedError::ParseError(ParseErrorKind::IllegalState(
+                "scope was not setup during mediarss entry parsing".to_string(),
+            )))
         }
     }
 
     pub(crate) fn new() -> MediaRssState {
-        MediaRssState {
-            root: RefCell::new(None),
-        }
+        MediaRssState { root: RefCell::new(None) }
     }
 }
 
@@ -253,17 +253,10 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut Scope) 
 
             (NS::MediaRSS, "rating") => content.rating = handle_media_rating(child),
 
-            // These elements are modeled as fields on the parent MediaObject, but only set if the parent field does not already have a value
-            (NS::MediaRSS, "title") => {
-                if media_obj.title.is_none() {
-                    media_obj.title = handle_text(child)?
-                }
-            }
-            (NS::MediaRSS, "description") => {
-                if media_obj.description.is_none() {
-                    media_obj.description = handle_text(child)?
-                }
-            }
+            // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
+            (NS::MediaRSS, "title") if media_obj.title.is_none() => media_obj.title = handle_text(child)?,
+
+            (NS::MediaRSS, "description") if media_obj.description.is_none() => media_obj.description = handle_text(child)?,
 
             // These elements are accumulated in the corresponding field of the parent MediaObject
             (NS::MediaRSS, "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),

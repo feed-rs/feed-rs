@@ -272,7 +272,7 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::new("markpritchard"))
+                .author(Person::new("markpritchard")),
         )
         .entry(
             Entry::default()
@@ -285,7 +285,7 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook"))
+                .author(Person::new("kumabook")),
         );
 
     // Check

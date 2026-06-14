@@ -102,11 +102,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
 
-            (NS::DublinCore, "description") => {
-                if entry.summary.is_none() {
-                    entry.summary = util::handle_text(child)
-                }
-            }
+            (NS::DublinCore, "description") if entry.summary.is_none() => entry.summary = util::handle_text(child),
 
             (NS::DublinCore, "rights") => entry.rights = util::handle_text(child),
 

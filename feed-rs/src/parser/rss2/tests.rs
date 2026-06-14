@@ -583,12 +583,12 @@ fn test_ch9() {
                         .thumbnail(MediaThumbnail::new(
                             Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg".into())
                                 .width(100)
-                                .height(56)
+                                .height(56),
                         ))
                         .thumbnail(MediaThumbnail::new(
                             Image::new("https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg".into())
                                 .width(220)
-                                .height(123)
+                                .height(123),
                         ))
                         .duration(Duration::from_secs(867))
                         .description("Yun Jung Choi shows Scott Hanselman how to use AKS Diagnostics...")

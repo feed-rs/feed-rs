@@ -1,4 +1,4 @@
-use mediatype::{names, MediaTypeBuf};
+use mediatype::{MediaTypeBuf, names};
 use std::io::BufRead;
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, MediaObjectSource, Person};
@@ -6,8 +6,8 @@ use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_el
 use crate::parser::podcast::{handle_podcast_channel_element, handle_podcast_item_element};
 use crate::parser::util;
 use crate::parser::util::{if_ok_then_some, if_some_then};
-use crate::parser::{atom, Parser};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{Parser, atom};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
