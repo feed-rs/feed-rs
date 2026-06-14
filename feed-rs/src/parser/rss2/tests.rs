@@ -890,3 +890,13 @@ fn test_peertube_mediarss() {
         .description("Max, das bunte Strickhorn, schaukelt mit einem hängenden Erdbeer-Fass. Backlink: https://plushies.social/@maxhorn/116387023010050899");
     assert_eq!(&expected, actual);
 }
+
+// Verify we handle feeds with missing schema versions (!)
+#[test]
+fn test_iprogrammer_missing_rss_version() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_iprogrammer.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Don't need to check much, just that we can parse it into a valid graph
+    assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())))
+}

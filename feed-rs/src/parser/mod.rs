@@ -205,7 +205,7 @@ impl Parser {
                     element_source.set_default_default_namespace(NS::Atom);
                     return atom::parse_entry(self, root);
                 }
-                ("rss", Some("2.0")) => {
+                ("rss", Some("2.0")) | ("rss", Some("")) => {
                     element_source.set_default_default_namespace(NS::RSS);
                     return rss2::parse(self, root);
                 }
