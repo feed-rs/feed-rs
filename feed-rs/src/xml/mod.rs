@@ -168,7 +168,7 @@ impl<R: BufRead> ElementSource<R> {
 
         // If the next event is characters, we have found our text
         if let Ok(Some(XmlEvent::Text(_text))) = state.peek() {
-            // Grab the next event - we know its a Text event from the above
+            // Grab the next event - we know it's a Text event from the above
             match state.next() {
                 Ok(Some(XmlEvent::Text(text))) => return Some(text),
                 _ => unreachable!("state.next() did not return expected XmlEvent::Text"),
@@ -349,8 +349,6 @@ pub(crate) struct Element<'a, R: BufRead> {
     source: &'a ElementSource<R>,
 }
 
-// TODO this is flagged as needless, but is required in Element... fix this
-#[allow(clippy::needless_lifetimes)]
 impl<'a, R: BufRead> Element<'a, R> {
     /// Returns the value for an attribute if it exists
     pub(crate) fn attr_value(&self, name: &str) -> Option<String> {
@@ -387,8 +385,6 @@ impl<'a, R: BufRead> Element<'a, R> {
     }
 }
 
-// TODO this is flagged as needless, but is required in Element... fix this
-#[allow(clippy::needless_lifetimes)]
 impl<'a, R: BufRead> Debug for Element<'a, R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut buffer = String::new();
@@ -427,6 +423,7 @@ pub(crate) enum NS {
 }
 
 impl NS {
+    //noinspection HttpUrlsUsage
     fn parse(s: &str) -> NS {
         match s {
             "http://purl.org/rss/1.0/" => NS::RSS,
