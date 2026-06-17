@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::str::FromStr;
 use std::time::Duration;
 
 use chrono::{DateTime, Utc};
@@ -1225,12 +1224,8 @@ impl Role {
             Self::AssistantEditor => Group::VideoPostProduction,
         }
     }
-}
 
-impl FromStr for Role {
-    type Err = ParseFeedError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    pub(crate) fn parse(position: u64, s: &str) -> Result<Self, ParseFeedError> {
         match normalise_case(s).as_str() {
             "Director" => Ok(Role::Director),
             "Assistant Director" => Ok(Role::AssistantDirector),
@@ -1294,7 +1289,10 @@ impl FromStr for Role {
             "Assistant Camera" => Ok(Role::AssistantCamera),
             "Editor" => Ok(Role::Editor),
             "Assistant Editor" => Ok(Role::AssistantEditor),
-            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant(s.to_string()))),
+            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant {
+                position,
+                reference: s.to_string(),
+            })),
         }
     }
 }
@@ -1325,10 +1323,8 @@ pub enum Group {
     Writing,
 }
 
-impl FromStr for Group {
-    type Err = ParseFeedError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl Group {
+    pub(crate) fn parse(position: u64, s: &str) -> Result<Self, ParseFeedError> {
         match normalise_case(s).as_str() {
             "Administration" => Ok(Group::Administration),
             "Audio Post-Production" => Ok(Group::AudioPostProduction),
@@ -1341,7 +1337,10 @@ impl FromStr for Group {
             "Video Production" => Ok(Group::VideoProduction),
             "Visuals" => Ok(Group::Visuals),
             "Writing" => Ok(Group::Writing),
-            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant(s.to_string()))),
+            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant {
+                position,
+                reference: s.to_string(),
+            })),
         }
     }
 }

@@ -56,9 +56,10 @@ impl MediaRssState {
 
             Ok(())
         } else {
-            Err(ParseFeedError::ParseError(ParseErrorKind::IllegalState(
-                "scope was not setup during mediarss entry parsing".to_string(),
-            )))
+            Err(ParseFeedError::ParseError(ParseErrorKind::IllegalState {
+                position: element.buffer_pos,
+                reference: "scope was not setup during mediarss entry parsing".to_string(),
+            }))
         }
     }
 
@@ -374,7 +375,10 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
         "html" => Ok(MediaTypeBuf::new(names::TEXT, names::HTML)),
 
         // Unknown content type
-        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),
+        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType {
+            position: element.buffer_pos,
+            mime: type_attr.into(),
+        })),
     }?;
 
     element
@@ -385,5 +389,8 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
             Some(text)
         })
         // Need the text for a text element
-        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))
+        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
+            position: element.buffer_pos,
+            reference: "text",
+        }))
 }

@@ -113,7 +113,12 @@ impl<R: BufRead> ElementSource<R> {
         while let Some(node) = state.next()? {
             match node {
                 // The start of an element may be interesting to the iterator
-                XmlEvent::Start { name, attributes, namespace } => {
+                XmlEvent::Start {
+                    buffer_pos,
+                    name,
+                    attributes,
+                    namespace,
+                } => {
                     // Starting an element increases our depth
                     state.current_depth += 1;
 
@@ -129,6 +134,7 @@ impl<R: BufRead> ElementSource<R> {
                             xml_base: ElementSource::xml_base_fetch(&state),
                             source: self,
                             depth: state.current_depth,
+                            buffer_pos,
                         };
                         return Ok(Some(element));
                     }
@@ -347,6 +353,9 @@ pub(crate) struct Element<'a, R: BufRead> {
 
     // The underlying source of XML events
     source: &'a ElementSource<R>,
+
+    // Byte position in the source at which this element starts
+    pub buffer_pos: u64,
 }
 
 impl<'a, R: BufRead> Element<'a, R> {
@@ -497,9 +506,16 @@ impl From<quick_xml::escape::EscapeError> for XmlError {
 // Abstraction over the underlying XML reader event model
 enum XmlEvent {
     // An XML start tag
-    Start { namespace: NS, name: String, attributes: Vec<NameValue> },
+    Start {
+        buffer_pos: u64,
+        namespace: NS,
+        name: String,
+        attributes: Vec<NameValue>,
+    },
     // An XML end tag
-    End { name: String },
+    End {
+        name: String,
+    },
     // Text or CData
     Text(String),
 }
@@ -525,6 +541,8 @@ impl XmlEvent {
 
     // Creates a new event corresponding to an XML start-tag
     fn start<R: BufRead>(namespace: NS, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
+        let buffer_pos = reader.buffer_position();
+
         // Parse the name
         let name = XmlEvent::parse_name(event.name().as_ref(), reader);
 
@@ -554,7 +572,12 @@ impl XmlEvent {
             })
             .collect::<Vec<NameValue>>();
 
-        XmlEvent::Start { namespace, name, attributes }
+        XmlEvent::Start {
+            buffer_pos,
+            namespace,
+            name,
+            attributes,
+        }
     }
 
     // Creates a new event corresponding to an XML text node
