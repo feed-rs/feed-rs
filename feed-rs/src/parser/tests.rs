@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use crate::model::Feed;
 use crate::parser;
+use crate::parser::{ParseErrorKind, ParseFeedError};
 use crate::util::test;
 
 // Regression test for the default ID generator
@@ -84,5 +85,24 @@ fn replace_ids(expected: &mut Feed, actual: &mut Feed) {
         if Uuid::parse_str(&expected_entry.id).is_ok() {
             actual_entry.id = expected_entry.id.clone();
         }
+    }
+}
+
+#[test]
+fn test_broken() {
+    let broken_rss = r#"
+        <?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet href="stylesheet.xsl" type="text/xsl"?><rss version="2.0" xmlns:podcast="https://podcastindex.org/namespace/1.0"><channel><podcast:person role="ThisIsNotAValidRole" href="https://ahl.dtrace.org/">Adam Leventhal</podcast:person></channel></rss>
+    "#;
+    match parser::parse(broken_rss.as_bytes()) {
+        Err(ParseFeedError::ParseError(kind)) => match kind {
+            ParseErrorKind::UnknownEnumVariant {
+                position,
+                reference: _reference,
+            } => {
+                assert_eq!(position, 260)
+            }
+            _ => panic!("Incorrect error kind {:?}", kind),
+        },
+        _ => panic!("Should not have been able to parse broken feed"),
     }
 }

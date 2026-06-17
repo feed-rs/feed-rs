@@ -98,9 +98,12 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
     if let Some(src) = element.attr_value("src") {
         // > If the "src" attribute is present, the "type" attribute SHOULD be provided and MUST be a MIME media type, rather than "text", "html", or "xhtml".
         let mime = match &content_type {
-            Some(ct) => ct
-                .parse::<MediaTypeBuf>()
-                .map_err(|_| ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))?,
+            Some(ct) => ct.parse::<MediaTypeBuf>().map_err(|_| {
+                ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType {
+                    position: element.buffer_pos,
+                    mime: ct.into(),
+                })
+            })?,
             None => {
                 // According to the spec the content type only SHOULD be provided.
                 // Unfortunately `Content` has media type as required. So we treat a missing type as text/html as that is probably the most common. Not to mention that `body` will be `None` so we are just providing a content type for nothing.
@@ -111,7 +114,10 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
         if element.child_as_text().is_some() {
             // > If the "src" attribute is present, atom:content MUST be empty.
             // `ParseFeedError` has no appropriate error type, so use `MissingContent` which is what would have been returned before support for `src` was added.
-            return Err(ParseFeedError::ParseError(ParseErrorKind::MissingContent("non-empty atom:content with src")));
+            return Err(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
+                position: element.buffer_pos,
+                reference: "non-empty atom:content with src",
+            }));
         }
 
         let content = Content {
@@ -135,6 +141,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
     match content_type.as_deref() {
         // Should be handled as a text element per "In the most common case, the type attribute is either text, html, xhtml, in which case the content element is defined identically to other text constructs"
         Some("text") | Some("html") | Some("xhtml") | Some("text/html") | None => {
+            let buffer_pos = element.buffer_pos;
             handle_text(element)?
                 .map(|text| {
                     let mut content = Content::default();
@@ -143,11 +150,15 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
                     Some(content)
                 })
                 // The text is required for a text or HTML element
-                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.text")))
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
+                    position: buffer_pos,
+                    reference: "content.text",
+                }))
         }
 
         // XML per "Otherwise, if the type attribute ends in +xml or /xml, then an xml document of this type is contained inline."
         Some(ct) if ct.ends_with(" +xml") || ct.ends_with("/xml") => {
+            let buffer_pos = element.buffer_pos;
             handle_text(element)?
                 .map(|body| {
                     let mut content = Content::default();
@@ -156,7 +167,10 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
                     Some(content)
                 })
                 // The XML is required for an XML content element
-                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.xml")))
+                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
+                    position: buffer_pos,
+                    reference: "content.xml",
+                }))
         }
 
         // Escaped text per "Otherwise, if the type attribute starts with text, then an escaped document of this type is contained inline." and
@@ -174,9 +188,15 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
                         Some(content)
                     })
                     // The text is required for an inline text or base64 element
-                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("content.inline")))
+                    .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
+                        position: element.buffer_pos,
+                        reference: "content.inline",
+                    }))
             } else {
-                Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(ct.into())))
+                Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType {
+                    position: element.buffer_pos,
+                    mime: ct.into(),
+                }))
             }
         }
     }
@@ -324,7 +344,10 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
         "html" | "xhtml" | "text/html" => Ok(MediaTypeBuf::new(names::TEXT, names::HTML)),
 
         // Unknown content type
-        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),
+        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType {
+            position: element.buffer_pos,
+            mime: type_attr.into(),
+        })),
     }?;
 
     element
@@ -335,5 +358,8 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
             Some(text)
         })
         // Need the text for a text element
-        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))
+        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
+            position: element.buffer_pos,
+            reference: "text",
+        }))
 }

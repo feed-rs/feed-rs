@@ -4,13 +4,12 @@ use std::fmt::Debug;
 use std::hash::Hasher;
 use std::io::{BufRead, BufReader, Read};
 
-use chrono::{DateTime, Utc};
-use siphasher::sip128::{Hasher128, SipHasher};
-
 use crate::model;
 use crate::parser::util::{IdGenerator, TimestampParser};
 use crate::xml;
 use crate::xml::NS;
+use chrono::{DateTime, Utc};
+use siphasher::sip128::{Hasher128, SipHasher};
 
 mod atom;
 mod itunes;
@@ -26,7 +25,6 @@ pub type ParseFeedResult<T> = Result<T, ParseFeedError>;
 /// An error returned when parsing a feed from a source fails
 #[derive(Debug)]
 pub enum ParseFeedError {
-    // TODO add line number/position
     ParseError(ParseErrorKind),
     // IO error
     IoError(std::io::Error),
@@ -85,23 +83,23 @@ pub enum ParseErrorKind {
     /// Could not find the expected root element (e.g. "channel" for RSS 2, a JSON node etc.)
     NoFeedRoot,
     /// The content type is unsupported, and we cannot parse the value into a known representation
-    UnknownMimeType(String),
+    UnknownMimeType { position: u64, mime: String },
     /// Required content within the source was not found e.g. the XML child text element for a "content" element
-    MissingContent(&'static str),
+    MissingContent { position: u64, reference: &'static str },
     /// Unknown enum variant
-    UnknownEnumVariant(String),
+    UnknownEnumVariant { position: u64, reference: String },
     /// Unexpected state
-    IllegalState(String),
+    IllegalState { position: u64, reference: String },
 }
 
 impl fmt::Display for ParseErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ParseErrorKind::NoFeedRoot => f.write_str("no root element"),
-            ParseErrorKind::UnknownMimeType(mime) => write!(f, "unsupported content type {}", mime),
-            ParseErrorKind::MissingContent(elem) => write!(f, "missing content element {}", elem),
-            ParseErrorKind::UnknownEnumVariant(val) => write!(f, "unknown enum variant {}", val),
-            ParseErrorKind::IllegalState(val) => write!(f, "illegal parser state {}", val),
+            ParseErrorKind::UnknownMimeType { position, mime } => write!(f, "unsupported content type {} at position {}", mime, position),
+            ParseErrorKind::MissingContent { position, reference } => write!(f, "missing {} at position {}", reference, position),
+            ParseErrorKind::UnknownEnumVariant { position, reference } => write!(f, "unknown enum variant {} at position {}", reference, position),
+            ParseErrorKind::IllegalState { position, reference } => write!(f, "illegal parser state {} at position {}", reference, position),
         }
     }
 }
