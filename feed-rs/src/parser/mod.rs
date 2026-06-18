@@ -12,6 +12,7 @@ use chrono::{DateTime, Utc};
 use siphasher::sip128::{Hasher128, SipHasher};
 
 mod atom;
+mod common;
 mod itunes;
 mod json;
 mod mediarss;

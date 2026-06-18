@@ -139,6 +139,8 @@ fn test_example_4() {
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
             .author(Person::new("admin"))
             .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/", None))
+            .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/#respond", None).target(LinkTarget::Comments))
+            .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/feed/", None).target(LinkTarget::CommentsFeed))
             .published("Tue, 06 Aug 2019 05:01:15 +0000")
             .category(Category::new("Earthquake breaking news"))
             .category(Category::new("Minor World Earthquakes Magnitude -3.9"))
@@ -529,6 +531,13 @@ fn test_ch9() {
                     "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope",
                     None,
                 ))
+                .link(
+                    Link::new(
+                        "https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope/RSS",
+                        None,
+                    )
+                    .target(LinkTarget::CommentsFeed),
+                )
                 .published("Fri, 26 Feb 2021 20:00:00 GMT")
                 .updated_parsed("Fri, 26 Feb 2021 20:00:00 GMT")
                 .id("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope")
@@ -899,4 +908,26 @@ fn test_iprogrammer_missing_rss_version() {
 
     // Don't need to check much, just that we can parse it into a valid graph
     assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())))
+}
+
+// Verify we extract comments links correctly
+#[test]
+fn test_docuverse_comments() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_docuverse_comments.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Verify we have both the standard comments link + the link to the feed
+    let entry = &actual.entries[0];
+
+    let comments_link = entry.links.iter().find(|link| link.target == Some(LinkTarget::Comments)).unwrap();
+    assert_eq!(
+        comments_link.href,
+        "https://blog.docuverse.com/2017/07/23/using-herb-vaporizers-with-tobacco/#comments".to_string()
+    );
+
+    let comments_feed_link = entry.links.iter().find(|link| link.target == Some(LinkTarget::CommentsFeed)).unwrap();
+    assert_eq!(
+        comments_feed_link.href,
+        "https://blog.docuverse.com/2017/07/23/using-herb-vaporizers-with-tobacco/feed/".to_string()
+    );
 }

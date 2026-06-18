@@ -2,11 +2,12 @@ use std::io::BufRead;
 
 use mediatype::{MediaTypeBuf, names};
 
+use crate::model::LinkTarget::CommentsFeed;
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
-use crate::parser::Parser;
 use crate::parser::util;
 use crate::parser::util::if_some_then;
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{Parser, common};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
@@ -125,6 +126,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
             content_type: mime,
             src: Some(Link {
                 href: src,
+                target: None,
                 rel: None,
                 media_type: content_type,
                 href_lang: None,
@@ -239,6 +241,11 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
             (NS::Atom, "published") | (NS::Atom, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = parser.parse_timestamp(&text)),
 
             (NS::Atom, "rights") => entry.rights = handle_text(child)?,
+
+            // According to https://validator.w3.org/feed/docs/warning/CommentRSS.html we need to support both
+            (NS::WellFormedWebComments, "commentRss") | (NS::WellFormedWebComments, "commentRSS") => {
+                if_some_then(common::handle_link(Some(CommentsFeed), child), |link| entry.links.push(link))
+            }
 
             // Handle MediaRSS elements
             (NS::MediaRSS, _) => parser.mediarss.handle_entry_mediarss_element(child)?,

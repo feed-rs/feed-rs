@@ -32,7 +32,7 @@ use crate::parser::{ParseErrorKind, ParseFeedError, util};
 /// Certain elements are not mapped given their limited utility:
 ///   * RSS 2:
 ///     * channel - docs (pointer to the spec), cloud (for callbacks), textInput (text box e.g. for search)
-///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
+///     * item - source (pointer to the channel, but our data model links items to a channel)
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
 #[derive(Clone, Deserialize, PartialEq, Serialize)]
@@ -648,13 +648,17 @@ pub struct Link {
     /// * RSS 2: The URL to the HTML website corresponding to the channel or item.
     /// * JSON Feed: the URI to the attachment, feed etc
     pub href: String,
-    /// A single link relationship type.
+
+    /// Information on the target of this link if available
+    pub target: Option<LinkTarget>,
+
+    /// Atom: a single link relationship type from the enumerated set.
     pub rel: Option<String>,
     /// Indicates the media type of the resource.
     pub media_type: Option<String>,
     /// Indicates the language of the referenced resource.
     pub href_lang: Option<String>,
-    /// Human readable information about the link, typically for display purposes.
+    /// Human-readable information about the link, typically for display purposes.
     pub title: Option<String>,
     /// The length of the resource, in bytes.
     pub length: Option<u64>,
@@ -671,6 +675,7 @@ impl Link {
 
         Link {
             href,
+            target: None,
             rel: None,
             media_type: None,
             href_lang: None,
@@ -702,10 +707,27 @@ impl Link {
         self
     }
 
+    pub fn target(mut self, target: LinkTarget) -> Self {
+        self.target = Some(target);
+        self
+    }
+
     pub fn title(mut self, title: &str) -> Self {
         self.title = Some(title.to_owned());
         self
     }
+}
+
+/// Type of resource to which this link points
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum LinkTarget {
+    /// A link to comments, likely an HTML anchor to the corresponding section of a page
+    /// [RSS 2.0 standard]: https://www.rssboard.org/rss-specification#ltcommentsgtSubelementOfLtitemgt
+    Comments,
+    /// Link to the comments RSS feed
+    /// [Comment API NS]: https://www.rssboard.org/comment-api
+    ///
+    CommentsFeed,
 }
 
 /// The top-level representation of a media object

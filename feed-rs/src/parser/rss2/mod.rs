@@ -1,13 +1,14 @@
 use mediatype::{MediaTypeBuf, names};
+use std::collections::HashSet;
 use std::io::BufRead;
 
-use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaContent, MediaObject, MediaObjectSource, Person};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, LinkTarget, MediaContent, MediaObject, MediaObjectSource, Person};
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::podcast::{handle_podcast_channel_element, handle_podcast_item_element};
-use crate::parser::util;
 use crate::parser::util::{if_ok_then_some, if_some_then};
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::parser::{Parser, atom};
+use crate::parser::{common, util};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
@@ -34,17 +35,17 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => feed.title = util::handle_text(child),
+            (NS::RSS, "title") => feed.title = common::handle_text(child),
 
-            (NS::RSS, "link") => if_some_then(util::handle_link(child), |link| feed.links.push(link)),
+            (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| feed.links.push(link)),
 
             (NS::Atom, "link") => if_some_then(atom::handle_link(child), |link| feed.links.push(link)),
 
-            (NS::RSS, "description") => feed.description = util::handle_text(child),
+            (NS::RSS, "description") => feed.description = common::handle_text(child),
 
             (NS::RSS, "language") => feed.language = child.child_as_text().map(|text| text.to_lowercase()),
 
-            (NS::RSS, "copyright") => feed.rights = util::handle_text(child),
+            (NS::RSS, "copyright") => feed.rights = common::handle_text(child),
 
             (NS::RSS, "managingEditor") => if_some_then(handle_contact("managingEditor", child), |person| feed.contributors.push(person)),
 
@@ -217,9 +218,9 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => entry.title = util::handle_text(child),
+            (NS::RSS, "title") => entry.title = common::handle_text(child),
 
-            (NS::RSS, "link") => if_some_then(util::handle_link(child), |link| entry.links.push(link)),
+            (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| entry.links.push(link)),
 
             (NS::RSS, "description") => entry.summary = util::handle_encoded(child)?,
 
@@ -246,6 +247,13 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
             // Podcast elements populate the default MediaObject
             (NS::Podcast, _) => handle_podcast_item_element(child, &mut podcast_media_obj)?,
 
+            // Comments can use the Well Formed Web NS or the RSS comments element
+            // According to https://validator.w3.org/feed/docs/warning/CommentRSS.html we need to support both
+            (NS::WellFormedWebComments, "commentRss") | (NS::WellFormedWebComments, "commentRSS") => {
+                if_some_then(common::handle_link(Some(LinkTarget::CommentsFeed), child), |link| entry.links.push(link))
+            }
+            (NS::RSS, "comments") => if_some_then(common::handle_link(Some(LinkTarget::Comments), child), |link| entry.links.push(link)),
+
             // Nothing required for unknown elements
             _ => {}
         }
@@ -269,7 +277,23 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
         entry.updated = entry.published;
     }
 
+    // Remove any comment links that simply target the entry
+    clean_links(&mut entry.links);
+
     Ok(Some(entry))
+}
+
+// Remove comment links that are just the same target as another link we've already discovered
+fn clean_links(links: &mut Vec<Link>) {
+    // First we collect the set of links that are not of type Comment
+    let non_comment_targets: HashSet<String> = links
+        .iter()
+        .filter(|link| link.target != Some(LinkTarget::Comments))
+        .map(|link| link.href.clone())
+        .collect::<HashSet<_>>();
+
+    // Retain only those comment links that are distinct URLs
+    links.retain(|link| link.target != Some(LinkTarget::Comments) || !non_comment_targets.contains(link.href.as_str()));
 }
 
 // Apply standard processing to the parsed set of media
