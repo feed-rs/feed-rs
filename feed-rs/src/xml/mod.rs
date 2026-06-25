@@ -429,6 +429,7 @@ pub(crate) enum NS {
     MediaRSS,
     Itunes,
     Podcast,
+    WellFormedWebComments,
 }
 
 impl NS {
@@ -444,6 +445,7 @@ impl NS {
             "http://search.yahoo.com/mrss/" => NS::MediaRSS,
             "http://www.itunes.com/dtds/podcast-1.0.dtd" => NS::Itunes,
             "https://podcastindex.org/namespace/1.0" => NS::Podcast,
+            "http://wellformedweb.org/CommentAPI/" => NS::WellFormedWebComments,
 
             // Everything else is ignored
             _ => NS::Unknown,

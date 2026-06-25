@@ -1,6 +1,6 @@
 use crate::model::{
-    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaObjectSource, MediaText, MediaThumbnail,
-    Person, Text,
+    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, LinkTarget, MediaCommunity, MediaContent, MediaObject, MediaObjectSource, MediaText,
+    MediaThumbnail, Person, Text,
 };
 use crate::parser;
 use crate::util::test;
@@ -520,6 +520,7 @@ fn test_atom_content_src() {
             content_type: "text/plain".parse().unwrap(),
             src: Some(Link {
                 href: "https://elly.town/d/blog/2024-03-08-x509-certificates.txt".into(),
+                target: None,
                 rel: None,
                 media_type: Some("text/plain".into()),
                 href_lang: None,
@@ -537,4 +538,17 @@ fn test_atom_content_xml_base() {
     let test_data = test::fixture_as_string("atom/atom_xml_base.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     assert!(actual.entries[0].base.as_ref().unwrap().eq("https://numi.st/post/2022/travel-uke/"));
+}
+
+// Verify we extract comments links correctly
+#[test]
+fn test_comments_1() {
+    let test_data = test::fixture_as_string("atom/atom_comments_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Verify we have the link to the feed
+    let entry = &actual.entries[0];
+
+    let comments_feed_link = entry.links.iter().find(|link| link.target == Some(LinkTarget::CommentsFeed)).unwrap();
+    assert_eq!(comments_feed_link.href, "http://example.org/2005/04/02/atom/feed".to_string());
 }

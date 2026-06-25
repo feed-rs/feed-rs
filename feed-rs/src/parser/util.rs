@@ -99,20 +99,6 @@ pub(crate) fn handle_base_attr<R: BufRead>(element: &Element<R>) -> Option<Strin
     element.attr_value("xml:base")
 }
 
-// Handles <link>
-pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))
-}
-
-// Handles <title>, <description> etc
-pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
-    if let Ok(Some(text)) = element.children_as_string() {
-        Some(Text::new(text))
-    } else {
-        None
-    }
-}
-
 /// Handles date/time
 pub(crate) fn handle_timestamp<R: BufRead>(parser: &Parser, element: Element<R>) -> Option<DateTime<Utc>> {
     if let Some(text) = element.child_as_text() {
