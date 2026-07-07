@@ -231,7 +231,7 @@ struct SourceState<R: BufRead> {
     buf_event: Vec<u8>,
     next: XmlResult<Option<XmlEvent>>,
     // An event stashed while coalescing text (e.g. the start tag terminating a run of text and entity references)
-    pending: Option<XmlEvent>,
+    pending_text: Option<XmlEvent>,
     current_depth: u32,
     base_uris: Vec<(u32, Url)>,
     default_namespace: NS,
@@ -252,7 +252,7 @@ impl<R: BufRead> SourceState<R> {
             reader,
             buf_event,
             next: Ok(None),
-            pending: None,
+            pending_text: None,
             current_depth: 0,
             base_uris,
             default_namespace: NS::Unknown,
@@ -264,7 +264,7 @@ impl<R: BufRead> SourceState<R> {
     // Returns the next event
     fn fetch_next(&mut self) -> XmlResult<Option<XmlEvent>> {
         // Emit an event stashed while coalescing text
-        if let Some(event) = self.pending.take() {
+        if let Some(event) = self.pending_text.take() {
             return Ok(Some(event));
         }
 
@@ -292,7 +292,7 @@ impl<R: BufRead> SourceState<R> {
                     let start = XmlEvent::start(namespace, e, reader);
                     return match text.take() {
                         Some(text) => {
-                            self.pending = Some(start);
+                            self.pending_text = Some(start);
                             Ok(Some(XmlEvent::Text(text)))
                         }
                         None => Ok(Some(start)),
@@ -304,7 +304,7 @@ impl<R: BufRead> SourceState<R> {
                     let end = XmlEvent::end(e, reader);
                     return match text.take() {
                         Some(text) => {
-                            self.pending = Some(end);
+                            self.pending_text = Some(end);
                             Ok(Some(XmlEvent::Text(text)))
                         }
                         None => Ok(Some(end)),
