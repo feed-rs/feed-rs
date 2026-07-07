@@ -50,7 +50,7 @@ impl<R: BufRead> ElementSource<R> {
     }
 
     /// Returns the first element in the source
-    pub(crate) fn root(&self) -> XmlResult<Option<Element<R>>> {
+    pub(crate) fn root(&self) -> XmlResult<Option<Element<'_, R>>> {
         self.next_element_at_depth(1)
     }
 
@@ -107,7 +107,7 @@ impl<R: BufRead> ElementSource<R> {
     }
 
     // Returns the next element at the nominated depth
-    fn next_element_at_depth(&self, iter_depth: u32) -> XmlResult<Option<Element<R>>> {
+    fn next_element_at_depth(&self, iter_depth: u32) -> XmlResult<Option<Element<'_, R>>> {
         // Read nodes until we arrive at the correct depth
         let mut state = self.state.borrow_mut();
         while let Some(node) = state.next()? {
@@ -406,7 +406,7 @@ impl<'a, R: BufRead> Element<'a, R> {
     }
 
     /// Returns an iterator over children of this element (i.e. descends a level in the hierarchy)
-    pub(crate) fn children(&self) -> ElementIter<R> {
+    pub(crate) fn children(&self) -> ElementIter<'_, R> {
         ElementIter {
             source: self.source,
             depth: self.depth + 1,
@@ -542,9 +542,15 @@ impl From<quick_xml::escape::EscapeError> for XmlError {
 enum XmlEvent {
     // An XML start tag
     // The namespace is `None` when the document does not declare one; the source's default namespace is applied on consumption
-    Start { namespace: Option<NS>, name: String, attributes: Vec<NameValue> },
+    Start {
+        namespace: Option<NS>,
+        name: String,
+        attributes: Vec<NameValue>,
+    },
     // An XML end tag
-    End { name: String },
+    End {
+        name: String,
+    },
     // Text or CData
     Text(String),
 }
