@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+                                           xmlns:content="http://purl.org/rss/1.0/modules/content/"
+                                           xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+                                           xmlns:dc="http://purl.org/dc/elements/1.1/"
+                                           xmlns:atom="http://www.w3.org/2005/Atom"
+                                           xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+                                           xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+                                           xmlns:georss="http://www.georss.org/georss" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" xmlns:media="http://search.yahoo.com/mrss/"
+>
+
+    <channel>
+        <title>Don Park&#039;s Weekly Habit</title>
+        <atom:link href="https://blog.docuverse.com/feed/" rel="self" type="application/rss+xml" />
+        <link>https://blog.docuverse.com</link>
+        <description>Well, sorta weekly.</description>
+        <lastBuildDate>Wed, 12 Mar 2025 20:20:14 +0000</lastBuildDate>
+        <language>en</language>
+        <sy:updatePeriod>
+            hourly	</sy:updatePeriod>
+        <sy:updateFrequency>
+            1	</sy:updateFrequency>
+        <generator>http://wordpress.com/</generator>
+        <site xmlns="com-wordpress:feed-additions:1">343932</site><cloud domain='blog.docuverse.com' port='80' path='/?rsscloud=notify' registerProcedure='' protocol='http-post' />
+        <image>
+            <url>https://secure.gravatar.com/blavatar/ac73f19ebf989ae03e903d2c497e8bbf3a7a4f0792be54acf67c8e74beb081c0?s=96&#038;d=https%3A%2F%2Fs0.wp.com%2Fi%2Fbuttonw-com.png</url>
+            <title>Don Park&#039;s Weekly Habit</title>
+            <link>https://blog.docuverse.com</link>
+        </image>
+        <atom:link rel="search" type="application/opensearchdescription+xml" href="https://blog.docuverse.com/osd.xml" title="Don Park&#039;s Weekly Habit" />
+        <atom:link rel='hub' href='https://blog.docuverse.com/?pushpress=hub'/>
+        <item>
+            <title>Using Herb Vaporizers with Tobacco</title>
+            <link>https://blog.docuverse.com/2017/07/23/using-herb-vaporizers-with-tobacco/</link>
+            <comments>https://blog.docuverse.com/2017/07/23/using-herb-vaporizers-with-tobacco/#comments</comments>
+
+            <dc:creator><![CDATA[donpark]]></dc:creator>
+            <pubDate>Sun, 23 Jul 2017 14:03:28 +0000</pubDate>
+            <category><![CDATA[General]]></category>
+            <guid isPermaLink="false">http://blog.docuverse.com/?p=4004</guid>
+
+            <description><![CDATA[Fact that most if not all herb vaporizers are designed for vaporizing cannabis made it difficult to get reliable information for tobacco use. Tobacco Types I tried three types: RYO Tobacco (I use The Good Stuff Gold Original and Menthol Gold) Pipe Tobacco (tried only Captain Black so far) Cigar Tobacco (tried grounded cigars then &#8230; <a href="https://blog.docuverse.com/2017/07/23/using-herb-vaporizers-with-tobacco/" class="more-link">Continue reading <span class="screen-reader-text">Using Herb Vaporizers with&#160;Tobacco</span> <span class="meta-nav">&#8594;</span></a>]]></description>
+            <content:encoded><![CDATA[<p>Fact that most if not all herb vaporizers are designed for vaporizing cannabis made it difficult to get reliable information for tobacco use.</p>
+<h1>Tobacco Types</h1>
+...
+]]></content:encoded>
+
+            <wfw:commentRss>https://blog.docuverse.com/2017/07/23/using-herb-vaporizers-with-tobacco/feed/</wfw:commentRss>
+            <slash:comments>1</slash:comments>
+
+
+            <post-id xmlns="com-wordpress:feed-additions:1">4004</post-id>
+            <media:content url="https://0.gravatar.com/avatar/ce748a705fe043cb47faedbd8908b42b9170d8a11fb5d8d829aa6d6ad22c0539?s=96&#38;d=identicon&#38;r=X" medium="image">
+                <media:title type="html">donpark</media:title>
+            </media:content>
+        </item>
+    </channel>
+</rss>

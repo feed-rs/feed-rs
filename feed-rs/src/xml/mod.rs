@@ -113,7 +113,12 @@ impl<R: BufRead> ElementSource<R> {
         while let Some(node) = state.next()? {
             match node {
                 // The start of an element may be interesting to the iterator
-                XmlEvent::Start { name, attributes, namespace } => {
+                XmlEvent::Start {
+                    buffer_pos,
+                    name,
+                    attributes,
+                    namespace,
+                } => {
                     // Starting an element increases our depth
                     state.current_depth += 1;
 
@@ -129,6 +134,7 @@ impl<R: BufRead> ElementSource<R> {
                             xml_base: ElementSource::xml_base_fetch(&state),
                             source: self,
                             depth: state.current_depth,
+                            buffer_pos,
                         };
                         return Ok(Some(element));
                     }
@@ -168,7 +174,7 @@ impl<R: BufRead> ElementSource<R> {
 
         // If the next event is characters, we have found our text
         if let Ok(Some(XmlEvent::Text(_text))) = state.peek() {
-            // Grab the next event - we know its a Text event from the above
+            // Grab the next event - we know it's a Text event from the above
             match state.next() {
                 Ok(Some(XmlEvent::Text(text))) => return Some(text),
                 _ => unreachable!("state.next() did not return expected XmlEvent::Text"),
@@ -390,10 +396,11 @@ pub(crate) struct Element<'a, R: BufRead> {
 
     // The underlying source of XML events
     source: &'a ElementSource<R>,
+
+    // Byte position in the source at which this element starts
+    pub buffer_pos: u64,
 }
 
-// TODO this is flagged as needless, but is required in Element... fix this
-#[allow(clippy::needless_lifetimes)]
 impl<'a, R: BufRead> Element<'a, R> {
     /// Returns the value for an attribute if it exists
     pub(crate) fn attr_value(&self, name: &str) -> Option<String> {
@@ -430,8 +437,6 @@ impl<'a, R: BufRead> Element<'a, R> {
     }
 }
 
-// TODO this is flagged as needless, but is required in Element... fix this
-#[allow(clippy::needless_lifetimes)]
 impl<'a, R: BufRead> Debug for Element<'a, R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut buffer = String::new();
@@ -466,9 +471,12 @@ pub(crate) enum NS {
     DublinCore,
     MediaRSS,
     Itunes,
+    Podcast,
+    WellFormedWebComments,
 }
 
 impl NS {
+    //noinspection HttpUrlsUsage
     fn parse(s: &str) -> NS {
         match s {
             "http://purl.org/rss/1.0/" => NS::RSS,
@@ -479,6 +487,8 @@ impl NS {
             "http://purl.org/dc/elements/1.1/" => NS::DublinCore,
             "http://search.yahoo.com/mrss/" => NS::MediaRSS,
             "http://www.itunes.com/dtds/podcast-1.0.dtd" => NS::Itunes,
+            "https://podcastindex.org/namespace/1.0" => NS::Podcast,
+            "http://wellformedweb.org/CommentAPI/" => NS::WellFormedWebComments,
 
             // Everything else is ignored
             _ => NS::Unknown,
@@ -543,6 +553,7 @@ enum XmlEvent {
     // An XML start tag
     // The namespace is `None` when the document does not declare one; the source's default namespace is applied on consumption
     Start {
+        buffer_pos: u64,
         namespace: Option<NS>,
         name: String,
         attributes: Vec<NameValue>,
@@ -576,6 +587,7 @@ impl XmlEvent {
 
     // Creates a new event corresponding to an XML start-tag
     fn start<R: BufRead>(namespace: Option<NS>, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
+        let buffer_pos = reader.buffer_position();
         // Parse the name
         let name = XmlEvent::parse_name(event.name().as_ref(), reader);
 
@@ -605,7 +617,12 @@ impl XmlEvent {
             })
             .collect::<Vec<NameValue>>();
 
-        XmlEvent::Start { namespace, name, attributes }
+        XmlEvent::Start {
+            buffer_pos,
+            namespace,
+            name,
+            attributes,
+        }
     }
 }
 

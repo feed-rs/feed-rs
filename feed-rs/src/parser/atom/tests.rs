@@ -1,5 +1,6 @@
 use crate::model::{
-    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaText, MediaThumbnail, Person, Text,
+    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, LinkTarget, MediaCommunity, MediaContent, MediaObject, MediaObjectSource, MediaText,
+    MediaThumbnail, Person, Text,
 };
 use crate::parser;
 use crate::util::test;
@@ -271,14 +272,7 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::new("markpritchard"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars3.githubusercontent.com/u/8234070?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
+                .author(Person::new("markpritchard")),
         )
         .entry(
             Entry::default()
@@ -291,58 +285,7 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
-        )
-        .entry(
-            Entry::default()
-                .id("tag:github.com,2008:Repository/90976281/0.1.1")
-                .updated_parsed("2017-06-16T18:49:36+10:00")
-                .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1", None)
-                        .rel("alternate")
-                        .media_type("text/html"),
-                )
-                .title(Text::new("0.1.1".into()))
-                .content(
-                    Content::default()
-                        .body(r#"<p>Handle rel attribute of link element of entry of atom</p>"#)
-                        .content_type("text/html"),
-                )
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
-        )
-        .entry(
-            Entry::default()
-                .id("tag:github.com,2008:Repository/90976281/0.1.0")
-                .updated_parsed("2017-06-15T16:44:26+10:00")
-                .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0", None)
-                        .rel("alternate")
-                        .media_type("text/html"),
-                )
-                .title(Text::new("0.1.0".into()))
-                .content(Content::default().body(r#"<p>Update crate info to Cargo.toml</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
+                .author(Person::new("kumabook")),
         );
 
     // Check
@@ -494,7 +437,7 @@ fn test_mediarss_youtube() {
     let test_data = test::fixture_as_string("atom/atom_mediarss_youtube_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::default()
+    let expected = MediaObject::new(MediaObjectSource::MediaRSS)
         .title("Navigating with Quantum Entanglement")
         .content(
             MediaContent::new()
@@ -509,7 +452,7 @@ fn test_mediarss_youtube() {
                 .height(360),
         ))
         .description("Check Out Weathered on PBS Terra https://www.youtube.com/watch?v=znSN7ZFIaOg&ab_channel=PBSTerra")
-        .community(MediaCommunity::new().star_rating(15020, 4.95, 1, 5).statistics(304321, 42));
+        .community(MediaCommunity::new().star_rating(15020, 4.95, 1, 5).statistics(Some(304321), Some(42)));
 
     // Check the media object
     let entry = &actual.entries[0];
@@ -523,7 +466,7 @@ fn test_mediarss_newscred() {
     let test_data = test::fixture_as_string("atom/atom_mediarss_newscred_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::default()
+    let expected = MediaObject::new(MediaObjectSource::MediaRSS)
         .title("media title")
         .description("media description")
         .text(MediaText::new(Text::new("media text".to_string())))
@@ -547,33 +490,21 @@ fn test_mediarss_newscred() {
     assert_eq!(media_obj, &expected);
 }
 
-#[test]
-fn test_reddit() {
-    let test_data = test::fixture_as_string("atom/atom_mediarss_reddit_1.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
-
-    let expected = MediaObject::default().thumbnail(MediaThumbnail::new(Image::new(
-        "https://b.thumbs.redditmedia.com/_MXt-0n8VXQc-EQ7Q0vFioALFWFITAgVWu4Wf8dThhU.jpg".to_string(),
-    )));
-
-    let entry = &actual.entries[actual.entries.len() - 2];
-    let media_obj = &entry.media[0];
-    assert_eq!(media_obj, &expected);
-}
-
 // Handle text/html specified as a mime type on content
 #[test]
 fn test_scattered() {
     let test_data = test::fixture_as_string("atom/atom_scattered.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
-    assert!(actual.entries[0]
-        .content
-        .as_ref()
-        .unwrap()
-        .body
-        .as_ref()
-        .unwrap()
-        .contains("there are no strings on me"));
+    assert!(
+        actual.entries[0]
+            .content
+            .as_ref()
+            .unwrap()
+            .body
+            .as_ref()
+            .unwrap()
+            .contains("there are no strings on me")
+    );
 }
 
 // Handle Atom atomOutOfLineContent
@@ -589,6 +520,7 @@ fn test_atom_content_src() {
             content_type: "text/plain".parse().unwrap(),
             src: Some(Link {
                 href: "https://elly.town/d/blog/2024-03-08-x509-certificates.txt".into(),
+                target: None,
                 rel: None,
                 media_type: Some("text/plain".into()),
                 href_lang: None,
@@ -606,4 +538,17 @@ fn test_atom_content_xml_base() {
     let test_data = test::fixture_as_string("atom/atom_xml_base.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     assert!(actual.entries[0].base.as_ref().unwrap().eq("https://numi.st/post/2022/travel-uke/"));
+}
+
+// Verify we extract comments links correctly
+#[test]
+fn test_comments_1() {
+    let test_data = test::fixture_as_string("atom/atom_comments_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Verify we have the link to the feed
+    let entry = &actual.entries[0];
+
+    let comments_feed_link = entry.links.iter().find(|link| link.target == Some(LinkTarget::CommentsFeed)).unwrap();
+    assert_eq!(comments_feed_link.href, "http://example.org/2005/04/02/atom/feed".to_string());
 }

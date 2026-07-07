@@ -13,6 +13,7 @@ use fixes::PatSub;
 use model::{Link, Text};
 
 use crate::model;
+use crate::model::{Episode, Season};
 use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
 
@@ -78,10 +79,10 @@ mod fixes {
 static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
 /// Pluggable timestamp parser
-pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>> + 'static;
+pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>> + 'static + Send + Sync;
 
 /// Pluggable ID (feed or entry) generator
-pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> String;
+pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> String + Send + Sync;
 
 /// Handles <content:encoded>
 pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
@@ -96,20 +97,6 @@ pub(crate) fn handle_language_attr<R: BufRead>(element: &Element<R>) -> Option<S
 // Handles "xml:base" as an attribute (e.g. in Atom feeds)
 pub(crate) fn handle_base_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
     element.attr_value("xml:base")
-}
-
-// Handles <link>
-pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))
-}
-
-// Handles <title>, <description> etc
-pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
-    if let Ok(Some(text)) = element.children_as_string() {
-        Some(Text::new(text))
-    } else {
-        None
-    }
 }
 
 /// Handles date/time
@@ -334,4 +321,20 @@ mod tests {
         );
         assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
     }
+}
+
+// Handles episode elements in the Podcast or iTunes namespace
+pub fn handle_episode<R: BufRead>(element: Element<R>) -> Option<Episode> {
+    element.child_as_text().and_then(|n| n.parse().ok()).map(|number| Episode {
+        display: element.attr_value("display"),
+        number,
+    })
+}
+
+// Handles season elements in the Podcast or iTunes namespace
+pub fn handle_season<R: BufRead>(element: Element<R>) -> Option<Season> {
+    element.child_as_text().and_then(|n| n.parse().ok()).map(|number| Season {
+        name: element.attr_value("name"),
+        number,
+    })
 }

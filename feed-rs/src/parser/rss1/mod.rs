@@ -2,7 +2,7 @@ use std::io::BufRead;
 
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser::util::if_some_then;
-use crate::parser::{util, ParseFeedResult, Parser};
+use crate::parser::{ParseFeedResult, Parser, common, util};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
@@ -34,11 +34,11 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => feed.title = util::handle_text(child),
+            (NS::RSS, "title") => feed.title = common::handle_text(child),
 
-            (NS::RSS, "link") => if_some_then(util::handle_link(child), |link| feed.links.push(link)),
+            (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| feed.links.push(link)),
 
-            (NS::RSS, "description") => feed.description = util::handle_text(child),
+            (NS::RSS, "description") => feed.description = common::handle_text(child),
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
 
@@ -46,22 +46,10 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
 
             (NS::DublinCore, "language") => feed.language = child.child_as_text(),
 
-            (NS::DublinCore, "rights") => feed.rights = util::handle_text(child),
+            (NS::DublinCore, "rights") => feed.rights = common::handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
-        }
-    }
-
-    if parser.sanitize_content {
-        if let Some(t) = feed.description.as_mut() {
-            t.sanitize()
-        }
-        if let Some(t) = feed.rights.as_mut() {
-            t.sanitize()
-        }
-        if let Some(t) = feed.title.as_mut() {
-            t.sanitize()
         }
     }
 
@@ -102,11 +90,11 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => entry.title = util::handle_text(child),
+            (NS::RSS, "title") => entry.title = common::handle_text(child),
 
-            (NS::RSS, "link") => if_some_then(util::handle_link(child), |link| entry.links.push(link)),
+            (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| entry.links.push(link)),
 
-            (NS::RSS, "description") => entry.summary = util::handle_text(child),
+            (NS::RSS, "description") => entry.summary = common::handle_text(child),
 
             (NS::Content, "encoded") => content_encoded = util::handle_encoded(child)?,
 
@@ -114,13 +102,9 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
 
-            (NS::DublinCore, "description") => {
-                if entry.summary.is_none() {
-                    entry.summary = util::handle_text(child)
-                }
-            }
+            (NS::DublinCore, "description") if entry.summary.is_none() => entry.summary = common::handle_text(child),
 
-            (NS::DublinCore, "rights") => entry.rights = util::handle_text(child),
+            (NS::DublinCore, "rights") => entry.rights = common::handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -136,21 +120,6 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
                 length: None,
                 src: ce.src.map(|s| Link::new(s, element.xml_base.as_ref())),
             });
-        }
-    }
-
-    if parser.sanitize_content {
-        if let Some(c) = entry.content.as_mut() {
-            c.sanitize()
-        }
-        if let Some(t) = entry.rights.as_mut() {
-            t.sanitize()
-        }
-        if let Some(t) = entry.summary.as_mut() {
-            t.sanitize()
-        }
-        if let Some(t) = entry.title.as_mut() {
-            t.sanitize()
         }
     }
 

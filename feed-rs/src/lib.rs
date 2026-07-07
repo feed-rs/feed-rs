@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/rss/")]
+#![doc(html_root_url = "https://docs.rs/feed-rs/")]
 //! This crate provides a parser and common data model over Atom, RSS and JSON Feed content.
 //!
 //! The parser will automatically detect the type of content (XML vs. JSON) and the feed format (Atom vs. RSS).
@@ -77,6 +77,8 @@
 #![forbid(unsafe_code)]
 // Standard names like MediaRSS and JSON are used throughout this crate
 #![allow(clippy::upper_case_acronyms)]
+// Nested ifs are more readable when we are using a local variable in a match pattern etc
+#![allow(clippy::collapsible_if)]
 
 #[macro_use]
 extern crate serde;

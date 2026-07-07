@@ -1,4 +1,4 @@
-use mediatype::{names, MediaType};
+use mediatype::{MediaType, names};
 
 use crate::model::{Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser;
@@ -54,14 +54,16 @@ fn test_example_2() {
     let feed = parser::parse(test_data.as_bytes()).unwrap();
 
     // content:encoded should be mapped to the content field
-    assert!(feed.entries[0]
-        .content
-        .as_ref()
-        .unwrap()
-        .body
-        .as_ref()
-        .unwrap()
-        .starts_with("This morning I saw two things that were Microsoft "));
+    assert!(
+        feed.entries[0]
+            .content
+            .as_ref()
+            .unwrap()
+            .body
+            .as_ref()
+            .unwrap()
+            .starts_with("This morning I saw two things that were Microsoft ")
+    );
     // content media type should be text/html.
     assert_eq!(feed.entries[0].content.as_ref().unwrap().content_type, MediaType::new(names::TEXT, names::HTML));
 }

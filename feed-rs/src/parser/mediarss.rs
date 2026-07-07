@@ -1,68 +1,176 @@
+use std::cell::RefCell;
 use std::io::BufRead;
+use std::mem;
 use std::time::Duration;
 
-use mediatype::{names, MediaTypeBuf};
+use mediatype::{MediaTypeBuf, names};
 
-use crate::model::{Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaRating, MediaText, MediaThumbnail, Text};
+use crate::model::{Entry, Image, MediaCommunity, MediaContent, MediaCredit, MediaObject, MediaObjectSource, MediaRating, MediaText, MediaThumbnail, Text};
 use crate::parser::util::{if_ok_then_some, if_some_then, parse_npt};
-use crate::parser::{util, ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult, util};
 use crate::xml::{Element, NS};
 
-// TODO When an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
-// TODO Duplicated elements appearing at deeper levels of the document tree have higher priority over other levels. For example, <media:content> level elements are favored over <item> level elements. The priority level is listed from strongest to weakest: <media:content>, <media:group>, <item>, <channel>.
+pub(crate) struct MediaRssState {
+    root: RefCell<Option<Scope>>,
+}
 
-/// Handles the top-level "media:group", a collection of mediarss elements.
-pub(crate) fn handle_media_group<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<MediaObject>> {
-    let mut media_obj = MediaObject::default();
+#[derive(Default)]
+struct Scope {
+    title: Option<Text>,
+    community: Option<MediaCommunity>,
+    credits: Vec<MediaCredit>,
+    description: Option<Text>,
+    rating: Option<MediaRating>,
+    texts: Vec<MediaText>,
+    thumbnails: Vec<MediaThumbnail>,
 
-    for child in element.children() {
-        let child = child?;
-        if child.ns_and_tag().0 == NS::MediaRSS {
-            handle_media_element(child, &mut media_obj)?;
+    // <media:content> elements we have discovered at this scope which we process later into media objects
+    pending: Vec<MediaContent>,
+
+    // Children (i.e. <media:group> elements that nest MediaRSS content below them)
+    children: Vec<Scope>,
+}
+
+impl MediaRssState {
+    /// Initialise parsing for this entry
+    pub(crate) fn entry_begin(&self) {
+        // We should not have a scope at this point, since all entries are parsed separately and no media RSS elements are processed at the feed level
+        assert!(self.root.borrow().is_none());
+
+        // Initialise the scope
+        self.root.borrow_mut().replace(Scope::default());
+    }
+
+    pub(crate) fn entry_end(&self, entry: &mut Entry) {
+        // Emit media objects as required
+        let scope = self.root.replace(None).unwrap();
+        emit_media_objects(scope, entry);
+    }
+
+    /// Handle a primary or scoped optional MediaRSS element at the entry level
+    pub(crate) fn handle_entry_mediarss_element<R: BufRead>(&self, element: Element<R>) -> ParseFeedResult<()> {
+        // We will parse this element into the top-level scope
+        if let Some(scope) = self.root.borrow_mut().as_mut() {
+            // Pass off to the inner handle to process the element
+            inner_handle_mediarss_element(element, scope)?;
+
+            Ok(())
+        } else {
+            Err(ParseFeedError::ParseError(ParseErrorKind::IllegalState {
+                position: element.buffer_pos,
+                reference: "scope was not setup during mediarss entry parsing".to_string(),
+            }))
         }
     }
 
-    Ok(Some(media_obj))
+    pub(crate) fn new() -> MediaRssState {
+        MediaRssState { root: RefCell::new(None) }
+    }
 }
 
-/// Process the mediarss element into the supplied media object
-/// This isn't the typical pattern, but MediaRSS has a strange shape (content within group, with other elements as peers...or no group and some elements as children)
-/// So this signature is used to parse into a media object from a group, or a default one created at the entry level
-pub(crate) fn handle_media_element<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
-    // Top level elements that should be propagated down to content items
-    let mut rating = None;
+fn emit_media_objects(mut scope: Scope, entry: &mut Entry) {
+    // If we have content at this scope, then build a media object for it
+    if !scope.pending.is_empty() {
+        // Build a media object for this scope
+        let mut media_obj = MediaObject::new(MediaObjectSource::MediaRSS);
+        media_obj.title = scope.title.clone();
+        media_obj.description = scope.description.clone();
+        media_obj.thumbnails = scope.thumbnails.clone();
+        media_obj.community = scope.community.clone();
+        media_obj.thumbnails = scope.thumbnails.clone();
+        media_obj.texts = scope.texts.clone();
+        media_obj.credits = scope.credits.clone();
 
-    match element.ns_and_tag() {
-        (NS::MediaRSS, "title") => media_obj.title = handle_text(element)?,
+        // Propagate the rating to the content if not already set
+        let mut pending = mem::take(&mut scope.pending);
+        if scope.rating.is_some() {
+            pending.iter_mut().for_each(|content| {
+                if content.rating.is_none() {
+                    content.rating = scope.rating.clone();
+                }
+            });
+        }
 
-        (NS::MediaRSS, "content") => handle_media_content(element, media_obj)?,
-
-        (NS::MediaRSS, "thumbnail") => if_some_then(handle_media_thumbnail(element), |thumbnail| media_obj.thumbnails.push(thumbnail)),
-
-        (NS::MediaRSS, "description") => media_obj.description = handle_text(element)?,
-
-        (NS::MediaRSS, "community") => media_obj.community = handle_media_community(element)?,
-
-        (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(element), |credit| media_obj.credits.push(credit)),
-
-        (NS::MediaRSS, "text") => if_some_then(handle_media_text(element), |text| media_obj.texts.push(text)),
-
-        (NS::MediaRSS, "rating") => rating = handle_media_rating(element),
-
-        // Nothing required for unknown elements
-        _ => {}
+        // Add this content to the media object and emit
+        media_obj.content = pending;
+        entry.media.push(media_obj);
     }
 
-    // If we found a rating at this level it needs to be propagated down to all content items (that don't have a rating already)
-    if let Some(rating) = rating {
-        media_obj.content.iter_mut().for_each(|content| {
-            if content.rating.is_none() {
-                content.rating = Some(rating.clone());
-            }
-        })
+    // Process each of the children
+    let children = scope.children.drain(..).collect::<Vec<_>>();
+    children.into_iter().for_each(|mut child| {
+        // Propagate this scope to the child
+        merge_parent_scope_into_child(&scope, &mut child);
+
+        // Assemble the media objects on the child
+        emit_media_objects(child, entry);
+    });
+}
+
+fn inner_handle_mediarss_element<R: BufRead>(element: Element<R>, scope: &mut Scope) -> ParseFeedResult<()> {
+    // A "group" element indicates that the children are different representations of the same content - https://www.rssboard.org/media-rss#media-group
+    if let (NS::MediaRSS, "group") = element.ns_and_tag() {
+        // Create a new scope for the nested elements
+        let mut nested = Scope::default();
+
+        // Process the children of this group node
+        for child in element.children() {
+            let child = child?;
+            inner_handle_mediarss_element(child, &mut nested)?;
+        }
+
+        // Add this nested scope
+        scope.children.push(nested);
+    } else {
+        // Process the Media RSS elements
+        match element.ns_and_tag() {
+            (NS::MediaRSS, "title") => scope.title = handle_text(element)?,
+
+            (NS::MediaRSS, "content") => handle_media_content(element, scope)?,
+
+            (NS::MediaRSS, "thumbnail") => if_some_then(handle_media_thumbnail(element), |thumbnail| scope.thumbnails.push(thumbnail)),
+
+            (NS::MediaRSS, "description") => scope.description = handle_text(element)?,
+
+            (NS::MediaRSS, "community") => scope.community = handle_media_community(element)?,
+
+            (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(element), |credit| scope.credits.push(credit)),
+
+            (NS::MediaRSS, "text") => if_some_then(handle_media_text(element), |text| scope.texts.push(text)),
+
+            (NS::MediaRSS, "rating") => scope.rating = handle_media_rating(element),
+
+            // Nothing required for unknown elements
+            _ => {}
+        }
     }
 
     Ok(())
+}
+
+fn merge_parent_scope_into_child(parent: &Scope, child: &mut Scope) {
+    if child.title.is_none() {
+        child.title = parent.title.clone();
+    }
+    if child.community.is_none() {
+        child.community = parent.community.clone();
+    }
+    if child.description.is_none() {
+        child.description = parent.description.clone();
+    }
+    if child.rating.is_none() {
+        child.rating = parent.rating.clone();
+    }
+
+    if child.credits.is_empty() {
+        child.credits = parent.credits.clone();
+    }
+    if child.texts.is_empty() {
+        child.texts = parent.texts.clone();
+    }
+    if child.thumbnails.is_empty() {
+        child.thumbnails = parent.thumbnails.clone();
+    }
 }
 
 // Handle "media:community"
@@ -106,7 +214,7 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 }
 
 // Handle the core attributes and elements from "media:content"
-fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaObject) -> ParseFeedResult<()> {
+fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut Scope) -> ParseFeedResult<()> {
     let mut content = MediaContent::new();
 
     // Extract attributes from the content element
@@ -147,23 +255,16 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
             (NS::MediaRSS, "rating") => content.rating = handle_media_rating(child),
 
             // These elements are modelled as fields on the parent MediaObject, but only set if the parent field does not already have a value
-            (NS::MediaRSS, "title") => {
-                if media_obj.title.is_none() {
-                    media_obj.title = handle_text(child)?
-                }
-            }
-            (NS::MediaRSS, "description") => {
-                if media_obj.description.is_none() {
-                    media_obj.description = handle_text(child)?
-                }
-            }
+            (NS::MediaRSS, "title") if media_obj.title.is_none() => media_obj.title = handle_text(child)?,
+
+            (NS::MediaRSS, "description") if media_obj.description.is_none() => media_obj.description = handle_text(child)?,
 
             // These elements are accumulated in the corresponding field of the parent MediaObject
             (NS::MediaRSS, "text") => if_some_then(handle_media_text(child), |text| media_obj.texts.push(text)),
             (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
 
             // Other elements in the namespace are handled recursively
-            (NS::MediaRSS, _) => handle_media_element(child, media_obj)?,
+            (NS::MediaRSS, _) => inner_handle_mediarss_element(child, media_obj)?,
 
             // Nothing required for unknown elements
             _ => {}
@@ -173,7 +274,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut MediaOb
     // If we found a URL from the content element or the player, we consider this valid
     if content.url.is_some() {
         // Emit this parsed content
-        media_obj.content.push(content);
+        media_obj.pending.push(content);
     }
 
     Ok(())
@@ -274,7 +375,10 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
         "html" => Ok(MediaTypeBuf::new(names::TEXT, names::HTML)),
 
         // Unknown content type
-        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType(type_attr.into()))),
+        _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType {
+            position: element.buffer_pos,
+            mime: type_attr.into(),
+        })),
     }?;
 
     element
@@ -285,5 +389,8 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
             Some(text)
         })
         // Need the text for a text element
-        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent("text")))
+        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
+            position: element.buffer_pos,
+            reference: "text",
+        }))
 }

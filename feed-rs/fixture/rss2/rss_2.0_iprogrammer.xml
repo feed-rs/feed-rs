@@ -1,0 +1,18 @@
+<!--  generator="FeedCreator 1.8.0-dev (info@mypapit.net)"  -->
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="">
+    <channel>
+        <title>I Programmer - full contents</title>
+        <description/>
+        <link>https://www.i-programmer.info/</link>
+        <lastBuildDate>Sun, 14 Jun 2026 22:18:31 GMT</lastBuildDate>
+        <generator>FeedCreator 1.8.0-dev (info@mypapit.net)</generator>
+        <atom:link href="https://www.i-programmer.info/index.php?option=com_ninjarsssyndicator&feed_id=3&format=raw" rel="self" type="application/rss+xml"/>
+        <item>
+            <title>MotionDisco For Extreme LocoManipulation</title>
+            <link>http://www.i-programmer.info/news/169-robotics/18934-motiondisco-from-atari-labs.html</link>
+            <description/>
+            <pubDate>Sun, 14 Jun 2026 22:18:31 GMT</pubDate>
+            <guid isPermaLink="false">http://www.i-programmer.info/news/169-robotics/18934-motiondisco-from-atari-labs.html</guid>
+        </item>
+    </channel>
+</rss>
