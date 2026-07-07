@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use std::io::BufRead;
 use std::mem;
 
-use quick_xml::events::{BytesCData, BytesEnd, BytesStart, BytesText, Event};
+use quick_xml::events::{BytesEnd, BytesStart, Event};
 use quick_xml::name::ResolveResult;
 use quick_xml::{NsReader, Reader};
 use url::Url;
@@ -128,7 +128,7 @@ impl<R: BufRead> ElementSource<R> {
                     // If we are at the correct depth we found a node of interest
                     if state.current_depth == iter_depth {
                         let element = Element {
-                            namespace,
+                            namespace: namespace.unwrap_or(state.default_namespace),
                             name,
                             attributes,
                             xml_base: ElementSource::xml_base_fetch(&state),
@@ -236,6 +236,8 @@ struct SourceState<R: BufRead> {
     reader: NsReader<R>,
     buf_event: Vec<u8>,
     next: XmlResult<Option<XmlEvent>>,
+    // An event stashed while coalescing text (e.g. the start tag terminating a run of text and entity references)
+    pending_text: Option<XmlEvent>,
     current_depth: u32,
     base_uris: Vec<(u32, Url)>,
     default_namespace: NS,
@@ -256,6 +258,7 @@ impl<R: BufRead> SourceState<R> {
             reader,
             buf_event,
             next: Ok(None),
+            pending_text: None,
             current_depth: 0,
             base_uris,
             default_namespace: NS::Unknown,
@@ -266,8 +269,16 @@ impl<R: BufRead> SourceState<R> {
 
     // Returns the next event
     fn fetch_next(&mut self) -> XmlResult<Option<XmlEvent>> {
+        // Emit an event stashed while coalescing text
+        if let Some(event) = self.pending_text.take() {
+            return Ok(Some(event));
+        }
+
         let decoder = self.reader.decoder();
         let reader = &mut self.reader;
+
+        // Text, CData and entity references are coalesced into a single text event
+        let mut text: Option<String> = None;
 
         loop {
             let (ns_resolution, event) = reader.read_resolved_event_into(&mut self.buf_event)?;
@@ -276,42 +287,74 @@ impl<R: BufRead> SourceState<R> {
                 // Start of an element
                 Event::Start(ref e) => {
                     // Parse the namespace
+                    // The default namespace is applied when the event is consumed, since it may not be known yet
+                    // (e.g. the root element is examined to determine the feed type, which in turn sets the default namespace)
                     let namespace = match ns_resolution {
-                        ResolveResult::Bound(ns) => decoder
-                            .decode(ns.as_ref())
-                            .map(|decoded| NS::parse(decoded.as_ref()))
-                            .unwrap_or(self.default_namespace),
-                        ResolveResult::Unknown(_) => self.default_namespace,
-                        ResolveResult::Unbound => self.default_namespace,
+                        ResolveResult::Bound(ns) => decoder.decode(ns.as_ref()).ok().map(|decoded| NS::parse(decoded.as_ref())),
+                        ResolveResult::Unknown(_) => None,
+                        ResolveResult::Unbound => None,
                     };
 
-                    return Ok(Some(XmlEvent::start(namespace, e, reader)));
+                    let start = XmlEvent::start(namespace, e, reader);
+                    return match text.take() {
+                        Some(text) => {
+                            self.pending_text = Some(start);
+                            Ok(Some(XmlEvent::Text(text)))
+                        }
+                        None => Ok(Some(start)),
+                    };
                 }
 
                 // End of an element
                 Event::End(ref e) => {
-                    return Ok(Some(XmlEvent::end(e, reader)));
+                    let end = XmlEvent::end(e, reader);
+                    return match text.take() {
+                        Some(text) => {
+                            self.pending_text = Some(end);
+                            Ok(Some(XmlEvent::Text(text)))
+                        }
+                        None => Ok(Some(end)),
+                    };
                 }
 
                 // Text
                 Event::Text(ref t) => {
-                    let event = XmlEvent::text(t, reader);
-                    if let Ok(Some(ref _t)) = event {
-                        return event;
+                    if !t.is_empty() {
+                        let decoded = decoder.decode(t)?;
+                        text.get_or_insert_with(String::new).push_str(&decoded);
                     }
                 }
 
                 // CData is converted to text
-                Event::CData(t) => {
-                    let event = XmlEvent::text_from_cdata(&t, reader);
-                    if let Ok(Some(ref _t)) = event {
-                        return event;
+                Event::CData(ref t) => {
+                    if !t.is_empty() {
+                        let decoded = decoder.decode(t)?;
+                        text.get_or_insert_with(String::new).push_str(&decoded);
+                    }
+                }
+
+                // Character and entity references (e.g. "&#38;" or "&amp;") are resolved into text
+                Event::GeneralRef(ref r) => {
+                    let buffer = text.get_or_insert_with(String::new);
+                    if let Some(ch) = r.resolve_char_ref()? {
+                        buffer.push(ch);
+                    } else {
+                        let name = decoder.decode(r)?;
+                        match quick_xml::escape::resolve_predefined_entity(&name) {
+                            Some(resolved) => buffer.push_str(resolved),
+                            // Unknown entities cannot be resolved, so retain them in their escaped form
+                            None => {
+                                buffer.push('&');
+                                buffer.push_str(&name);
+                                buffer.push(';');
+                            }
+                        }
                     }
                 }
 
                 // The end of the document
                 Event::Eof => {
-                    return Ok(None);
+                    return Ok(text.take().map(XmlEvent::Text));
                 }
 
                 // Ignore everything else
@@ -508,9 +551,10 @@ impl From<quick_xml::escape::EscapeError> for XmlError {
 // Abstraction over the underlying XML reader event model
 enum XmlEvent {
     // An XML start tag
+    // The namespace is `None` when the document does not declare one; the source's default namespace is applied on consumption
     Start {
         buffer_pos: u64,
-        namespace: NS,
+        namespace: Option<NS>,
         name: String,
         attributes: Vec<NameValue>,
     },
@@ -542,9 +586,8 @@ impl XmlEvent {
     }
 
     // Creates a new event corresponding to an XML start-tag
-    fn start<R: BufRead>(namespace: NS, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
+    fn start<R: BufRead>(namespace: Option<NS>, event: &BytesStart, reader: &Reader<R>) -> XmlEvent {
         let buffer_pos = reader.buffer_position();
-
         // Parse the name
         let name = XmlEvent::parse_name(event.name().as_ref(), reader);
 
@@ -579,30 +622,6 @@ impl XmlEvent {
             namespace,
             name,
             attributes,
-        }
-    }
-
-    // Creates a new event corresponding to an XML text node
-    fn text<R: BufRead>(text: &BytesText, reader: &Reader<R>) -> XmlResult<Option<XmlEvent>> {
-        if text.is_empty() {
-            Ok(None)
-        } else {
-            let escaped_text = reader.decoder().decode(text)?;
-            let unescaped_text = quick_xml::escape::unescape(&escaped_text)?;
-
-            Ok(Some(XmlEvent::Text(unescaped_text.to_string())))
-        }
-    }
-
-    // Creates a new event from the corresponding cdata
-    // No need to unescape in this case given cdata is "raw"
-    fn text_from_cdata<R: BufRead>(cdata: &BytesCData, reader: &Reader<R>) -> XmlResult<Option<XmlEvent>> {
-        if cdata.is_empty() {
-            Ok(None)
-        } else {
-            let decoded_text = reader.decoder().decode(cdata)?;
-
-            Ok(Some(XmlEvent::Text(decoded_text.to_string())))
         }
     }
 }
