@@ -516,10 +516,10 @@ impl<'a, R: BufRead> Element<'a, R> {
     /// This function is a hack to deal with invalid feeds. In all cases we **should** know if we should take the text or serialize the children.
     pub(crate) fn child_as_text_sloppy(&self) -> XmlResult<Option<String>> {
         if let Some(s) = self.source.text_node() {
-            return Ok(Some(s))
+            return Ok(Some(s));
         }
 
-        return self.children_as_string()
+        self.children_as_string()
     }
 
     /// Returns an iterator over children of this element (i.e. descends a level in the hierarchy)
