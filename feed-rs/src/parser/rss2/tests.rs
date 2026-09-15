@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use chrono::{TimeZone, Utc};
 use mediatype::{MediaType, names};
 use url::Url;
 
@@ -48,8 +47,8 @@ fn test_example_2() {
 
     // Expected feed
     let expected: Feed = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref())     // not present in the test data
-        .updated(actual.updated)    // not present in the test data
+        .id(actual.id.as_ref())             // not present in the test data
+        .updated(actual.updated.clone())    // not present in the test data
         .title(Text::new("NASA Breaking News".into()))
         .description(Text::new("A RSS news feed containing the latest NASA news articles and press releases.".into()))
         .link(Link::new("http://www.nasa.gov/", None))
@@ -148,7 +147,7 @@ fn test_example_4() {
             .content(Content::default()
                 .body("<p><img class='size-full alignleft' title='Earthquake location 37.102S, 21.9072W' alt='Earthquake location 37.102S, 21.9072W' src='http://www.earthquakenewstoday.com/wp-content/uploads/35_20.jpg' width='146' height='146' />A minor earthquake with magnitude 3.5 (ml/mb) was detected on Tuesday, 8 kilometers (5 miles) from Aris in Greece.Exact location of event, depth 10 km, 21.9072&deg; East, 37.102&deg; North. </p>")
                 .content_type("text/html"))
-            .updated(actual.updated));
+            .updated(actual.updated.clone()));
 
     // Check
     assert_eq!(actual, expected);
@@ -699,7 +698,7 @@ fn test_rfc1123_ilgiornale() {
     let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2022, 11, 15, 20, 15, 4));
 }
 
 // Verifies we can handle an RFC1123 date in an RSS 2.0 feed where the week day name is in a different language
@@ -710,7 +709,7 @@ fn test_rfc1123_ilmessaggero() {
     let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2022, 11, 15, 23, 38, 15));
 }
 
 // Verifies we trim leading and trailing whitespace in text fields
@@ -735,7 +734,7 @@ fn test_published_from_dc_date() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_dbengines.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.first().expect("feed has 1 entry");
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2023, 1, 3, 15, 0, 0));
 }
 
 // Verifies that an custom parser is correctly called and can return a useful date
@@ -755,7 +754,7 @@ fn test_custom_timestamp_parser() {
         .parse(test_data.as_bytes())
         .unwrap();
     let entry = actual.entries.first().expect("feed has 1 entry");
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 12, 16, 19, 2, 33).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2023, 12, 16, 19, 2, 33));
 }
 
 // Verifies we correctly extract subcategories from the iTunes NS
@@ -953,9 +952,9 @@ fn test_verdagon_broken_date_fmt() {
 
     // Verify the dates in the feed
     let entry0 = &actual.entries[0];
-    assert_eq!(entry0.published, Some(Utc.with_ymd_and_hms(2022, 11, 9, 14, 15, 0).unwrap()));
+    assert_eq!(entry0.published, Some(crate::parser::tests::zoned(2022, 11, 9, 14, 15, 0)));
     let entry1 = &actual.entries[1];
-    assert_eq!(entry1.published, Some(Utc.with_ymd_and_hms(2022, 10, 7, 14, 15, 0).unwrap()));
+    assert_eq!(entry1.published, Some(crate::parser::tests::zoned(2022, 10, 7, 14, 15, 0)));
 }
 
 // This feed uses the Atom namespace to represent standard RSS fields
@@ -976,7 +975,7 @@ fn test_volpeon_hybrid_rss_atom() {
 
     // And we should have extracted the updated date for the entries
     let entry0 = &actual.entries[0];
-    assert_eq!(entry0.updated, Some(Utc.with_ymd_and_hms(2025, 03, 29, 0, 0, 0).unwrap()));
+    assert_eq!(entry0.updated, Some(crate::parser::tests::zoned(2025, 03, 29, 0, 0, 0)));
     let entry1 = &actual.entries[1];
-    assert_eq!(entry1.updated, Some(Utc.with_ymd_and_hms(2024, 7, 1, 0, 0, 0).unwrap()));
+    assert_eq!(entry1.updated, Some(crate::parser::tests::zoned(2024, 7, 1, 0, 0, 0)));
 }

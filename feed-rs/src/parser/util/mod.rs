@@ -3,7 +3,7 @@ use std::ops::Add;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use jiff::{ZonedDateTime, tz::TimeZone};
 use regex::{Captures, Regex};
 use url::Url;
 use uuid::Uuid;
@@ -81,7 +81,7 @@ mod fixes {
 static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
 /// Pluggable timestamp parser
-pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>> + 'static + Send + Sync;
+pub(crate) type TimestampParser = dyn Fn(&str) -> Option<ZonedDateTime> + 'static + Send + Sync;
 
 /// Pluggable ID (feed or entry) generator
 pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> String + Send + Sync;
@@ -102,7 +102,7 @@ pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>,
 
 /// Parses a timestamp using a variety of strategies to try and deal with the remarkable variability and non-standards
 /// compliant text on the internet.
-pub(crate) fn parse_timestamp_lenient(original: &str) -> Option<DateTime<Utc>> {
+pub(crate) fn parse_timestamp_lenient(original: &str) -> Option<ZonedDateTime> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds, and it is supposed to be the format for Atom and Json too so we try this first
     try_parse_timestamp_rfc3339_lenient(original)
         // Next is the format for RSS 2, which is used often
@@ -251,35 +251,36 @@ fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
 
 // Parses a timestamp from a potentially RFC-1123 formatted timestamp (which isn't part of any feed standard, but hey
 // its the internet, why follow standards?
-fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
+fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<ZonedDateTime> {
     let mut cleaned = original.trim().to_string();
     for PatSub(regex, replacement) in fixes::rfc1123() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    DateTime::parse_from_str(&cleaned, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)).ok()
+    ZonedDateTime::strptime(RFC1123_FORMAT_STR, &cleaned).ok()
 }
 
 // Parses a timestamp from a potentially RFC-2822 formatted timestamp
-fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
+fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<ZonedDateTime> {
     // Clean the input string by applying each of the regex fixes
     let mut cleaned = original.trim().to_string();
     for PatSub(regex, replacement) in fixes::rfc2822() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    DateTime::parse_from_rfc2822(&cleaned).map(|t| t.with_timezone(&Utc)).ok()
+    jiff::fmt::rfc2822::parse(&cleaned).ok()
 }
 
 // Parses a timestamp from a potentially RFC-3339 formatted string
-fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
+fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<ZonedDateTime> {
     // Clean the input string by applying each of the regex fixes
     let mut cleaned = original.trim().to_string();
     for PatSub(regex, replacement) in fixes::rfc3339() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    DateTime::parse_from_rfc3339(cleaned.trim()).map(|t| t.with_timezone(&Utc)).ok()
+    let parser = jiff::fmt::temporal::DateTimeParser::new();
+    parser.parse_timestamp(cleaned.trim()).map(|t| t.to_zoned_datetime(TimeZone::UTC)).ok()
 }
 
 #[cfg(test)]
