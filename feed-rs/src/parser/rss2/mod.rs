@@ -51,10 +51,10 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
 
             (NS::RSS, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
 
-            (NS::RSS, "pubDate") => feed.published = util::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") => feed.published = common::handle_timestamp(parser, child),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = util::handle_timestamp(parser, child),
+            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = common::handle_timestamp(parser, child),
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
@@ -222,7 +222,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| entry.links.push(link)),
 
-            (NS::RSS, "description") => entry.summary = util::handle_encoded(child)?,
+            (NS::RSS, "description") => entry.summary = common::handle_encoded(child)?,
 
             (NS::RSS, "author") => if_some_then(handle_contact("author", child), |person| entry.authors.push(person)),
 
@@ -232,7 +232,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "enclosure") => handle_enclosure(child, &mut enclosure_media_obj),
 
-            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 

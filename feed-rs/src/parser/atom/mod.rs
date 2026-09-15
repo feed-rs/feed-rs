@@ -18,7 +18,7 @@ pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> Parse
     let mut feed = Feed::new(FeedType::Atom);
 
     // Extract top-level info
-    feed.language = util::handle_language_attr(&root);
+    feed.language = handle_language_attr(&root);
 
     for child in root.children() {
         let child = child?;
@@ -66,6 +66,11 @@ pub(crate) fn parse_entry<R: BufRead>(parser: &Parser, root: Element<R>) -> Pars
     if_some_then(handle_entry(parser, root)?, |entry| feed.entries.push(entry));
 
     Ok(feed)
+}
+
+// Handles "xml:base" as an attribute (e.g. in Atom feeds)
+fn handle_base_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
+    element.attr_value("xml:base")
 }
 
 // Handles an Atom <category>
@@ -224,8 +229,8 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
             (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
 
             (NS::Atom, "content") => {
-                entry.base = util::handle_base_attr(&child);
-                entry.language = util::handle_language_attr(&child);
+                entry.base = handle_base_attr(&child);
+                entry.language = handle_language_attr(&child);
                 entry.content = handle_content(child)?;
             }
 
@@ -289,6 +294,11 @@ fn handle_image<R: BufRead>(element: Element<R>) -> Option<Image> {
                 .unwrap_or(raw_uri)
         })
         .map(Image::new)
+}
+
+// Handles "xml:lang" as an attribute (e.g. in Atom feeds)
+fn handle_language_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
+    element.attr_value("xml:lang")
 }
 
 // Handles an Atom <link>

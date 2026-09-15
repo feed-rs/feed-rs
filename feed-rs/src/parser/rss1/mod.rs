@@ -2,7 +2,7 @@ use std::io::BufRead;
 
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser::util::if_some_then;
-use crate::parser::{ParseFeedResult, Parser, common, util};
+use crate::parser::{ParseFeedResult, Parser, common};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
@@ -42,7 +42,7 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
 
-            (NS::DublinCore, "date") => feed.published = util::handle_timestamp(parser, child),
+            (NS::DublinCore, "date") => feed.published = common::handle_timestamp(parser, child),
 
             (NS::DublinCore, "language") => feed.language = child.child_as_text(),
 
@@ -96,11 +96,11 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "description") => entry.summary = common::handle_text(child),
 
-            (NS::Content, "encoded") => content_encoded = util::handle_encoded(child)?,
+            (NS::Content, "encoded") => content_encoded = common::handle_encoded(child)?,
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
 
-            (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
+            (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
 
             (NS::DublinCore, "description") if entry.summary.is_none() => entry.summary = common::handle_text(child),
 

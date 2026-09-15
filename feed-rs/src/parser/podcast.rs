@@ -1,6 +1,6 @@
 use crate::model::{Feed, Group, MediaObject, PodcastPerson, Role, Transcript};
 use crate::parser::util::{if_some_then, parse_uri};
-use crate::parser::{ParseFeedResult, util};
+use crate::parser::{ParseFeedResult, common};
 use crate::xml::{Element, NS};
 use mediatype::MediaTypeBuf;
 use std::io::BufRead;
@@ -20,9 +20,9 @@ pub(crate) fn handle_podcast_item_element<R: BufRead>(element: Element<R>, media
     match element.ns_and_tag() {
         (NS::Podcast, "person") => if_some_then(handle_person(element)?, |person| media_obj.people.push(person)),
 
-        (NS::Podcast, "season") => if_some_then(util::handle_season(element), |season| media_obj.season = Some(season)),
+        (NS::Podcast, "season") => if_some_then(common::handle_season(element), |season| media_obj.season = Some(season)),
 
-        (NS::Podcast, "episode") => if_some_then(util::handle_episode(element), |episode| media_obj.episode = Some(episode)),
+        (NS::Podcast, "episode") => if_some_then(common::handle_episode(element), |episode| media_obj.episode = Some(episode)),
 
         (NS::Podcast, "transcript") => if_some_then(handle_transcript(element), |transcript| media_obj.transcripts.push(transcript)),
 
