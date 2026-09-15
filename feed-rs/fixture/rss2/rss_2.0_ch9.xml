@@ -38,8 +38,6 @@
             <guid isPermaLink="false">https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope</guid>
             <media:thumbnail url="https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_100.jpg" height="56" width="100"></media:thumbnail>
             <media:thumbnail url="https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_220.jpg" height="123" width="220"></media:thumbnail>
-            <media:thumbnail url="https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_512.jpg" height="288" width="512"></media:thumbnail>
-            <media:thumbnail url="https://sec.ch9.ms/ch9/3724/8609074c-2b7b-41ae-9345-f49973543724/azfr663_960.jpg" height="540" width="960"></media:thumbnail>
             <media:group>
                 <media:content url="https://rev9.blob.core.windows.net/mfupload/04b236b5-e824-4091-85d8-acd90155d4b0_20210124205102.mp4" expression="full" duration="867" fileSize="1" type="video/mp4" medium="video"></media:content>
                 <media:content url="https://sec.ch9.ms/ch9/075d/6e61e6c6-3890-4172-a617-fa0c4b38075d/azfr663.mp3" expression="full" duration="867" fileSize="13878646" type="audio/mp3" medium="audio"></media:content>

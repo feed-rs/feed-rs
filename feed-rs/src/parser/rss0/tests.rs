@@ -112,7 +112,7 @@ fn test_0_92_spec_1() {
                 enjoy something new every time.\n            ".into()))
             .id(entry1.id.as_ref())     // not in source data
             .updated(entry1.updated)   // not in source data
-            .media(MediaObject::default()
+            .media(MediaObject::new(MediaObjectSource::RSS)
                 .content(MediaContent::new()
                     .url("http://www.scripting.com/mp3s/theOtherOne.mp3")
                     .content_type("audio/mpeg")

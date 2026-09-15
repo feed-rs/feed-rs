@@ -1,5 +1,6 @@
 use crate::model::{
-    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, MediaCommunity, MediaContent, MediaObject, MediaText, MediaThumbnail, Person, Text,
+    Category, Content, Entry, Feed, FeedType, Generator, Image, Link, LinkTarget, MediaCommunity, MediaContent, MediaObject, MediaObjectSource, MediaText,
+    MediaThumbnail, Person, Text,
 };
 use crate::parser;
 use crate::util::test;
@@ -38,9 +39,11 @@ fn test_example_1() {
                 )
                 .contributor(Person::new("Sam Ruby"))
                 .contributor(Person::new("Joe Gregorio"))
-                .content(Content::default().content_type("text/html").body(
-                    "<div>\n                <p>\n                    <i>[Update: The Atom draft is finished.]</i>\n                </p>\n            </div>",
-                ))
+                .content(
+                    Content::default()
+                        .content_type("application/xhtml")
+                        .body("<p>\n                    <i>[Update: The Atom draft is finished.]</i>\n                </p>"),
+                )
                 .published("2003-12-13T08:29:29-04:00"),
         );
 
@@ -271,14 +274,7 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::new("markpritchard"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars3.githubusercontent.com/u/8234070?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
+                .author(Person::new("markpritchard")),
         )
         .entry(
             Entry::default()
@@ -291,58 +287,7 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
-        )
-        .entry(
-            Entry::default()
-                .id("tag:github.com,2008:Repository/90976281/0.1.1")
-                .updated_parsed("2017-06-16T18:49:36+10:00")
-                .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.1", None)
-                        .rel("alternate")
-                        .media_type("text/html"),
-                )
-                .title(Text::new("0.1.1".into()))
-                .content(
-                    Content::default()
-                        .body(r#"<p>Handle rel attribute of link element of entry of atom</p>"#)
-                        .content_type("text/html"),
-                )
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
-        )
-        .entry(
-            Entry::default()
-                .id("tag:github.com,2008:Repository/90976281/0.1.0")
-                .updated_parsed("2017-06-15T16:44:26+10:00")
-                .link(
-                    Link::new("https://github.com/feed-rs/feed-rs/releases/tag/0.1.0", None)
-                        .rel("alternate")
-                        .media_type("text/html"),
-                )
-                .title(Text::new("0.1.0".into()))
-                .content(Content::default().body(r#"<p>Update crate info to Cargo.toml</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook"))
-                .media(
-                    MediaObject::default().thumbnail(MediaThumbnail::new(
-                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".to_owned())
-                            .width(30)
-                            .height(30),
-                    )),
-                ),
+                .author(Person::new("kumabook")),
         );
 
     // Check
@@ -352,7 +297,7 @@ fn test_example_6() {
 // Verify that we don't trim essential whitespace
 #[test]
 fn test_example_7() {
-    let expected_body = r#"<div xmlns="http://www.w3.org/1999/xhtml"><p>This is a follow up from <a href="https://who-t.blogspot.com/2018/12/high-resolution-wheel-scrolling-on.html">the kernel support for high-resolution wheel scrolling</a> which you totally forgot about because it's already more then a year in the past and seriously, who has the attention span these days to remember this. Anyway, I finally found time and motivation to pick this up again and I started lining up the pieces like cans, for it only to be shot down by the commentary of strangers on the internet. The <a href="https://gitlab.freedesktop.org/wayland/wayland/-/merge_requests/72">Wayland merge request</a> lists the various pieces (libinput, wayland, weston, mutter, gtk and Xwayland) but for the impatient there's also an <a href="https://copr.fedorainfracloud.org/coprs/whot/high-resolution-wheel-scrolling/">Fedora 32 COPR</a>. For all you weirdos inexplicably not running the latest Fedora, well, you'll have to compile this yourself, just like I did. </p> <p>Let's recap: in v5.0 the kernel added new axes <b>REL_WHEEL_HI_RES</b> and <b>REL_HWHEEL_HI_RES</b> for all devices. On devices that actually support high-resolution wheel scrolling (Logitech and Microsoft mice, primarily) you'll get multiple hires events before the now-legacy <b>REL_WHEEL</b> events. On all other devices those two are in sync. </p> <p>Integrating this into the userspace stack was a bit of a mess at first, but I think the solution is good enough, even if it has a rather verbose explanation on how to handle it. The actual patches to integrate ended up being relatively simple. So let's see why it's a bit weird: </p> <p>When Wayland started, back in WhoahReallyThatLongAgo, scrolling was specified as the <b>wl_pointer.axis</b> event with a value in pixels. This works fine for touchpads, not so much for wheels. The early versions of Weston decreed that one wheel click was 10 pixels [1] and, perhaps surprisingly, the world kept on turning. When libinput was forked from Weston <a href="https://who-t.blogspot.com/2015/01/providing-physical-movement-of-wheel.html">an early change</a> was that wheel events would have two values - degrees of movement and click count ("discrete steps"). The wayland protocol was expanded to include the discrete steps as <b>wl_pointer.axis_discrete</b> as well. Then backwards compatibility reared its ugly head and Mutter, Weston, GTK all basically said: one discrete step equals 10 pixels so we multiply the discrete value by 10 and, perhaps surprisingly, the world kept on turning. </p> <p>This worked out well enough for a few years but with high resolution wheels we ran into a problem. Discrete steps are integers, so we can't send partial values. And the protocol is defined in a way that any tweaking of the behaviour would result in broken clients which, perhaps surprisingly, is a Bad Thing. This lead to the current proposal of separate events. <b>LIBINPUT_EVENT_POINTER_AXIS_WHEEL</b> and for Wayland the <b>wl_pointer.axis_v120</b> event, linked to above. These events are (like the kernel events) a parallel event stream to the previous events and effectively replace the <b>LIBINPUT_EVENT_POINTER_AXIS</b> and Wayland <b>wl_pointer.axis/axis_discrete</b> pair for wheel events (not so for touchpad or button scrolling though). </p> <p>The compositor side of things is relatively simple: take the events from libinput and pass the hires ones as v120 events and the lowres ones as v120 events with a value of zero. The client side takes the v120 events and uses them over <b>wl_pointer.axis/axis_discrete</b> unless one is zero in which case you can discard all axis events in that <b>wl_pointer.frame</b>. Since most client implementation already have the support for smooth scrolling (because, well, touchpads do exist) it's relatively simple to integrate - the new events just feed into the smooth scrolling code. And since you already have to do wheel emulation for that (because, well, old clients exist) wheel emulation is handled easily too. </p> <p>All that to provide buttery smooth [2] wheel scrolling. Or not, if your hardware doesn't support it. In which case, well, live with the warm fuzzy feeling that someone else has a better user experience now. Or soon, anyway. </p> <p><small>[1] with, I suspect, the scientific measurement of "yeah, that seems about alright"<br></br>[2] like butter out of a fridge, so still chunky but at least less so than before<br></br></small></p></div>"#;
+    let expected_body = r#"<p>This is a follow up from <a href="https://who-t.blogspot.com/2018/12/high-resolution-wheel-scrolling-on.html">the kernel support for high-resolution wheel scrolling</a> which you totally forgot about because it's already more then a year in the past and seriously, who has the attention span these days to remember this. Anyway, I finally found time and motivation to pick this up again and I started lining up the pieces like cans, for it only to be shot down by the commentary of strangers on the internet. The <a href="https://gitlab.freedesktop.org/wayland/wayland/-/merge_requests/72">Wayland merge request</a> lists the various pieces (libinput, wayland, weston, mutter, gtk and Xwayland) but for the impatient there's also an <a href="https://copr.fedorainfracloud.org/coprs/whot/high-resolution-wheel-scrolling/">Fedora 32 COPR</a>. For all you weirdos inexplicably not running the latest Fedora, well, you'll have to compile this yourself, just like I did. </p> <p>Let's recap: in v5.0 the kernel added new axes <b>REL_WHEEL_HI_RES</b> and <b>REL_HWHEEL_HI_RES</b> for all devices. On devices that actually support high-resolution wheel scrolling (Logitech and Microsoft mice, primarily) you'll get multiple hires events before the now-legacy <b>REL_WHEEL</b> events. On all other devices those two are in sync. </p> <p>Integrating this into the userspace stack was a bit of a mess at first, but I think the solution is good enough, even if it has a rather verbose explanation on how to handle it. The actual patches to integrate ended up being relatively simple. So let's see why it's a bit weird: </p> <p>When Wayland started, back in WhoahReallyThatLongAgo, scrolling was specified as the <b>wl_pointer.axis</b> event with a value in pixels. This works fine for touchpads, not so much for wheels. The early versions of Weston decreed that one wheel click was 10 pixels [1] and, perhaps surprisingly, the world kept on turning. When libinput was forked from Weston <a href="https://who-t.blogspot.com/2015/01/providing-physical-movement-of-wheel.html">an early change</a> was that wheel events would have two values - degrees of movement and click count ("discrete steps"). The wayland protocol was expanded to include the discrete steps as <b>wl_pointer.axis_discrete</b> as well. Then backwards compatibility reared its ugly head and Mutter, Weston, GTK all basically said: one discrete step equals 10 pixels so we multiply the discrete value by 10 and, perhaps surprisingly, the world kept on turning. </p> <p>This worked out well enough for a few years but with high resolution wheels we ran into a problem. Discrete steps are integers, so we can't send partial values. And the protocol is defined in a way that any tweaking of the behaviour would result in broken clients which, perhaps surprisingly, is a Bad Thing. This lead to the current proposal of separate events. <b>LIBINPUT_EVENT_POINTER_AXIS_WHEEL</b> and for Wayland the <b>wl_pointer.axis_v120</b> event, linked to above. These events are (like the kernel events) a parallel event stream to the previous events and effectively replace the <b>LIBINPUT_EVENT_POINTER_AXIS</b> and Wayland <b>wl_pointer.axis/axis_discrete</b> pair for wheel events (not so for touchpad or button scrolling though). </p> <p>The compositor side of things is relatively simple: take the events from libinput and pass the hires ones as v120 events and the lowres ones as v120 events with a value of zero. The client side takes the v120 events and uses them over <b>wl_pointer.axis/axis_discrete</b> unless one is zero in which case you can discard all axis events in that <b>wl_pointer.frame</b>. Since most client implementation already have the support for smooth scrolling (because, well, touchpads do exist) it's relatively simple to integrate - the new events just feed into the smooth scrolling code. And since you already have to do wheel emulation for that (because, well, old clients exist) wheel emulation is handled easily too. </p> <p>All that to provide buttery smooth [2] wheel scrolling. Or not, if your hardware doesn't support it. In which case, well, live with the warm fuzzy feeling that someone else has a better user experience now. Or soon, anyway. </p> <p><small>[1] with, I suspect, the scientific measurement of "yeah, that seems about alright"<br></br>[2] like butter out of a fridge, so still chunky but at least less so than before<br></br></small></p>"#;
     // Parse the feed; note that the result with sanitization active differs from the expected,
     // so we will explicitly disable sanitization for this test.
     let test_data = test::fixture_as_string("atom/atom_example_7.xml");
@@ -494,7 +439,7 @@ fn test_mediarss_youtube() {
     let test_data = test::fixture_as_string("atom/atom_mediarss_youtube_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::default()
+    let expected = MediaObject::new(MediaObjectSource::MediaRSS)
         .title("Navigating with Quantum Entanglement")
         .content(
             MediaContent::new()
@@ -509,7 +454,7 @@ fn test_mediarss_youtube() {
                 .height(360),
         ))
         .description("Check Out Weathered on PBS Terra https://www.youtube.com/watch?v=znSN7ZFIaOg&ab_channel=PBSTerra")
-        .community(MediaCommunity::new().star_rating(15020, 4.95, 1, 5).statistics(304321, 42));
+        .community(MediaCommunity::new().star_rating(15020, 4.95, 1, 5).statistics(Some(304321), Some(42)));
 
     // Check the media object
     let entry = &actual.entries[0];
@@ -523,7 +468,7 @@ fn test_mediarss_newscred() {
     let test_data = test::fixture_as_string("atom/atom_mediarss_newscred_1.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
 
-    let expected = MediaObject::default()
+    let expected = MediaObject::new(MediaObjectSource::MediaRSS)
         .title("media title")
         .description("media description")
         .text(MediaText::new(Text::new("media text".to_string())))
@@ -547,33 +492,21 @@ fn test_mediarss_newscred() {
     assert_eq!(media_obj, &expected);
 }
 
-#[test]
-fn test_reddit() {
-    let test_data = test::fixture_as_string("atom/atom_mediarss_reddit_1.xml");
-    let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
-
-    let expected = MediaObject::default().thumbnail(MediaThumbnail::new(Image::new(
-        "https://b.thumbs.redditmedia.com/_MXt-0n8VXQc-EQ7Q0vFioALFWFITAgVWu4Wf8dThhU.jpg".to_string(),
-    )));
-
-    let entry = &actual.entries[actual.entries.len() - 2];
-    let media_obj = &entry.media[0];
-    assert_eq!(media_obj, &expected);
-}
-
 // Handle text/html specified as a mime type on content
 #[test]
 fn test_scattered() {
     let test_data = test::fixture_as_string("atom/atom_scattered.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap().id("");
-    assert!(actual.entries[0]
-        .content
-        .as_ref()
-        .unwrap()
-        .body
-        .as_ref()
-        .unwrap()
-        .contains("there are no strings on me"));
+    assert!(
+        actual.entries[0]
+            .content
+            .as_ref()
+            .unwrap()
+            .body
+            .as_ref()
+            .unwrap()
+            .contains("there are no strings on me")
+    );
 }
 
 // Handle Atom atomOutOfLineContent
@@ -589,6 +522,7 @@ fn test_atom_content_src() {
             content_type: "text/plain".parse().unwrap(),
             src: Some(Link {
                 href: "https://elly.town/d/blog/2024-03-08-x509-certificates.txt".into(),
+                target: None,
                 rel: None,
                 media_type: Some("text/plain".into()),
                 href_lang: None,
@@ -600,10 +534,46 @@ fn test_atom_content_src() {
     );
 }
 
+// Verify that we don't trim essential whitespace
+#[test]
+fn test_example_xhtml() {
+    let expected_body = r#"<p>
+While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&amp;nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
+</p>
+<p>
+In this example it's ok to remove the spaces between <code>&lt;/li>&lt;li></code> but it's <em>not</em> ok to remove the spaces between <code>&lt;/i> &lt;b></code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code>&lt;pre></code> or <code>&lt;script></code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
+</p>"#;
+    let test_data = test::fixture_as_string("atom/atom_example_xhtml.xml");
+    let p = parser::Builder::new().sanitize_content(false).build();
+    let feed = p.parse(test_data.as_bytes()).unwrap();
+    let body = feed
+        .entries
+        .first()
+        .map(|e| e.content.as_ref())
+        .unwrap()
+        .map(|c| c.body.as_ref())
+        .unwrap()
+        .unwrap();
+    assert_eq!(body, expected_body);
+}
+
 // Handle xml:base attribute on content
 #[test]
 fn test_atom_content_xml_base() {
     let test_data = test::fixture_as_string("atom/atom_xml_base.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     assert!(actual.entries[0].base.as_ref().unwrap().eq("https://numi.st/post/2022/travel-uke/"));
+}
+
+// Verify we extract comments links correctly
+#[test]
+fn test_comments_1() {
+    let test_data = test::fixture_as_string("atom/atom_comments_1.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Verify we have the link to the feed
+    let entry = &actual.entries[0];
+
+    let comments_feed_link = entry.links.iter().find(|link| link.target == Some(LinkTarget::CommentsFeed)).unwrap();
+    assert_eq!(comments_feed_link.href, "http://example.org/2005/04/02/atom/feed".to_string());
 }

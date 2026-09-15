@@ -4,22 +4,21 @@ use std::fmt::Debug;
 use std::hash::Hasher;
 use std::io::{BufRead, BufReader, Read};
 
-use chrono::{DateTime, Utc};
-use siphasher::sip128::{Hasher128, SipHasher};
-
 use crate::model;
 use crate::parser::util::{IdGenerator, TimestampParser};
 use crate::xml;
 use crate::xml::NS;
+use chrono::{DateTime, Utc};
+use siphasher::sip128::{Hasher128, SipHasher};
 
 mod atom;
+mod common;
+mod itunes;
 mod json;
+mod mediarss;
 mod rss0;
 mod rss1;
 mod rss2;
-
-pub(crate) mod itunes;
-pub(crate) mod mediarss;
 pub(crate) mod util;
 
 pub type ParseFeedResult<T> = Result<T, ParseFeedError>;
@@ -27,7 +26,6 @@ pub type ParseFeedResult<T> = Result<T, ParseFeedError>;
 /// An error returned when parsing a feed from a source fails
 #[derive(Debug)]
 pub enum ParseFeedError {
-    // TODO add line number/position
     ParseError(ParseErrorKind),
     // IO error
     IoError(std::io::Error),
@@ -86,17 +84,23 @@ pub enum ParseErrorKind {
     /// Could not find the expected root element (e.g. "channel" for RSS 2, a JSON node etc.)
     NoFeedRoot,
     /// The content type is unsupported, and we cannot parse the value into a known representation
-    UnknownMimeType(String),
+    UnknownMimeType { position: u64, mime: String },
     /// Required content within the source was not found e.g. the XML child text element for a "content" element
-    MissingContent(&'static str),
+    MissingContent { position: u64, reference: &'static str },
+    /// Unknown enum variant
+    UnknownEnumVariant { position: u64, reference: String },
+    /// Unexpected state
+    IllegalState { position: u64, reference: String },
 }
 
 impl fmt::Display for ParseErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ParseErrorKind::NoFeedRoot => f.write_str("no root element"),
-            ParseErrorKind::UnknownMimeType(mime) => write!(f, "unsupported content type {}", mime),
-            ParseErrorKind::MissingContent(elem) => write!(f, "missing content element {}", elem),
+            ParseErrorKind::UnknownMimeType { position, mime } => write!(f, "unsupported content type {} at position {}", mime, position),
+            ParseErrorKind::MissingContent { position, reference } => write!(f, "missing {} at position {}", reference, position),
+            ParseErrorKind::UnknownEnumVariant { position, reference } => write!(f, "unknown enum variant {} at position {}", reference, position),
+            ParseErrorKind::IllegalState { position, reference } => write!(f, "illegal parser state {} at position {}", reference, position),
         }
     }
 }
@@ -107,6 +111,9 @@ pub struct Parser {
     id_generator: Box<IdGenerator>,
     sanitize_content: bool,
     timestamp_parser: Box<TimestampParser>,
+
+    // state for MediaRSS handling
+    mediarss: mediarss::MediaRssState,
 }
 
 impl Parser {
@@ -155,9 +162,15 @@ impl Parser {
             _ => Err(ParseFeedError::ParseError(ParseErrorKind::NoFeedRoot)),
         };
 
-        // Post processing as required
+        // Post-processing as required
         if let Ok(mut feed) = result {
+            // Some feeds do not provide IDs, so we need to generate a consistent identifier
             assign_missing_ids(&self.id_generator, &mut feed, self.base_uri.as_deref());
+
+            // Sanitise content as required
+            if self.sanitize_content {
+                sanitise(&mut feed);
+            }
 
             Ok(feed)
         } else {
@@ -191,7 +204,7 @@ impl Parser {
                     element_source.set_default_default_namespace(NS::Atom);
                     return atom::parse_entry(self, root);
                 }
-                ("rss", Some("2.0")) => {
+                ("rss", Some("2.0")) | ("rss", Some("")) => {
                     element_source.set_default_default_namespace(NS::RSS);
                     return rss2::parse(self, root);
                 }
@@ -246,13 +259,14 @@ impl Builder {
             id_generator: self.id_generator,
             sanitize_content: self.sanitize_content,
             timestamp_parser: self.timestamp_parser,
+            mediarss: mediarss::MediaRssState::new(),
         }
     }
 
     /// Registers an ID generator
     pub fn id_generator<F>(mut self, generator: F) -> Self
     where
-        F: Fn(&[model::Link], &Option<model::Text>, Option<&str>) -> String + 'static,
+        F: Fn(&[model::Link], &Option<model::Text>, Option<&str>) -> String + 'static + Send + Sync,
     {
         self.id_generator = Box::new(generator);
         self
@@ -286,7 +300,7 @@ impl Builder {
     /// Registers a custom timestamp parser
     pub fn timestamp_parser<F>(mut self, ts_parser: F) -> Self
     where
-        F: Fn(&str) -> Option<DateTime<Utc>> + 'static,
+        F: Fn(&str) -> Option<DateTime<Utc>> + 'static + Send + Sync,
     {
         self.timestamp_parser = Box::new(ts_parser);
         self
@@ -314,6 +328,34 @@ fn assign_missing_ids(id_generator: &IdGenerator, feed: &mut model::Feed, uri: O
     for entry in feed.entries.iter_mut() {
         if entry.id.is_empty() {
             entry.id = id_generator(&entry.links, &entry.title, uri);
+        }
+    }
+}
+
+// Sanitises the various text fields in the feed + entries
+fn sanitise(feed: &mut model::Feed) {
+    if let Some(t) = feed.description.as_mut() {
+        t.sanitize()
+    }
+    if let Some(t) = feed.rights.as_mut() {
+        t.sanitize()
+    }
+    if let Some(t) = feed.title.as_mut() {
+        t.sanitize()
+    }
+
+    for entry in feed.entries.iter_mut() {
+        if let Some(c) = entry.content.as_mut() {
+            c.sanitize()
+        }
+        if let Some(t) = entry.rights.as_mut() {
+            t.sanitize()
+        }
+        if let Some(t) = entry.summary.as_mut() {
+            t.sanitize()
+        }
+        if let Some(t) = entry.title.as_mut() {
+            t.sanitize()
         }
     }
 }
@@ -356,5 +398,6 @@ pub fn generate_id_from_uri_and_title(uri: &str, title: &model::Text) -> String 
     format!("{:x}{:x}", hash.h1, hash.h2)
 }
 
+mod podcast;
 #[cfg(test)]
 mod tests;

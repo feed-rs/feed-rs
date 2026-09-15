@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use mediatype::{names, MediaTypeBuf};
+use mediatype::{MediaTypeBuf, names};
 
 use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser::util::if_some_then;
@@ -149,15 +149,6 @@ fn handle_item(parser: &Parser, ji: JsonItem) -> Entry {
     if_some_then(ji.attachments, |attachments| {
         attachments.into_iter().map(handle_attachment).for_each(|link| entry.links.push(link))
     });
-
-    // Per the JSON Feed spec, "the only place HTML is allowed in this format is in content_html";
-    // as such when sanitizing, we will *only* inspect entry.content.
-    // it's "text/html".
-    if parser.sanitize_content {
-        if let Some(c) = entry.content.as_mut() {
-            c.sanitize()
-        }
-    }
 
     entry
 }

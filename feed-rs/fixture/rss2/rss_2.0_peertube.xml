@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:podcast="https://podcastindex.org/namespace/1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>tchncs</title>
+        <link>https://tube.tchncs.de</link>
+        <description>Why registrations are closed With something like a video hosting service, it is much harder to "scale up", justifying the price/usage ratio by the amount of donations. Yes, the general donation/cost ration (without work time) would still allow more scaling up, but it does not feel right at the current state., By the time of writing, this instance counts 7,712 videos, resulting in 10.4 TB of media that is getting about 44 views per video on average. The average is so "high" because there is a tiny amount of people generating more views. Scrolling through the feed, videos tend to have 0-10 views usually., In a perfect world, the media weight should be at least twice as much, because this instance still needs some replication/backup thing for that media and above numbers lower motivation., For better user experience, the instance should be getting remote workers for faster processing of media, but most of the hosts are pretty well utilized already. So what to do about that Well, I honestly don't know right now. If the service gets discontinued, don't worry, media will remain at least a year for you to request and there will be a warning at least half a year in advance. I still want to try some stuff to tackle some of the mentioned points above out of curiosity and who knows, maybe it won't be as dramatic as I assume, however these days (early 2025) I am very busy. And there are things with higher priority to tackle. Of course Peertube needs a ton of users in order to reach a healthy active userbase (which usually is only a fraction of total users) just like the other services. I am aware of that. It's just much more heavy weighted than the others (perhaps with Matrix as an exception) I still want my account! :( Not a problem at all. Just reach out to me. https://tchncs.de/contact Preferable accounts allowed to signup All of the above forms a new motivation. Every now and then, small projects or podcasts reach out for getting a seat on this instance – and that's exactly what we need more of right now! If you are certain to reach more people than explained above, please request an account. It might(!) help this instance to become more purposeful and actually used.   There is no specific topic but we want original content and will go after copies made from other people and/or organisations of any kind... no matter what the license is, this place is for your very own videos. 😉</description>
+        <lastBuildDate>Sun, 12 Apr 2026 01:09:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>PeerTube - https://tube.tchncs.de</generator>
+        <image>
+            <title>tchncs</title>
+            <url>https://tube.tchncs.de/client/assets/images/icons/icon-1500x1500.png</url>
+            <link>https://tube.tchncs.de</link>
+        </image>
+        <copyright>All rights reserved, unless otherwise specified in the terms specified at https://tube.tchncs.de/about and potential licenses granted by each content's rightholder.</copyright>
+        <atom:link href="https://tube.tchncs.de/feeds/videos.xml" rel="self" type="application/rss+xml"/>
+        <item>
+            <title><![CDATA[Max schaukelt]]></title>
+            <link>https://tube.tchncs.de/w/bUrNgv89egmbvC5Ht6z7G9</link>
+            <guid>https://tube.tchncs.de/w/bUrNgv89egmbvC5Ht6z7G9</guid>
+            <pubDate>Sat, 11 Apr 2026 16:30:43 GMT</pubDate>
+            <description><![CDATA[Max, das bunte Strickhorn, schaukelt mit einem hängenden Erdbeer-Fass. Backlink: https://plushies.social/@maxhorn/116387023010050899]]></description>
+            <content:encoded><![CDATA[<p>Max, das bunte Strickhorn, schaukelt mit einem hängenden Erdbeer-Fass.</p>
+<p>Backlink: <a href="https://plushies.social/@maxhorn/116387023010050899" target="_blank" rel="noopener noreferrer">https://plushies.social/@maxhorn/116387023010050899</a></p>
+]]></content:encoded>
+            <dc:creator>Max Horn</dc:creator>
+            <category>Sports</category>
+            <enclosure length="26517343" type="video/mp4" url="https://tube.tchncs.de/download/videos/generate/584df607-04b4-471a-9c7f-abce9f5cf888?videoFileIds=936523"/>
+            <media:community>
+                <media:statistics views="5"/>
+            </media:community>
+            <media:embed url="https://tube.tchncs.de/videos/embed/bUrNgv89egmbvC5Ht6z7G9"/>
+            <media:player url="https://tube.tchncs.de/w/bUrNgv89egmbvC5Ht6z7G9"/>
+            <media:group>
+                <media:peerLink type="application/x-bittorrent" href="https://tube.tchncs.de/lazy-static/torrents/ff65b7e4-3bd5-487a-958c-aa998556be72-2160.torrent" isDefault="false"/>
+                <media:peerLink type="application/x-bittorrent" href="https://tube.tchncs.de/lazy-static/torrents/0b3560e4-36f2-4d5e-843b-65a098485631-1080.torrent" isDefault="false"/>
+                <media:content type="video/mp4" medium="video" height="2160" fileSize="26517343" url="https://media.tube.tchncs.de/videos/e5ae90de-4f23-4795-bdf9-2a7f91fa49b5-2160.mp4" framerate="30" duration="11" isDefault="true"/>
+                <media:content type="video/mp4" medium="video" height="1080" fileSize="7976897" url="https://media.tube.tchncs.de/videos/428992cc-1ca0-46ad-9e97-97f9f7f6bec2-1080.mp4" framerate="30" duration="11" isDefault="false"/>
+            </media:group>
+            <media:thumbnail url="https://tube.tchncs.de/lazy-static/thumbnails/2145486d-b02a-443f-9ca7-0766c160c329.jpg" height="1400" width="1400"/>
+            <media:rating>nonadult</media:rating>
+            <media:title type="plain">Max schaukelt (media title)</media:title>
+            <media:description type="plain">Max, das bunte Strickhorn, schaukelt mit einem hängenden Erdbeer-Fass. Backlink: https://plushies.social/@maxhorn/116387023010050899</media:description>
+        </item>
+    </channel>
+</rss>

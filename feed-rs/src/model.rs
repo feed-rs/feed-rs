@@ -1,13 +1,16 @@
+use std::fmt::Debug;
 use std::time::Duration;
 
 use chrono::{DateTime, Utc};
-use mediatype::{names, MediaTypeBuf};
-use serde::Serialize;
+use mediatype::{MediaTypeBuf, names};
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::Value;
 use url::Url;
 
-use crate::parser::util;
 #[cfg(test)]
 use crate::parser::util::parse_timestamp_lenient;
+use crate::parser::{ParseErrorKind, ParseFeedError, util};
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -29,10 +32,10 @@ use crate::parser::util::parse_timestamp_lenient;
 /// Certain elements are not mapped given their limited utility:
 ///   * RSS 2:
 ///     * channel - docs (pointer to the spec), cloud (for callbacks), textInput (text box e.g. for search)
-///     * item - comments (link to comments on the article), source (pointer to the channel, but our data model links items to a channel)
+///     * item - source (pointer to the channel, but our data model links items to a channel)
 ///   * RSS 1:
 ///     * channel - rdf:about attribute (pointer to feed), textinput (text box e.g. for search)
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Deserialize, PartialEq, Serialize)]
 pub struct Feed {
     /// Type of this feed (e.g. RSS2, Atom etc)
     pub feed_type: FeedType,
@@ -99,6 +102,8 @@ pub struct Feed {
     pub rights: Option<Text>,
     /// RSS 2 (optional): It's a number of minutes that indicates how long a channel can be cached before refreshing from the source.
     pub ttl: Option<u32>,
+    /// Podcast: People associated with this channel
+    pub people: Vec<PodcastPerson>,
 
     /// The individual items within the feed
     /// * Atom (optional): Individual entries within the feed (e.g. a blog post)
@@ -126,8 +131,15 @@ impl Feed {
             rating: None,
             rights: None,
             ttl: None,
+            people: Vec::new(),
             entries: Vec::new(),
         }
+    }
+}
+
+impl Debug for Feed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        f.write_str(serde_json::to_string(self).unwrap().as_str())
     }
 }
 
@@ -219,7 +231,7 @@ impl Feed {
     }
 }
 
-/// Type of a feed (RSS, Atom etc)
+/// Type of feed (RSS, Atom etc)
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum FeedType {
     Atom,
@@ -239,7 +251,7 @@ pub struct Entry {
     /// * JSON Feed: is unique for that item for that feed over time.
     pub id: String,
     /// Title of this item within the feed
-    /// * Atom, RSS 1(required): Contains a human readable title for the entry.
+    /// * Atom, RSS 1(required): Contains a human-readable title for the entry.
     /// * RSS 2 (optional): The title of the item.
     /// * JSON Feed: The title of the item.
     pub title: Option<Text>,
@@ -296,7 +308,7 @@ pub struct Entry {
     /// 1) each "media:group" element encountered in the feed
     /// 2) a default for any other "media:*" elements found at the item level
     ///
-    /// See the Atom tests for youtube and newscred for examples
+    /// See the Atom tests for YouTube and newscred for examples
     pub media: Vec<MediaObject>,
 
     /// Atom (optional): The language specified on the item
@@ -636,13 +648,17 @@ pub struct Link {
     /// * RSS 2: The URL to the HTML website corresponding to the channel or item.
     /// * JSON Feed: the URI to the attachment, feed etc
     pub href: String,
-    /// A single link relationship type.
+
+    /// Information on the target of this link if available
+    pub target: Option<LinkTarget>,
+
+    /// Atom: a single link relationship type from the enumerated set.
     pub rel: Option<String>,
     /// Indicates the media type of the resource.
     pub media_type: Option<String>,
     /// Indicates the language of the referenced resource.
     pub href_lang: Option<String>,
-    /// Human readable information about the link, typically for display purposes.
+    /// Human-readable information about the link, typically for display purposes.
     pub title: Option<String>,
     /// The length of the resource, in bytes.
     pub length: Option<u64>,
@@ -659,6 +675,7 @@ impl Link {
 
         Link {
             href,
+            target: None,
             rel: None,
             media_type: None,
             href_lang: None,
@@ -690,16 +707,36 @@ impl Link {
         self
     }
 
+    pub fn target(mut self, target: LinkTarget) -> Self {
+        self.target = Some(target);
+        self
+    }
+
     pub fn title(mut self, title: &str) -> Self {
         self.title = Some(title.to_owned());
         self
     }
 }
 
+/// Type of resource to which this link points
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum LinkTarget {
+    /// A link to comments, likely an HTML anchor to the corresponding section of a page
+    /// [RSS 2.0 standard]: https://www.rssboard.org/rss-specification#ltcommentsgtSubelementOfLtitemgt
+    Comments,
+    /// Link to the comments RSS feed
+    /// [Comment API NS]: https://www.rssboard.org/comment-api
+    ///
+    CommentsFeed,
+}
+
 /// The top-level representation of a media object
 /// i.e. combines "media:*" elements from the RSS Media spec such as those under a media:group
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct MediaObject {
+    // Final post-processed source of this media object
+    pub(crate) source: Option<MediaObjectSource>,
+
     /// Title of the object (from the media:title element)
     pub title: Option<Text>,
     /// Collection of the media content elements
@@ -716,12 +753,29 @@ pub struct MediaObject {
     pub community: Option<MediaCommunity>,
     /// Credits
     pub credits: Vec<MediaCredit>,
+
+    /// Podcast: People associated with this episode
+    pub people: Vec<PodcastPerson>,
+    /// iTunes + Podcast (optional): Season number
+    pub season: Option<Season>,
+    /// iTunes + Podcast (optional): Episode number
+    pub episode: Option<Episode>,
+    /// Podcast: Available transcripts
+    pub transcripts: Vec<Transcript>,
 }
 
 impl MediaObject {
-    // Checks if this object has been populated with content
-    pub(crate) fn has_content(&self) -> bool {
-        self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.thumbnails.is_empty() || !self.texts.is_empty()
+    // Checks if this object has been populated with any content (e.g. iTunes, Podcast etc.)
+    pub(crate) fn is_not_empty(&self) -> bool {
+        self.title.is_some() || self.description.is_some() || !self.content.is_empty() || !self.texts.is_empty() || !self.transcripts.is_empty()
+    }
+
+    // Creates a new instance with the nominated source
+    pub(crate) fn new(source: MediaObjectSource) -> Self {
+        MediaObject {
+            source: Some(source),
+            ..Default::default()
+        }
     }
 }
 
@@ -768,6 +822,14 @@ impl MediaObject {
     }
 }
 
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub(crate) enum MediaObjectSource {
+    RSS,
+    MediaRSS,
+    ITunes,
+    Podcast,
+}
+
 /// Represents a "media:community" item from the RSS Media spec
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct MediaCommunity {
@@ -805,9 +867,9 @@ impl MediaCommunity {
         self
     }
 
-    pub fn statistics(mut self, views: u64, favorites: u64) -> Self {
-        self.stats_views = Some(views);
-        self.stats_favorites = Some(favorites);
+    pub fn statistics(mut self, views: Option<u64>, favorites: Option<u64>) -> Self {
+        self.stats_views = views;
+        self.stats_favorites = favorites;
         self
     }
 }
@@ -859,6 +921,11 @@ impl MediaContent {
 
     pub fn size(mut self, size: u64) -> Self {
         self.size = Some(size);
+        self
+    }
+
+    pub fn rating(mut self, rating: MediaRating) -> Self {
+        self.rating = Some(rating);
         self
     }
 }
@@ -984,6 +1051,352 @@ impl Person {
     }
 }
 
+/// Represents a "podcast:person" from the [Podcast spec].
+///
+/// [Podcast spec]: https://podcastindex.org/namespace/1.0#person
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct PodcastPerson {
+    pub name: String,
+    #[serde(deserialize_with = "podcast_enum")]
+    pub role: Role,
+    #[serde(deserialize_with = "podcast_enum")]
+    pub group: Group,
+    pub img: Option<Url>,
+    pub href: Option<Url>,
+}
+
+/// Represents a [`PodcastPerson`](PodcastPerson)'s role.
+///
+/// See the [taxonomy](https://github.com/Podcastindex-org/podcast-namespace/blob/main/taxonomy.json)
+/// for a list of roles and their associated groups.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum Role {
+    Director,
+    #[serde(rename = "Assistant Director")]
+    AssistantDirector,
+    #[serde(rename = "Executive Producer")]
+    ExecutiveProducer,
+    #[serde(rename = "Senior Producer")]
+    SeniorProducer,
+    Producer,
+    #[serde(rename = "Associate Producer")]
+    AssociateProducer,
+    #[serde(rename = "Development Producer")]
+    DevelopmentProducer,
+    #[serde(rename = "Creative Director")]
+    CreativeDirector,
+    Host,
+    #[serde(rename = "Co-Host")]
+    CoHost,
+    #[serde(rename = "Guest Host")]
+    GuestHost,
+    Guest,
+    #[serde(rename = "Voice Actor")]
+    VoiceActor,
+    Narrator,
+    Announcer,
+    Reporter,
+    Author,
+    #[serde(rename = "Editorial Director")]
+    EditorialDirector,
+    #[serde(rename = "Co-Writer")]
+    CoWriter,
+    Writer,
+    Songwriter,
+    #[serde(rename = "Guest Writer")]
+    GuestWriter,
+    #[serde(rename = "Story Editor")]
+    StoryEditor,
+    #[serde(rename = "Managing Editor")]
+    ManagingEditor,
+    #[serde(rename = "Script Editor")]
+    ScriptEditor,
+    #[serde(rename = "Script Coordinator")]
+    ScriptCoordinator,
+    Researcher,
+    #[serde(rename = "Fact Checker")]
+    FactChecker,
+    Translator,
+    Transcriber,
+    Logger,
+    #[serde(rename = "Studio Coordinator")]
+    StudioCoordinator,
+    #[serde(rename = "Technical Director")]
+    TechnicalDirector,
+    #[serde(rename = "Technical Manager")]
+    TechnicalManager,
+    #[serde(rename = "Audio Engineer")]
+    AudioEngineer,
+    #[serde(rename = "Remote Recording Engineer")]
+    RemoteRecordingEngineer,
+    #[serde(rename = "Post Production Engineer")]
+    PostProductionEngineer,
+    #[serde(rename = "Audio Editor")]
+    AudioEditor,
+    #[serde(rename = "Sound Designer")]
+    SoundDesigner,
+    #[serde(rename = "Foley Artist")]
+    FoleyArtist,
+    Composer,
+    #[serde(rename = "Theme Music")]
+    ThemeMusic,
+    #[serde(rename = "Music Production")]
+    MusicProduction,
+    #[serde(rename = "Music Contributor")]
+    MusicContributor,
+    #[serde(rename = "Production Coordinator")]
+    ProductionCoordinator,
+    #[serde(rename = "Booking Coordinator")]
+    BookingCoordinator,
+    #[serde(rename = "Production Assistant")]
+    ProductionAssistant,
+    #[serde(rename = "Content Manager")]
+    ContentManager,
+    #[serde(rename = "Marketing Manager")]
+    MarketingManager,
+    #[serde(rename = "Sales Representative")]
+    SalesRepresentative,
+    #[serde(rename = "Sales Manager")]
+    SalesManager,
+    #[serde(rename = "Graphic Designer")]
+    GraphicDesigner,
+    #[serde(rename = "Cover Art Designer")]
+    CoverArtDesigner,
+    #[serde(rename = "Social Media Manager")]
+    SocialMediaManager,
+    Consultant,
+    Intern,
+    #[serde(rename = "Camera Operator")]
+    CameraOperator,
+    #[serde(rename = "Lighting Designer")]
+    LightingDesigner,
+    #[serde(rename = "Camera Grip")]
+    CameraGrip,
+    #[serde(rename = "Assistant Camera")]
+    AssistantCamera,
+    Editor,
+    #[serde(rename = "Assistant Editor")]
+    AssistantEditor,
+}
+
+impl Role {
+    pub const fn default_group(&self) -> Group {
+        match self {
+            Self::Director => Group::CreativeDirection,
+            Self::AssistantDirector => Group::CreativeDirection,
+            Self::ExecutiveProducer => Group::CreativeDirection,
+            Self::SeniorProducer => Group::CreativeDirection,
+            Self::Producer => Group::CreativeDirection,
+            Self::AssociateProducer => Group::CreativeDirection,
+            Self::DevelopmentProducer => Group::CreativeDirection,
+            Self::CreativeDirector => Group::CreativeDirection,
+            Self::Host => Group::Cast,
+            Self::CoHost => Group::Cast,
+            Self::GuestHost => Group::Cast,
+            Self::Guest => Group::Cast,
+            Self::VoiceActor => Group::Cast,
+            Self::Narrator => Group::Cast,
+            Self::Announcer => Group::Cast,
+            Self::Reporter => Group::Cast,
+            Self::Author => Group::Writing,
+            Self::EditorialDirector => Group::Writing,
+            Self::CoWriter => Group::Writing,
+            Self::Writer => Group::Writing,
+            Self::Songwriter => Group::Writing,
+            Self::GuestWriter => Group::Writing,
+            Self::StoryEditor => Group::Writing,
+            Self::ManagingEditor => Group::Writing,
+            Self::ScriptEditor => Group::Writing,
+            Self::ScriptCoordinator => Group::Writing,
+            Self::Researcher => Group::Writing,
+            Self::Editor => Group::Writing,
+            Self::FactChecker => Group::Writing,
+            Self::Translator => Group::Writing,
+            Self::Transcriber => Group::Writing,
+            Self::Logger => Group::Writing,
+            Self::StudioCoordinator => Group::AudioProduction,
+            Self::TechnicalDirector => Group::AudioProduction,
+            Self::TechnicalManager => Group::AudioProduction,
+            Self::AudioEngineer => Group::AudioProduction,
+            Self::RemoteRecordingEngineer => Group::AudioProduction,
+            Self::PostProductionEngineer => Group::AudioProduction,
+            Self::AudioEditor => Group::AudioPostProduction,
+            Self::SoundDesigner => Group::AudioPostProduction,
+            Self::FoleyArtist => Group::AudioPostProduction,
+            Self::Composer => Group::AudioPostProduction,
+            Self::ThemeMusic => Group::AudioPostProduction,
+            Self::MusicProduction => Group::AudioPostProduction,
+            Self::MusicContributor => Group::AudioPostProduction,
+            Self::ProductionCoordinator => Group::Administration,
+            Self::BookingCoordinator => Group::Administration,
+            Self::ProductionAssistant => Group::Administration,
+            Self::ContentManager => Group::Administration,
+            Self::MarketingManager => Group::Administration,
+            Self::SalesRepresentative => Group::Administration,
+            Self::SalesManager => Group::Administration,
+            Self::GraphicDesigner => Group::Visuals,
+            Self::CoverArtDesigner => Group::Visuals,
+            Self::SocialMediaManager => Group::Community,
+            Self::Consultant => Group::Misc,
+            Self::Intern => Group::Misc,
+            Self::CameraOperator => Group::VideoProduction,
+            Self::LightingDesigner => Group::VideoProduction,
+            Self::CameraGrip => Group::VideoProduction,
+            Self::AssistantCamera => Group::VideoProduction,
+            Self::AssistantEditor => Group::VideoPostProduction,
+        }
+    }
+
+    pub(crate) fn parse(position: u64, s: &str) -> Result<Self, ParseFeedError> {
+        match normalise_case(s).as_str() {
+            "Director" => Ok(Role::Director),
+            "Assistant Director" => Ok(Role::AssistantDirector),
+            "Executive Producer" => Ok(Role::ExecutiveProducer),
+            "Senior Producer" => Ok(Role::SeniorProducer),
+            "Producer" => Ok(Role::Producer),
+            "Associate Producer" => Ok(Role::AssociateProducer),
+            "Development Producer" => Ok(Role::DevelopmentProducer),
+            "Creative Director" => Ok(Role::CreativeDirector),
+            "Host" => Ok(Role::Host),
+            "Co-Host" => Ok(Role::CoHost),
+            "Guest Host" => Ok(Role::GuestHost),
+            "Guest" => Ok(Role::Guest),
+            "Voice Actor" => Ok(Role::VoiceActor),
+            "Narrator" => Ok(Role::Narrator),
+            "Announcer" => Ok(Role::Announcer),
+            "Reporter" => Ok(Role::Reporter),
+            "Author" => Ok(Role::Author),
+            "Editorial Director" => Ok(Role::EditorialDirector),
+            "Co-Writer" => Ok(Role::CoWriter),
+            "Writer" => Ok(Role::Writer),
+            "Songwriter" => Ok(Role::Songwriter),
+            "Guest Writer" => Ok(Role::GuestWriter),
+            "Story Editor" => Ok(Role::StoryEditor),
+            "Managing Editor" => Ok(Role::ManagingEditor),
+            "Script Editor" => Ok(Role::ScriptEditor),
+            "Script Coordinator" => Ok(Role::ScriptCoordinator),
+            "Researcher" => Ok(Role::Researcher),
+            "Fact Checker" => Ok(Role::FactChecker),
+            "Translator" => Ok(Role::Translator),
+            "Transcriber" => Ok(Role::Transcriber),
+            "Logger" => Ok(Role::Logger),
+            "Studio Coordinator" => Ok(Role::StudioCoordinator),
+            "Technical Director" => Ok(Role::TechnicalDirector),
+            "Technical Manager" => Ok(Role::TechnicalManager),
+            "Audio Engineer" => Ok(Role::AudioEngineer),
+            "Remote Recording Engineer" => Ok(Role::RemoteRecordingEngineer),
+            "Post Production Engineer" => Ok(Role::PostProductionEngineer),
+            "Audio Editor" => Ok(Role::AudioEditor),
+            "Sound Designer" => Ok(Role::SoundDesigner),
+            "Foley Artist" => Ok(Role::FoleyArtist),
+            "Composer" => Ok(Role::Composer),
+            "Theme Music" => Ok(Role::ThemeMusic),
+            "Music Production" => Ok(Role::MusicProduction),
+            "Music Contributor" => Ok(Role::MusicContributor),
+            "Production Coordinator" => Ok(Role::ProductionCoordinator),
+            "Booking Coordinator" => Ok(Role::BookingCoordinator),
+            "Production Assistant" => Ok(Role::ProductionAssistant),
+            "Content Manager" => Ok(Role::ContentManager),
+            "Marketing Manager" => Ok(Role::MarketingManager),
+            "Sales Representative" => Ok(Role::SalesRepresentative),
+            "Sales Manager" => Ok(Role::SalesManager),
+            "Graphic Designer" => Ok(Role::GraphicDesigner),
+            "Cover Art Designer" => Ok(Role::CoverArtDesigner),
+            "Social Media Manager" => Ok(Role::SocialMediaManager),
+            "Consultant" => Ok(Role::Consultant),
+            "Intern" => Ok(Role::Intern),
+            "Camera Operator" => Ok(Role::CameraOperator),
+            "Lighting Designer" => Ok(Role::LightingDesigner),
+            "Camera Grip" => Ok(Role::CameraGrip),
+            "Assistant Camera" => Ok(Role::AssistantCamera),
+            "Editor" => Ok(Role::Editor),
+            "Assistant Editor" => Ok(Role::AssistantEditor),
+            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant {
+                position,
+                reference: s.to_string(),
+            })),
+        }
+    }
+}
+
+/// Represents a [`PodcastPerson`](PodcastPerson)'s group.
+///
+/// See the [taxonomy](https://github.com/Podcastindex-org/podcast-namespace/blob/main/taxonomy.json)
+/// for a list of groups.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+pub enum Group {
+    Administration,
+    #[serde(rename = "Audio Post-Production")]
+    AudioPostProduction,
+    #[serde(rename = "Audio Production")]
+    AudioProduction,
+    #[default]
+    Cast,
+    Community,
+    #[serde(rename = "Creative Direction")]
+    CreativeDirection,
+    #[serde(rename = "Misc.")]
+    Misc,
+    #[serde(rename = "Video Post-Production")]
+    VideoPostProduction,
+    #[serde(rename = "Video Production")]
+    VideoProduction,
+    Visuals,
+    Writing,
+}
+
+impl Group {
+    pub(crate) fn parse(position: u64, s: &str) -> Result<Self, ParseFeedError> {
+        match normalise_case(s).as_str() {
+            "Administration" => Ok(Group::Administration),
+            "Audio Post-Production" => Ok(Group::AudioPostProduction),
+            "Audio Production" => Ok(Group::AudioProduction),
+            "Cast" => Ok(Group::Cast),
+            "Community" => Ok(Group::Community),
+            "Creative Direction" => Ok(Group::CreativeDirection),
+            "Misc" => Ok(Group::Misc),
+            "Video Post-Production" => Ok(Group::VideoPostProduction),
+            "Video Production" => Ok(Group::VideoProduction),
+            "Visuals" => Ok(Group::Visuals),
+            "Writing" => Ok(Group::Writing),
+            _ => Err(ParseFeedError::ParseError(ParseErrorKind::UnknownEnumVariant {
+                position,
+                reference: s.to_string(),
+            })),
+        }
+    }
+}
+
+/// Represents a podcast episode's transcript.
+///
+/// See [the spec](https://podcastindex.org/namespace/1.0#transcript).
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Transcript {
+    pub url: Url,
+    #[serde(rename = "type")]
+    pub content_type: MediaTypeBuf,
+    pub language: Option<String>,
+    pub rel: Option<String>,
+}
+
+/// Represents a podcast episode's season number. Used in tandem with the [`Episode`](Episode) number.
+///
+/// See [the spec](https://podcastindex.org/namespace/1.0#season).
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Season {
+    pub name: Option<String>,
+    pub number: u32,
+}
+
+/// Represents a podcast episode's episode number. Used in tandem with the [`Season`](Season) number.
+///
+/// See [the spec](https://podcastindex.org/namespace/1.0#episode).
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct Episode {
+    pub display: Option<String>,
+    pub number: f32,
+}
+
 /// Textual content, or link to the content, for a given entry.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Text {
@@ -1025,4 +1438,38 @@ impl Text {
         self.content_type = content_type.parse::<MediaTypeBuf>().unwrap();
         self
     }
+}
+
+/// Case-insensitive deserialisation for enum properties such as [Role].
+pub(crate) fn podcast_enum<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    T: DeserializeOwned,
+    D: Deserializer<'de>,
+{
+    let value = String::deserialize(deserializer)?;
+    let value = normalise_case(&value);
+
+    T::deserialize(Value::String(value)).map_err(serde::de::Error::custom)
+}
+
+/// Convert "an example-string" to "An Example-String"
+pub(crate) fn normalise_case(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    let value = value.to_lowercase();
+
+    let mut capitalise = true;
+    for char in value.chars() {
+        if capitalise {
+            out.push(char.to_ascii_uppercase());
+            capitalise = false;
+        } else {
+            out.push(char);
+        }
+
+        if char == '-' || char == ' ' {
+            capitalise = true;
+        }
+    }
+
+    out
 }
