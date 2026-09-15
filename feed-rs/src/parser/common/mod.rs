@@ -13,9 +13,5 @@ pub(crate) fn handle_link<R: BufRead>(target: Option<LinkTarget>, element: Eleme
 
 // Handles <title>, <description> etc
 pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
-    if let Ok(Some(text)) = element.children_as_string() {
-        Some(Text::new(text))
-    } else {
-        None
-    }
+    element.child_as_text().map(Text::new)
 }

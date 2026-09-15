@@ -97,7 +97,7 @@ fn emit_media_objects(mut scope: Scope, entry: &mut Entry) {
     }
 
     // Process each of the children
-    let children = scope.children.drain(..).collect::<Vec<_>>();
+    let children = mem::take(&mut scope.children);
     children.into_iter().for_each(|mut child| {
         // Propagate this scope to the child
         merge_parent_scope_into_child(&scope, &mut child);
@@ -318,7 +318,7 @@ fn handle_media_text<R: BufRead>(element: Element<R>) -> Option<MediaText> {
     element.child_as_text().map(|t| {
         // Parse out the actual text of this element
         let mut text = Text::new(t);
-        text.content_type = mime.map_or(MediaTypeBuf::new(names::TEXT, names::PLAIN), |m| m);
+        text.content_type = mime.unwrap_or(MediaTypeBuf::new(names::TEXT, names::PLAIN));
         let mut media_text = MediaText::new(text);
 
         // Add the time boundaries if we found them
@@ -382,7 +382,7 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
     }?;
 
     element
-        .children_as_string()?
+        .child_as_text()
         .map(|content| {
             let mut text = Text::new(content);
             text.content_type = mime;
