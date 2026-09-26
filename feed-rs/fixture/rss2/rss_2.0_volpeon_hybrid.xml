@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" version="2.0">
+  <channel>
+    <title>Notebook</title>
+    <link>https://volpeon.ink/notebook/</link>
+    <atom:link href="https://volpeon.ink/notebook/feed.rss" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Destructive Convenience</title>
+      <link>https://volpeon.ink/notebook/dangerous-convenience/</link>
+      <guid isPermaLink="false">https://volpeon.ink/notebook/dangerous-convenience/</guid>
+      <category>Online Culture</category>
+      <atom:updated>2025-03-29T00:00:00.000Z</atom:updated>
+    </item>
+    <item>
+      <title>Micro­blogging's core design is inherently bad</title>
+      <link>https://volpeon.ink/notebook/microblogging-misdesign/</link>
+      <guid isPermaLink="false">https://volpeon.ink/notebook/microblogging-misdesign/</guid>
+      <category>Online Culture</category>
+      <atom:updated>2024-07-01T00:00:00.000Z</atom:updated>
+    </item>
+  </channel>
+</rss>
