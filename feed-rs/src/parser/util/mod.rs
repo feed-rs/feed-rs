@@ -48,6 +48,11 @@ mod fixes {
                 PatSub(Regex::new("(Sun|Mon|Tue|Wed|Thu|Fri|Sat)[a-z]*, ").unwrap(), ""),
                 // Long month names are not allowed, so replace them with short
                 PatSub(Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*").unwrap(), "$1"),
+                // Month and days can be reversed (i.e. MDY instead of DMY) so we fix this up too
+                PatSub(
+                    Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\\d{1,2}) (\\d{4})").unwrap(),
+                    "$2 $1 $3",
+                ),
                 // Some timestamps have an hours component adjusted by 24h, while not adjusting the day so we just reset to start of day
                 #[allow(clippy::trivial_regex)]
                 PatSub(Regex::new(" 24:").unwrap(), " 00:"),

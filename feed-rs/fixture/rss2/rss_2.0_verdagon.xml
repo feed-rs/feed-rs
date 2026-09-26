@@ -1,0 +1,37 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Languages and Architecture</title>
+        <link>https://verdagon.dev/</link>
+        <description>A blog on programming languages, software architecture, and Evan Ovadia's other shenanigans!</description>
+        <lastBuildDate>Mon, 21 Mar 2022 16:15:00 -0400</lastBuildDate>
+        <category>Software/</category>
+        <category>Software Architecture</category>
+        <category>Programming Languages</category>
+        <category>Vale Programming Language</category>
+        <copyright>Copyright 2022 Evan Ovadia</copyright>
+        <atom:link href="http://verdagon.dev/rss.xml" rel="self" type="application/rss+xml" />
+
+        <language>en-us</language>
+        <pubDate>Mon, 22 Mar 2022 16:15:00 -0400</pubDate>
+        <webMaster>noreply@verdagon.dev (Evan Ovadia)</webMaster>
+
+        <item>
+            <title>Hash Codes, Non-Determinism, and Other Eldritch Horrors</title>
+            <guid>https://verdagon.dev/blog/generics-hash-codes-horrors</guid>
+            <link>https://verdagon.dev/blog/generics-hash-codes-horrors</link>
+            <pubDate>Wed, 9 Nov 2022 10:15:00 -0400</pubDate>
+            <category>Programming Languages</category>
+            <category>Vale Programming Language</category>
+            <author>noreply@verdagon.dev (Evan Ovadia)</author>
+        </item>
+
+        <item>
+            <guid>https://verdagon.dev/blog/when-to-use-memory-safe-part-1</guid>
+            <link>https://verdagon.dev/blog/when-to-use-memory-safe-part-1</link>
+            <pubDate>Fri, Oct 7 2022 10:15:00 -0400</pubDate>
+            <category>Programming Languages</category>
+            <title>When to Use Memory Safe Languages, Part 1: Safety in Non-Memory-Safe Languages</title>
+            <author>noreply@verdagon.dev (Evan Ovadia)</author>
+        </item>
+    </channel>
+</rss>
