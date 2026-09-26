@@ -957,3 +957,26 @@ fn test_verdagon_broken_date_fmt() {
     let entry1 = &actual.entries[1];
     assert_eq!(entry1.published, Some(Utc.with_ymd_and_hms(2022, 10, 7, 14, 15, 0).unwrap()));
 }
+
+// This feed uses the Atom namespace to represent standard RSS fields
+#[test]
+fn test_volpeon_hybrid_rss_atom() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_volpeon_hybrid.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // We should have two links at the feed level
+    assert_eq!(actual.links.len(), 2);
+    assert_eq!(&actual.links[0], &Link::new("https://volpeon.ink/notebook/", None));
+    assert_eq!(
+        &actual.links[1],
+        &Link::new("https://volpeon.ink/notebook/feed.rss", None)
+            .rel("self")
+            .media_type("application/rss+xml")
+    );
+
+    // And we should have extracted the updated date for the entries
+    let entry0 = &actual.entries[0];
+    assert_eq!(entry0.updated, Some(Utc.with_ymd_and_hms(2025, 03, 29, 0, 0, 0).unwrap()));
+    let entry1 = &actual.entries[1];
+    assert_eq!(entry1.updated, Some(Utc.with_ymd_and_hms(2024, 7, 1, 0, 0, 0).unwrap()));
+}

@@ -230,6 +230,8 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
 
+            (NS::RSS, "updated") | (NS::Atom, "updated") => entry.updated = common::handle_timestamp(parser, child),
+
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
             (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
