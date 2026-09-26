@@ -16,7 +16,8 @@ fn test_example_1() {
         .title(Text::new("Daring Fireball".into()))
         .link(Link::new("https://daringfireball.net/", None))
         .link(Link::new("https://daringfireball.net/feeds/json", None))
-        .author(Person::new("John Gruber")
+        .author(Person::parse("John Gruber")
+            .role("author")
             .uri("https://twitter.com/gruber"))
         .logo(Image::new("https://daringfireball.net/graphics/apple-touch-icon.png".into()))
         .icon(Image::new("https://daringfireball.net/graphics/favicon-64.png".into()))
@@ -27,7 +28,7 @@ fn test_example_1() {
             .id("https://daringfireball.net/linked/2020/01/24/bezos-iphone-x")
             .link(Link::new("https://daringfireball.net/linked/2020/01/24/bezos-iphone-x", None))
             .link(Link::new("https://www.nytimes.com/2020/01/22/technology/jeff-bezos-hack-iphone.html", None))
-            .author(Person::new("John Gruber"))
+            .author(Person::parse("John Gruber").role("author"))
             .content(Content::default()
                 .body(r#"<p>Good summary from The New York Times. Until this week’s news, I don’t believe we knew what type of phone Bezos was using when he was hacked. Now we know: an iPhone X.</p>"#)
                 .content_type("text/html")
@@ -39,7 +40,7 @@ fn test_example_1() {
             .id("https://daringfireball.net/linked/2020/01/20/instagram-for-win95")
             .link(Link::new("https://daringfireball.net/linked/2020/01/20/instagram-for-win95", None))
             .link(Link::new("https://www.behance.net/gallery/41023081/Instagram-for-Win95?utm_source=morning_brew", None))
-            .author(Person::new("John Gruber"))
+            .author(Person::parse("John Gruber").role("author"))
             .content(Content::default()
                 .body(r#"<p>Delightful work by Petrick Studio.</p>"#)
                 .content_type("text/html")
@@ -66,7 +67,8 @@ fn test_spec_1() {
         .description(Text::new("JSON Feed is a pragmatic syndication format for blogs, microblogs, and other time-based content.".into()))
         .link(Link::new("https://jsonfeed.org/", None))
         .link(Link::new("https://jsonfeed.org/feed.json", None))
-        .author(Person::new("Brent Simmons and Manton Reece")
+        .author(Person::parse("Brent Simmons and Manton Reece")
+            .role("author")
             .uri("https://jsonfeed.org/"))
         .entry(Entry::default()
             .updated(actual.entries[0].updated)             // not in test content
@@ -74,7 +76,8 @@ fn test_spec_1() {
             .title(Text::new("Announcing JSON Feed".into()))
             .published("2017-05-17T08:02:12-07:00")
             .link(Link::new("https://jsonfeed.org/2017/05/17/announcing_json_feed", None))
-            .author(Person::new("Brent Simmons and Manton Reece")
+            .author(Person::parse("Brent Simmons and Manton Reece")
+                .role("author")
                 .uri("https://jsonfeed.org/"))
             .content(Content::default()
                 .body(r#"<p>We — Manton Reece and Brent Simmons — have noticed that JSON has become the developers’ choice for APIs, and that developers will often go out of their way to avoid XML. JSON is simpler to read and write, and it’s less prone to bugs.</p>
@@ -110,17 +113,26 @@ fn test_elastic_v1_1() {
     assert_eq!("en-US", actual.language.unwrap());
 
     // Check feed authors (should combine both deprecated and new fields)
-    assert_eq!(actual.authors, vec!(Person::new("Fake Author 3"), Person::new("Fake Author 4")));
+    assert_eq!(
+        actual.authors,
+        vec!(Person::parse("Fake Author 3").role("author"), Person::parse("Fake Author 4").role("author"))
+    );
 
     // Check first item - combine author + authors
     let mut entries = actual.entries.iter();
     let entry = entries.next().unwrap();
-    let chris = Person {
-        name: "Chris Churilo".to_string(),
-        uri: Some("https://www.influxdata.com/blog/author/chrisc/".to_string()),
-        email: None,
-    };
-    assert_eq!(entry.authors, vec!(Person::new("Fake Author 2"), chris.clone(), Person::new("Fake Author 1")));
+    let chris = Person::empty()
+        .name("Chris Churilo")
+        .role("author")
+        .uri("https://www.influxdata.com/blog/author/chrisc/");
+    assert_eq!(
+        entry.authors,
+        vec!(
+            Person::parse("Fake Author 2").role("author"),
+            chris.clone(),
+            Person::parse("Fake Author 1").role("author")
+        )
+    );
 
     // Second item migrates from old author to new authors field
     let entry = entries.next().unwrap();
@@ -128,5 +140,8 @@ fn test_elastic_v1_1() {
 
     // Third item inherits feed authors (per the spec)
     let entry = entries.next().unwrap();
-    assert_eq!(entry.authors, vec!(Person::new("Fake Author 3"), Person::new("Fake Author 4")));
+    assert_eq!(
+        entry.authors,
+        vec!(Person::parse("Fake Author 3").role("author"), Person::parse("Fake Author 4").role("author"))
+    );
 }

@@ -2,9 +2,9 @@ use std::io::BufRead;
 use std::time::Duration;
 
 use crate::model::{Category, Feed, Image, MediaCredit, MediaObject, MediaRating, MediaThumbnail, Person};
-use crate::parser::ParseFeedResult;
 use crate::parser::atom;
-use crate::parser::util::{handle_episode, handle_season, if_some_then, parse_npt};
+use crate::parser::util::{if_some_then, parse_npt};
+use crate::parser::{ParseFeedResult, common};
 use crate::xml::{Element, NS};
 
 // Process <itunes> elements at channel level updating the Feed object as required
@@ -26,7 +26,7 @@ pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, fee
             }
         }),
 
-        (NS::Itunes, "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::new(&person))),
+        (NS::Itunes, "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::parse(&person).role("author"))),
         (NS::Itunes, "owner") => if_some_then(handle_owner(element)?, |owner| feed.contributors.push(owner)),
 
         // Nothing required for unknown elements
@@ -49,9 +49,9 @@ pub(crate) fn handle_itunes_item_element<R: BufRead>(element: Element<R>, media_
 
         (NS::Itunes, "summary") => media_obj.description = atom::handle_text(element)?,
 
-        (NS::Itunes, "episode") => if_some_then(handle_episode(element), |episode| media_obj.episode = Some(episode)),
+        (NS::Itunes, "episode") => if_some_then(common::handle_episode(element), |episode| media_obj.episode = Some(episode)),
 
-        (NS::Itunes, "season") => if_some_then(handle_season(element), |season| media_obj.season = Some(season)),
+        (NS::Itunes, "season") => if_some_then(common::handle_season(element), |season| media_obj.season = Some(season)),
 
         // Nothing required for unknown elements
         _ => {}
@@ -122,7 +122,7 @@ fn handle_owner<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Perso
     }
 
     Ok(if let (Some(email), Some(name)) = (email, name) {
-        Some(Person::new(&name).email(&email))
+        Some(Person::parse(&name).email(&email).role("owner"))
     } else {
         None
     })

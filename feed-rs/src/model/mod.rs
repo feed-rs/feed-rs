@@ -1020,25 +1020,43 @@ impl MediaThumbnail {
 pub struct Person {
     /// Atom: human-readable name for the person.
     /// JSON Feed: human-readable name for the person.
-    pub name: String,
+    pub name: Option<String>,
     /// Atom: home page for the person.
     /// JSON Feed: link to media (Twitter etc) for the person
     pub uri: Option<String>,
     /// Atom: An email address for the person.
     pub email: Option<String>,
+    /// Various feed formats define the concept of roles at either element or attribute level with a variety of formats
+    pub role: Option<String>,
 }
 
 impl Person {
-    pub(crate) fn new(name: &str) -> Person {
+    pub(crate) fn empty() -> Person {
         Person {
-            name: name.trim().into(),
+            name: None,
             uri: None,
             email: None,
+            role: None,
         }
     }
 
-    pub fn email(mut self, email: &str) -> Self {
-        self.email = Some(email.to_owned());
+    pub(crate) fn parse(raw: &str) -> Person {
+        util::parse_person_name_email(raw)
+    }
+
+    pub(crate) fn email(mut self, email: &str) -> Self {
+        self.email = Some(email.trim().into());
+        self
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn name(mut self, name: &str) -> Self {
+        self.name = Some(name.trim().into());
+        self
+    }
+
+    pub(crate) fn role(mut self, role: &str) -> Self {
+        self.role = Some(role.trim().into());
         self
     }
 }

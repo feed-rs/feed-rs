@@ -51,10 +51,10 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
 
             (NS::RSS, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
 
-            (NS::RSS, "pubDate") => feed.published = util::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") => feed.published = common::handle_timestamp(parser, child),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = util::handle_timestamp(parser, child),
+            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = common::handle_timestamp(parser, child),
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
@@ -87,13 +87,9 @@ fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
     })
 }
 
-// Handles <managingEditor> and <webMaster>
+// Handles <author>, <managingEditor> and <webMaster>
 fn handle_contact<R: BufRead>(role: &str, element: Element<R>) -> Option<Person> {
-    element.child_as_text().map(|email| {
-        let mut person = Person::new(role);
-        person.email = Some(email);
-        person
-    })
+    element.child_as_text().map(|text| Person::parse(&text).role(role))
 }
 
 fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
@@ -222,7 +218,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| entry.links.push(link)),
 
-            (NS::RSS, "description") => entry.summary = util::handle_encoded(child)?,
+            (NS::RSS, "description") => entry.summary = common::handle_encoded(child)?,
 
             (NS::RSS, "author") => if_some_then(handle_contact("author", child), |person| entry.authors.push(person)),
 
@@ -232,11 +228,11 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "enclosure") => handle_enclosure(child, &mut enclosure_media_obj),
 
-            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = util::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
 
             // iTunes elements populate the corresponding MediaObject
             (NS::Itunes, _) => handle_itunes_item_element(child, &mut itunes_media_obj)?,

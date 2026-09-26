@@ -29,7 +29,12 @@ fn test_example_1() {
                 .updated_parsed("2005-07-31T12:29:29Z")
                 .language("en")
                 .base("http://diveintomark.org/")
-                .author(Person::new("Mark Pilgrim").uri("http://example.org/").email("f8dy@example.com"))
+                .author(
+                    Person::parse("Mark Pilgrim")
+                        .email("f8dy@example.com")
+                        .role("author")
+                        .uri("http://example.org/"),
+                )
                 .link(Link::new("http://example.org/2005/04/02/atom", None).rel("alternate").media_type("text/html"))
                 .link(
                     Link::new("http://example.org/audio/ph34r_my_podcast.mp3", None)
@@ -37,8 +42,8 @@ fn test_example_1() {
                         .media_type("audio/mpeg")
                         .length(1337),
                 )
-                .contributor(Person::new("Sam Ruby"))
-                .contributor(Person::new("Joe Gregorio"))
+                .contributor(Person::parse("Sam Ruby").role("contributor"))
+                .contributor(Person::parse("Joe Gregorio").role("contributor"))
                 .content(
                     Content::default()
                         .content_type("application/xhtml")
@@ -69,8 +74,9 @@ fn test_example_2() {
             .rel("alternate")
             .media_type("text/html"))
         .rights(Text::new("Copyright © 2019, Situation Publishing".into()))
-        .author(Person::new("Team Register")
+        .author(Person::parse("Team Register")
             .email("webmaster@theregister.co.uk")
+            .role("author")
             .uri("https://www.theregister.co.uk/odds/about/contact/"))
         .icon(Image::new("https://www.theregister.co.uk/Design/graphics/icons/favicon.png".into()))
         .description(Text::new("Biting the hand that feeds IT — sci/tech news and views for the world".into()))
@@ -79,7 +85,8 @@ fn test_example_2() {
         .entry(Entry::default()
             .id("tag:theregister.co.uk,2005:story204156")
             .updated_parsed("2019-07-31T11:54:28Z")
-            .author(Person::new("Richard Speed")
+            .author(Person::parse("Richard Speed")
+                .role("author")
                 .uri("https://search.theregister.co.uk/?author=Richard%20Speed"))
             .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/31/orbitbeyond_drops_nasa_moon_contract/", None)
                 .rel("alternate")
@@ -91,7 +98,8 @@ fn test_example_2() {
         .entry(Entry::default()
             .id("tag:theregister.co.uk,2005:story204131")
             .updated_parsed("2019-07-30T05:41:09Z")
-            .author(Person::new("Kieren McCarthy")
+            .author(Person::parse("Kieren McCarthy")
+                .role("author")
                 .uri("https://search.theregister.co.uk/?author=Kieren%20McCarthy"))
             .link(Link::new("http://go.theregister.com/feed/www.theregister.co.uk/2019/07/30/french_arming_satellites/", None)
                 .rel("alternate")
@@ -139,7 +147,7 @@ fn test_example_3() {
             .published("2019-07-30T16:00:00Z")
             .updated_parsed("2019-07-30T15:02:05Z")
             .summary(Text::new("Now, there are many reasons to isolate your infrastructure from the Internet. Minimizing the number of exposed things not only reduces risk, it also reduces operational complexity. VPNs are counter to this. VPNs make it so you aren't exposing all of your applications publicly in a DMZ, which is good. But for the most part, they still provide access to the corporate network to get access to corporate apps. Definitely bad. At this point, I think we all agree that moats and castles belong in the past.".into()))
-            .author(Person::new("Lorenz Jakober"))
+            .author(Person::parse("Lorenz Jakober").role("author"))
             .category(Category::new("Zero Trust")
                 .scheme("http://www.sixapart.com/ns/types#category"))
             .category(Category::new("ssl")
@@ -167,7 +175,7 @@ fn test_example_4() {
     let actual = p.parse(test_data.as_bytes()).unwrap();
 
     let expected = Feed::new(FeedType::Atom)
-        .author(Person::new("ebm-papst"))
+        .author(Person::parse("ebm-papst").role("author"))
         .link(Link::new("http://www.ebmpapst.com/en/ebmpapst_productnews_atom_feed.xml", None)
             .rel("self")
             .media_type("application/atom+xml"))
@@ -199,7 +207,8 @@ fn test_example_5() {
     let expected = Feed::new(FeedType::Atom)
         .title(Text::new("USGS Magnitude 2.5+ Earthquakes, Past Hour".into()))
         .updated_parsed("2019-07-31T13:17:27Z")
-        .author(Person::new("U.S. Geological Survey")
+        .author(Person::parse("U.S. Geological Survey")
+            .role("author")
             .uri("https://earthquake.usgs.gov/"))
         .id("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_hour.atom")
         .link(Link::new("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_hour.atom", None)
@@ -274,7 +283,7 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::new("markpritchard")),
+                .author(Person::parse("markpritchard").role("author")),
         )
         .entry(
             Entry::default()
@@ -287,7 +296,7 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::new("kumabook")),
+                .author(Person::parse("kumabook").role("author")),
         );
 
     // Check
@@ -338,7 +347,7 @@ fn test_spec_1() {
         .title(Text::new("Example Feed".into()))
         .link(Link::new("http://example.org/", None).rel("alternate"))
         .updated_parsed("2003-12-13T18:30:02Z")
-        .author(Person::new("John Doe"))
+        .author(Person::parse("John Doe").role("author"))
         .entry(
             Entry::default()
                 .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
@@ -397,7 +406,7 @@ fn test_pub_spec_1() {
             .title(Text::new("Atom-Powered Robots Run Amok".into()))
             .id("urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a")
             .updated_parsed("2003-12-13T18:30:02Z")
-            .author(Person::new("John Doe"))
+            .author(Person::parse("John Doe").role("author"))
             .content(Content::default().content_type("text/plain").body("Some text.")),
     );
 
@@ -416,9 +425,9 @@ fn test_entry() {
             .title(Text::new("Specifications".into()))
             .id("urn:uuid:988EF5C55CDEA24EDE1251744888912")
             .updated_parsed("2009-08-31T18:55:12.569Z")
-            .author(Person::new("S. A. Khuba"))
+            .author(Person::parse("S. A. Khuba").role("author"))
             .category(Category::new("45121504").scheme("http://www.unspsc.org/UNv1111201").label("Digital Camera"))
-            .contributor(Person::new("Shri. S. A. Khuba"))
+            .contributor(Person::parse("Shri. S. A. Khuba").role("contributor"))
             .content(
                 Content::default()
                     .body("1) Pixels 12.3 million Effective . 12) Weight is Approx. 840 g")

@@ -56,10 +56,8 @@ fn test_example_2() {
         .link(Link::new("http://www.nasa.gov/rss/dyn/breaking_news.rss", None)
             .rel("self"))
         .language("en-us")
-        .contributor(Person::new("managingEditor")
-            .email("jim.wilson@nasa.gov"))
-        .contributor(Person::new("webMaster")
-            .email("brian.dunbar@nasa.gov"))
+        .contributor(Person::parse("jim.wilson@nasa.gov").role("managingEditor"))
+        .contributor(Person::parse("brian.dunbar@nasa.gov").role("webMaster"))
         .entry(Entry::default()
             .title(Text::new("NASA Television to Broadcast Space Station Departure of Cygnus Cargo Ship".into()))
             .link(Link::new("http://www.nasa.gov/press-release/nasa-television-to-broadcast-space-station-departure-of-cygnus-cargo-ship", None))
@@ -103,7 +101,7 @@ fn test_example_3() {
             .title(Text::new("How a Historian Uncovered Ronald Reagan’s Racist Remarks to Richard Nixon".into()))
             .link(Link::new("https://www.newyorker.com/news/q-and-a/how-a-historian-uncovered-ronald-reagans-racist-remarks-to-richard-nixon", None))
             .id("5d420f3abfe6c20008d5eaad")
-            .author(Person::new("Isaac Chotiner"))
+            .author(Person::parse("Isaac Chotiner").role("creator"))
             .summary(Text::html("Isaac Chotiner talks with the historian Tim Naftali, who published the text and audio of a\n                taped call, from 1971, in which Reagan described the African delegates to the U.N. in luridly racist\n                terms.\n            ".into()))
             .category(Category::new("News / Q. & A."))
             .published("Fri, 02 Aug 2019 15:35:34 +0000")
@@ -137,7 +135,7 @@ fn test_example_4() {
         .generator(Generator::new("https://wordpress.org/?v=5.1.1"))
         .entry(Entry::default()
             .title(Text::new("Minor earthquake, 3.5 mag was detected near Aris in Greece".into()))
-            .author(Person::new("admin"))
+            .author(Person::parse("admin").role("creator"))
             .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/", None))
             .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/#respond", None).target(LinkTarget::Comments))
             .link(Link::new("http://www.earthquakenewstoday.com/2019/08/06/minor-earthquake-3-5-mag-was-detected-near-aris-in-greece/feed/", None).target(LinkTarget::CommentsFeed))
@@ -200,7 +198,7 @@ fn test_example_5() {
                 .category(Category::new("apple"))
                 .category(Category::new("google"))
                 .id("https://arstechnica.com/?p=1546121")
-                .author(Person::new("Samuel Axon"))
+                .author(Person::parse("Samuel Axon").role("creator"))
                 .summary(Text::html("Alphabet has $117 billion in cash on hand.".into()))
                 .content(
                     Content::default()
@@ -257,7 +255,7 @@ fn test_wirecutter() {
     assert_eq!(category.term, "Uncategorized");
 
     let author = entry.authors.first().expect("entry has one author");
-    assert_eq!(author.name, "James Austin");
+    assert_eq!(author.name, Some("James Austin".into()));
 }
 
 // Verify we can parse the example contained in the RSS 2.0 specification
@@ -280,8 +278,8 @@ fn test_spec_1() {
         .updated_parsed("Mon, 30 Sep 2002 11:00:00 GMT")
         .generator(Generator::new("Radio UserLand v8.0.5"))
         .category(Category::new("1765").scheme("Syndic8"))
-        .contributor(Person::new("managingEditor").email("dave@userland.com"))
-        .contributor(Person::new("webMaster").email("dave@userland.com"))
+        .contributor(Person::parse("dave@userland.com").role("managingEditor"))
+        .contributor(Person::parse("dave@userland.com").role("webMaster"))
         .ttl(40)
         .entry(
             Entry::default()
@@ -368,7 +366,7 @@ fn test_spiegel() {
         .id(actual.id.as_ref()) // not present in the test data
         .language("de")
         .title(Text::new("SPIEGEL Update – Die Nachrichten".into()))
-        .author(Person::new("DER SPIEGEL"))
+        .author(Person::parse("DER SPIEGEL").role("author"))
         .link(Link::new("https://www.omnycontent.com/d/playlist/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/4c18e072-24d2-4d60-9a42-abc00102c97e/podcast.rss", None)
             .rel("self")
             .media_type("application/rss+xml"))
@@ -383,7 +381,7 @@ fn test_spiegel() {
             .media_type("application/rss+xml"))
         .link(Link::new("https://www.spiegel.de/thema/spiegel-update/", None))
         .category(Category::new("News"))
-        .contributor(Person::new("SPIEGEL Update – Die Nachrichten").email("charlotte.meyer-hamme@spiegel.de"))
+        .contributor(Person::parse("SPIEGEL Update – Die Nachrichten").email("charlotte.meyer-hamme@spiegel.de").role("owner"))
         .description(Text::new("<p>Die wichtigsten Nachrichten des Tages &ndash; erg&auml;nzt um Meinungen und Empfehlungen aus der SPIEGEL-Redaktion. Wochentags aktualisieren wir morgens, mittags und abends unsere Meldungen. Am Wochenende blicken wir zur&uuml;ck auf die vergangene Woche &ndash; und erkl&auml;ren, was in der n&auml;chsten Woche wichtig wird.</p>".into()))
         .rights(Text::new("2021 DER SPIEGEL GmbH & Co. KG".into()))
         .logo(Image::new("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large".into())
@@ -451,8 +449,8 @@ fn test_bbc() {
         )
         .category(Category::new("History"))
         .description(Text::new("Melvyn Bragg and guests discuss the history of ideas".into()))
-        .author(Person::new("BBC Radio 4"))
-        .contributor(Person::new("BBC").email("RadioMusic.Support@bbc.co.uk"))
+        .author(Person::parse("BBC Radio 4").role("author"))
+        .contributor(Person::parse("BBC").email("RadioMusic.Support@bbc.co.uk").role("owner"))
         .language("en")
         .logo(
             Image::new("http://ichef.bbci.co.uk/images/ic/3000x3000/p087hyhs.jpg".into())
@@ -521,7 +519,7 @@ fn test_ch9() {
         .language("en")
         .published("Sat, 27 Feb 2021 06:55:01 GMT")
         .updated_parsed("Sat, 27 Feb 2021 06:55:01 GMT")
-        .author(Person::new("Microsoft"))
+        .author(Person::parse("Microsoft").role("author"))
         .generator(Generator::new("Rev9"))
         .entry(
             Entry::default()
@@ -541,7 +539,7 @@ fn test_ch9() {
                 .published("Fri, 26 Feb 2021 20:00:00 GMT")
                 .updated_parsed("Fri, 26 Feb 2021 20:00:00 GMT")
                 .id("https://channel9.msdn.com/Shows/Azure-Friday/Troubleshoot-AKS-cluster-issues-with-AKS-Diagnostics-and-AKS-Periscope")
-                .author(Person::new("Scott Hanselman, Rob Caron"))
+                .author(Person::parse("Scott Hanselman, Rob Caron").role("creator"))
                 .category(Category::new("Azure"))
                 .category(Category::new("Kubernetes"))
                 .category(Category::new("aft"))
@@ -930,4 +928,19 @@ fn test_docuverse_comments() {
         comments_feed_link.href,
         "https://blog.docuverse.com/2017/07/23/using-herb-vaporizers-with-tobacco/feed/".to_string()
     );
+}
+
+// Test that we handle an author correctly with just a name + role from the schema
+#[test]
+fn test_w3_blog_author() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_w3_blog.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Verify the author is set correctly
+    let entry = &actual.entries[0];
+    let author = &entry.authors[0];
+    assert_eq!(author.name, Some("Shawn Lawton Henry, W3C Web Accessibility Initiative (WAI) Director".into()));
+    assert_eq!(author.role, Some("author".into()));
+    assert_eq!(author.email, None);
+    assert_eq!(author.uri, None);
 }

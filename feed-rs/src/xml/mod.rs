@@ -10,9 +10,6 @@ use quick_xml::name::ResolveResult;
 use quick_xml::{NsReader, Reader};
 use url::Url;
 
-#[cfg(test)]
-mod tests;
-
 /// Iteration over the XML elements may return an error (malformed content etc)
 pub(crate) type XmlResult<T> = Result<T, XmlError>;
 
@@ -772,3 +769,6 @@ fn append_element_start(buffer: &mut String, name: &str, attributes: &[NameValue
 fn append_element_text(buffer: &mut String, text: &str) {
     buffer.push_str(&quick_xml::escape::minimal_escape(text));
 }
+
+#[cfg(test)]
+mod tests;
