@@ -29,13 +29,13 @@ pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> Parse
 
             (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| feed.updated = parser.parse_timestamp(&text)),
 
-            (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| feed.authors.push(person)),
+            (NS::Atom, "author") => if_some_then(handle_person("author", child)?, |person| feed.authors.push(person)),
 
             (NS::Atom, "link") => if_some_then(handle_link(child), |link| feed.links.push(link)),
 
             (NS::Atom, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
-            (NS::Atom, "contributor") => if_some_then(handle_person(child)?, |person| feed.contributors.push(person)),
+            (NS::Atom, "contributor") => if_some_then(handle_person("contributor", child)?, |person| feed.contributors.push(person)),
 
             (NS::Atom, "generator") => feed.generator = handle_generator(child),
 
@@ -226,7 +226,7 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
 
             (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| entry.updated = parser.parse_timestamp(&text)),
 
-            (NS::Atom, "author") => if_some_then(handle_person(child)?, |person| entry.authors.push(person)),
+            (NS::Atom, "author") => if_some_then(handle_person("author", child)?, |person| entry.authors.push(person)),
 
             (NS::Atom, "content") => {
                 entry.base = handle_base_attr(&child);
@@ -240,7 +240,7 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
 
             (NS::Atom, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
 
-            (NS::Atom, "contributor") => if_some_then(handle_person(child)?, |person| entry.contributors.push(person)),
+            (NS::Atom, "contributor") => if_some_then(handle_person("contributor", child)?, |person| entry.contributors.push(person)),
 
             // Some feeds have "pubDate" instead of "published"
             (NS::Atom, "published") | (NS::Atom, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = parser.parse_timestamp(&text)),
@@ -330,25 +330,38 @@ pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
 }
 
 // Handles an Atom <author> or <contributor>
-fn handle_person<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Person>> {
-    let mut person = Person::new("unknown");
-
+fn handle_person<R: BufRead>(role: &str, element: Element<R>) -> ParseFeedResult<Option<Person>> {
+    let mut maybe_name = None;
+    let mut maybe_uri = None;
+    let mut maybe_email = None;
     for child in element.children() {
         let child = child?;
         let tag_name = child.name.as_str();
         let child_text = child.child_as_text();
         match (tag_name, child_text) {
             // Extract the fields from the spec
-            ("name", Some(name)) => person.name = name,
-            ("uri", uri) => person.uri = uri,
-            ("email", email) => person.email = email,
+            ("name", Some(name)) => maybe_name = Some(name),
+            ("uri", uri) => maybe_uri = uri,
+            ("email", email) => maybe_email = email,
 
             // Nothing required for unknown elements
             _ => {}
         }
     }
 
-    Ok(Some(person))
+    // Need either a name or an email
+    let person = if maybe_name.is_some() || maybe_email.is_some() {
+        let mut person = Person::empty();
+        person.name = maybe_name;
+        person.email = maybe_email;
+        person.role = Some(role.into());
+        person.uri = maybe_uri;
+        Some(person)
+    } else {
+        None
+    };
+
+    Ok(person)
 }
 
 // Directly handles an Atom <title>, <summary>, <rights> or <subtitle> element

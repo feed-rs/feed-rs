@@ -87,13 +87,9 @@ fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
     })
 }
 
-// Handles <managingEditor> and <webMaster>
+// Handles <author>, <managingEditor> and <webMaster>
 fn handle_contact<R: BufRead>(role: &str, element: Element<R>) -> Option<Person> {
-    element.child_as_text().map(|email| {
-        let mut person = Person::new(role);
-        person.email = Some(email);
-        person
-    })
+    element.child_as_text().map(|text| Person::parse(&text).role(role))
 }
 
 fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
@@ -236,7 +232,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
 
             // iTunes elements populate the corresponding MediaObject
             (NS::Itunes, _) => handle_itunes_item_element(child, &mut itunes_media_obj)?,

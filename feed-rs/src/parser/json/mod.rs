@@ -66,8 +66,8 @@ fn convert(parser: &Parser, jf: JsonFeed) -> ParseFeedResult<Feed> {
 fn accumulate_author(authors: &mut Vec<Person>, ja: &JsonAuthor) {
     // Only add if we haven't already seen this person
     if let Some(name) = &ja.name {
-        if !authors.iter().any(|a| a.name.as_str() == name) {
-            let mut person = Person::new(name);
+        if !authors.iter().any(|a| a.name.is_some() && a.name.as_ref().unwrap() == name) {
+            let mut person = Person::parse(name).role("author");
             person.uri.clone_from(&ja.url);
 
             authors.push(person);

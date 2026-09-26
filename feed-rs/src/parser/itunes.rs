@@ -26,7 +26,7 @@ pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, fee
             }
         }),
 
-        (NS::Itunes, "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::new(&person))),
+        (NS::Itunes, "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::parse(&person).role("author"))),
         (NS::Itunes, "owner") => if_some_then(handle_owner(element)?, |owner| feed.contributors.push(owner)),
 
         // Nothing required for unknown elements
@@ -122,7 +122,7 @@ fn handle_owner<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Perso
     }
 
     Ok(if let (Some(email), Some(name)) = (email, name) {
-        Some(Person::new(&name).email(&email))
+        Some(Person::parse(&name).email(&email).role("owner"))
     } else {
         None
     })

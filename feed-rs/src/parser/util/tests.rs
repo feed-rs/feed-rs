@@ -60,3 +60,37 @@ fn test_parse_npt() {
     );
     assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
 }
+
+// Test various forms of email and names in a string
+#[test]
+fn test_parse_person_name_email() {
+    let tests = vec![
+        ("First Last <user@example.com>", Some("First Last"), Some("user@example.com")),
+        ("First Last [user@example.com]", Some("First Last"), Some("user@example.com")),
+        ("First Last (user@example.com)", Some("First Last"), Some("user@example.com")),
+        ("<user@example.com> First Last", Some("First Last"), Some("user@example.com")),
+        ("[user@example.com] First Last", Some("First Last"), Some("user@example.com")),
+        ("(user@example.com) First Last", Some("First Last"), Some("user@example.com")),
+        ("First", Some("First"), None),
+        (" First", Some("First"), None),
+        ("First ", Some("First"), None),
+        ("user@example.com", None, Some("user@example.com")),
+        (" user@example.com", None, Some("user@example.com")),
+        ("user@example.com ", None, Some("user@example.com")),
+        (
+            "Simon St.Laurent (mailto:simonstl@simonstl.com)",
+            Some("Simon St.Laurent"),
+            Some("simonstl@simonstl.com"),
+        ),
+    ];
+
+    for (raw, expected_name, expected_email) in tests {
+        let person = parse_person_name_email(raw);
+
+        let expected_name = expected_name.map(|s| s.to_owned());
+        assert_eq!(person.name, expected_name, "incorrect name for {}", raw);
+
+        let expected_email = expected_email.map(|s| s.to_owned());
+        assert_eq!(person.email, expected_email, "incorrect email for {}", raw);
+    }
+}

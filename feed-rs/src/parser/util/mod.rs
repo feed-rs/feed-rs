@@ -12,6 +12,7 @@ use fixes::PatSub;
 use model::{Link, Text};
 
 use crate::model;
+use crate::model::Person;
 
 /// Set of regular expressions we use to clean up broken dates
 mod fixes {
@@ -127,42 +128,51 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
     }
 }
 
-// Parses a timestamp from a potentially RFC-1123 formatted timestamp (which isn't part of any feed standard, but hey
-// its the internet, why follow standards?
-fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
-    let mut cleaned = original.trim().to_string();
-    for PatSub(regex, replacement) in fixes::rfc1123() {
-        cleaned = regex.replace(&cleaned, *replacement).to_string();
+static EMAIL_REGEX: OnceLock<Regex> = OnceLock::new();
+
+pub(crate) fn parse_person_name_email(raw: &str) -> Person {
+    let regex = EMAIL_REGEX.get_or_init(|| Regex::new(r"\b(<\[\()?(mailto:)?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})(>]\))?\b").unwrap());
+
+    let mut email = None;
+    let mut name = None;
+    if let Some(captures) = regex.captures(raw) {
+        // Discard the potential delimiters and optional mailto: prefix, and process the capture group containing the email address
+        if let Some(email_group) = captures.get(3) {
+            email = Some(email_group.as_str().trim().to_string());
+
+            // The remainder of the string is considered to be the name
+            if let Some(span) = captures.get(0) {
+                // Assume the longest remaining span (prefix or suffix) is the name
+                let prefix_len = span.start();
+                let suffix_len = raw.len() - span.end();
+
+                let name_str = if prefix_len > suffix_len {
+                    &raw[..span.start() - 1]
+                } else if span.end() < raw.len() {
+                    &raw[span.end() + 1..]
+                } else {
+                    ""
+                };
+
+                let name_str = name_str.trim();
+                if !name_str.is_empty() {
+                    name = Some(name_str.to_string());
+                }
+            }
+        }
     }
 
-    DateTime::parse_from_str(&cleaned, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)).ok()
-}
-
-// Parses a timestamp from a potentially RFC-2822 formatted timestamp
-fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
-    // Clean the input string by applying each of the regex fixes
-    let mut cleaned = original.trim().to_string();
-    for PatSub(regex, replacement) in fixes::rfc2822() {
-        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    // If we didn't find an email, assume the raw text is simply a name
+    if email.is_none() {
+        name = Some(raw.trim().to_string());
     }
 
-    DateTime::parse_from_rfc2822(&cleaned).map(|t| t.with_timezone(&Utc)).ok()
-}
-
-// Parses a timestamp from a potentially RFC-3339 formatted string
-fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
-    // Clean the input string by applying each of the regex fixes
-    let mut cleaned = original.trim().to_string();
-    for PatSub(regex, replacement) in fixes::rfc3339() {
-        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    Person {
+        name,
+        email,
+        uri: None,
+        role: None,
     }
-
-    DateTime::parse_from_rfc3339(cleaned.trim()).map(|t| t.with_timezone(&Utc)).ok()
-}
-
-/// Generates a new UUID.
-pub(crate) fn uuid_gen() -> String {
-    Uuid::new_v4().to_string()
 }
 
 /// Parses "normal play time" per the RSS media spec
@@ -216,6 +226,11 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     None
 }
 
+/// Generates a new UUID.
+pub(crate) fn uuid_gen() -> String {
+    Uuid::new_v4().to_string()
+}
+
 // Adds the fractional seconds if present
 fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
     if let Some(frac) = captures.name("f") {
@@ -227,6 +242,39 @@ fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
     } else {
         duration
     }
+}
+
+// Parses a timestamp from a potentially RFC-1123 formatted timestamp (which isn't part of any feed standard, but hey
+// its the internet, why follow standards?
+fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
+    let mut cleaned = original.trim().to_string();
+    for PatSub(regex, replacement) in fixes::rfc1123() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    }
+
+    DateTime::parse_from_str(&cleaned, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)).ok()
+}
+
+// Parses a timestamp from a potentially RFC-2822 formatted timestamp
+fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
+    // Clean the input string by applying each of the regex fixes
+    let mut cleaned = original.trim().to_string();
+    for PatSub(regex, replacement) in fixes::rfc2822() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    }
+
+    DateTime::parse_from_rfc2822(&cleaned).map(|t| t.with_timezone(&Utc)).ok()
+}
+
+// Parses a timestamp from a potentially RFC-3339 formatted string
+fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
+    // Clean the input string by applying each of the regex fixes
+    let mut cleaned = original.trim().to_string();
+    for PatSub(regex, replacement) in fixes::rfc3339() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    }
+
+    DateTime::parse_from_rfc3339(cleaned.trim()).map(|t| t.with_timezone(&Utc)).ok()
 }
 
 #[cfg(test)]

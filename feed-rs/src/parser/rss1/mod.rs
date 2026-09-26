@@ -40,7 +40,7 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
 
             (NS::RSS, "description") => feed.description = common::handle_text(child),
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::parse(&name).role("creator"))),
 
             (NS::DublinCore, "date") => feed.published = common::handle_timestamp(parser, child),
 
@@ -98,7 +98,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::Content, "encoded") => content_encoded = common::handle_encoded(child)?,
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::new(&name))),
+            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
 
             (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
 
