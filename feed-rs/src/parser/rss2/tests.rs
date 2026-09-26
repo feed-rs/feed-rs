@@ -944,3 +944,16 @@ fn test_w3_blog_author() {
     assert_eq!(author.email, None);
     assert_eq!(author.uri, None);
 }
+
+// Test that we handle MDY format dates
+#[test]
+fn test_verdagon_broken_date_fmt() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_verdagon.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Verify the dates in the feed
+    let entry0 = &actual.entries[0];
+    assert_eq!(entry0.published, Some(Utc.with_ymd_and_hms(2022, 11, 9, 14, 15, 0).unwrap()));
+    let entry1 = &actual.entries[1];
+    assert_eq!(entry1.published, Some(Utc.with_ymd_and_hms(2022, 10, 7, 14, 15, 0).unwrap()));
+}

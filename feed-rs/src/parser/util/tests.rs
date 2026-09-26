@@ -7,7 +7,9 @@ use super::*;
 #[test]
 fn test_timestamp_rss2() {
     let tests = vec![
-        //
+        // Incorrect order for month and day
+        ("Fri, Oct 7 2022 10:15:00 -0400", Utc.with_ymd_and_hms(2022, 10, 7, 14, 15, 00).unwrap()),
+        // Standard format
         ("26 August 2019 10:00:00 +0000", Utc.with_ymd_and_hms(2019, 8, 26, 10, 0, 0).unwrap()),
         // UTC is not a valid timezone in RFC-2822
         ("Mon, 01 Jan 0001 00:00:00 UTC", Utc.with_ymd_and_hms(1, 1, 1, 0, 0, 0).unwrap()),
