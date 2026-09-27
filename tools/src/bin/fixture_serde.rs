@@ -11,7 +11,7 @@ fn main() {
         let parser = feed_rs::parser::Builder::new().build();
 
         let path = entry.path();
-        println!("Processing {}", &path.display());
+        println!("Processing {}", path.display());
 
         let data = fs::read(&path).unwrap();
         if let Ok(feed) = parser.parse(data.as_slice()) {

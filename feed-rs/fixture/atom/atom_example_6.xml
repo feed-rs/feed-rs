@@ -35,26 +35,4 @@
         </author>
         <media:thumbnail height="30" width="30" url="https://avatars1.githubusercontent.com/u/753703?s=60&amp;v=4"/>
     </entry>
-    <entry>
-        <id>tag:github.com,2008:Repository/90976281/0.1.1</id>
-        <updated>2017-06-16T18:49:36+10:00</updated>
-        <link rel="alternate" type="text/html" href="https://github.com/feed-rs/feed-rs/releases/tag/0.1.1"/>
-        <title>0.1.1</title>
-        <content type="html">&lt;p&gt;Handle rel attribute of link element of entry of atom&lt;/p&gt;</content>
-        <author>
-            <name>kumabook</name>
-        </author>
-        <media:thumbnail height="30" width="30" url="https://avatars1.githubusercontent.com/u/753703?s=60&amp;v=4"/>
-    </entry>
-    <entry>
-        <id>tag:github.com,2008:Repository/90976281/0.1.0</id>
-        <updated>2017-06-15T16:44:26+10:00</updated>
-        <link rel="alternate" type="text/html" href="https://github.com/feed-rs/feed-rs/releases/tag/0.1.0"/>
-        <title>0.1.0</title>
-        <content type="html">&lt;p&gt;Update crate info to Cargo.toml&lt;/p&gt;</content>
-        <author>
-            <name>kumabook</name>
-        </author>
-        <media:thumbnail height="30" width="30" url="https://avatars1.githubusercontent.com/u/753703?s=60&amp;v=4"/>
-    </entry>
 </feed>

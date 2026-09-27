@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<?xml-stylesheet href="../atomfeed.xslt" type="text/xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:redblobgames.com,2011:blog.posts</id>
+  <title>Red Blob Games: latest blog posts</title>
+  <updated>2026-03-29T10:42:23.269145-07:00</updated>
+  <author>
+    <name>Amit Patel</name>
+    <email>redblobgames@gmail.com</email>
+    <uri>http://www-cs-students.stanford.edu/~amitp/</uri>
+  </author>
+  <link href="https://www.redblobgames.com/blog/" rel="alternate"/>
+  <link href="https://www.redblobgames.com/blog/posts.xml" rel="self"/>
+  <generator uri="https://lkiesow.github.io/python-feedgen" version="1.0.0">python-feedgen</generator>
+  <logo>https://www.redblobgames.com/img/logo-square-400.png</logo>
+  <entry>
+    <id>tag:redblobgames.com,2011:blog:2026-03-25-optimizing-page-size</id>
+    <title>Optimizing page size</title>
+    <updated>2026-03-29T10:42:23.269145-07:00</updated>
+    <content type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+<p>
+While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&amp;nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
+</p>
+<p>
+In this example it's ok to remove the spaces between <code>&lt;/li&gt;&lt;li&gt;</code> but it's <em>not</em> ok to remove the spaces between <code>&lt;/i&gt; &lt;b&gt;</code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code>&lt;pre&gt;</code> or <code>&lt;script&gt;</code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
+</p>
+</div>
+    </content>
+    <link href="https://www.redblobgames.com/blog/2026-03-25-optimizing-page-size/"/>
+    <published>2026-03-25T12:05:00-07:00</published>
+  </entry>
+</feed>

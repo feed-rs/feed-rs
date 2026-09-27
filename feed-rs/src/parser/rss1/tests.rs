@@ -1,4 +1,4 @@
-use mediatype::{names, MediaType};
+use mediatype::{MediaType, names};
 
 use crate::model::{Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser;
@@ -30,7 +30,7 @@ fn test_example_1() {
                 .link(Link::new("記事1のURL", None))
                 .summary(Text::new("記事1の内容".into()))
                 .published("2017-06-13T09:00:00Z")
-                .author(Person::new("記事1の作者名")),
+                .author(Person::parse("記事1の作者名").role("creator")),
         )
         .entry(
             Entry::default()
@@ -39,7 +39,7 @@ fn test_example_1() {
                 .title(Text::new("記事2のタイトル".into()))
                 .link(Link::new("記事2のURL", None))
                 .summary(Text::new("記事2の内容".into()))
-                .author(Person::new("記事2の作者名")),
+                .author(Person::parse("記事2の作者名").role("creator")),
         );
 
     // Check
@@ -54,14 +54,16 @@ fn test_example_2() {
     let feed = parser::parse(test_data.as_bytes()).unwrap();
 
     // content:encoded should be mapped to the content field
-    assert!(feed.entries[0]
-        .content
-        .as_ref()
-        .unwrap()
-        .body
-        .as_ref()
-        .unwrap()
-        .starts_with("This morning I saw two things that were Microsoft "));
+    assert!(
+        feed.entries[0]
+            .content
+            .as_ref()
+            .unwrap()
+            .body
+            .as_ref()
+            .unwrap()
+            .starts_with("This morning I saw two things that were Microsoft ")
+    );
     // content media type should be text/html.
     assert_eq!(feed.entries[0].content.as_ref().unwrap().content_type, MediaType::new(names::TEXT, names::HTML));
 }
@@ -122,7 +124,7 @@ fn test_spec_2() {
                 .title("Meerkat Powered!"),
         )
         .updated(actual.updated) // not present in the test data
-        .author(Person::new("Rael Dornfest (mailto:rael@oreilly.com)"))
+        .author(Person::parse("Rael Dornfest (mailto:rael@oreilly.com)").role("creator"))
         .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into()))
         .entry(
             Entry::default()
@@ -133,7 +135,7 @@ fn test_spec_2() {
                 .summary(Text::new(
                     "XML is placing increasingly heavy loads on the existing technical\n            infrastructure of the Internet.".into(),
                 ))
-                .author(Person::new("Simon St.Laurent (mailto:simonstl@simonstl.com)"))
+                .author(Person::parse("Simon St.Laurent (mailto:simonstl@simonstl.com)").role("creator"))
                 .rights(Text::new("Copyright © 2000 O'Reilly & Associates, Inc.".into())),
         );
 

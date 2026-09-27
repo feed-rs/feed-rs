@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::io::BufRead;
 use std::ops::Add;
 use std::sync::OnceLock;
 use std::time::Duration;
@@ -13,8 +12,7 @@ use fixes::PatSub;
 use model::{Link, Text};
 
 use crate::model;
-use crate::parser::{ParseFeedResult, Parser};
-use crate::xml::Element;
+use crate::model::Person;
 
 /// Set of regular expressions we use to clean up broken dates
 mod fixes {
@@ -50,6 +48,11 @@ mod fixes {
                 PatSub(Regex::new("(Sun|Mon|Tue|Wed|Thu|Fri|Sat)[a-z]*, ").unwrap(), ""),
                 // Long month names are not allowed, so replace them with short
                 PatSub(Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*").unwrap(), "$1"),
+                // Month and days can be reversed (i.e. MDY instead of DMY) so we fix this up too
+                PatSub(
+                    Regex::new("(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\\d{1,2}) (\\d{4})").unwrap(),
+                    "$2 $1 $3",
+                ),
                 // Some timestamps have an hours component adjusted by 24h, while not adjusting the day so we just reset to start of day
                 #[allow(clippy::trivial_regex)]
                 PatSub(Regex::new(" 24:").unwrap(), " 00:"),
@@ -78,48 +81,10 @@ mod fixes {
 static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
 /// Pluggable timestamp parser
-pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>> + 'static;
+pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>> + 'static + Send + Sync;
 
 /// Pluggable ID (feed or entry) generator
-pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> String;
-
-/// Handles <content:encoded>
-pub(crate) fn handle_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>> {
-    Ok(element.children_as_string()?.map(Text::html))
-}
-
-// Handles "xml:lang" as an attribute (e.g. in Atom feeds)
-pub(crate) fn handle_language_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
-    element.attr_value("xml:lang")
-}
-
-// Handles "xml:base" as an attribute (e.g. in Atom feeds)
-pub(crate) fn handle_base_attr<R: BufRead>(element: &Element<R>) -> Option<String> {
-    element.attr_value("xml:base")
-}
-
-// Handles <link>
-pub(crate) fn handle_link<R: BufRead>(element: Element<R>) -> Option<Link> {
-    element.child_as_text().map(|s| Link::new(s, element.xml_base.as_ref()))
-}
-
-// Handles <title>, <description> etc
-pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
-    if let Ok(Some(text)) = element.children_as_string() {
-        Some(Text::new(text))
-    } else {
-        None
-    }
-}
-
-/// Handles date/time
-pub(crate) fn handle_timestamp<R: BufRead>(parser: &Parser, element: Element<R>) -> Option<DateTime<Utc>> {
-    if let Some(text) = element.child_as_text() {
-        parser.parse_timestamp(&text)
-    } else {
-        None
-    }
-}
+pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> String + Send + Sync;
 
 /// Simplifies the "if let ... = parse ... assign" block
 pub(crate) fn if_some_then<T, F: FnOnce(T)>(v: Option<T>, func: F) {
@@ -168,42 +133,51 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
     }
 }
 
-// Parses a timestamp from a potentially RFC-1123 formatted timestamp (which isn't part of any feed standard, but hey
-// its the internet, why follow standards?
-fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
-    let mut cleaned = original.trim().to_string();
-    for PatSub(regex, replacement) in fixes::rfc1123() {
-        cleaned = regex.replace(&cleaned, *replacement).to_string();
+static EMAIL_REGEX: OnceLock<Regex> = OnceLock::new();
+
+pub(crate) fn parse_person_name_email(raw: &str) -> Person {
+    let regex = EMAIL_REGEX.get_or_init(|| Regex::new(r"\b(<\[\()?(mailto:)?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})(>]\))?\b").unwrap());
+
+    let mut email = None;
+    let mut name = None;
+    if let Some(captures) = regex.captures(raw) {
+        // Discard the potential delimiters and optional mailto: prefix, and process the capture group containing the email address
+        if let Some(email_group) = captures.get(3) {
+            email = Some(email_group.as_str().trim().to_string());
+
+            // The remainder of the string is considered to be the name
+            if let Some(span) = captures.get(0) {
+                // Assume the longest remaining span (prefix or suffix) is the name
+                let prefix_len = span.start();
+                let suffix_len = raw.len() - span.end();
+
+                let name_str = if prefix_len > suffix_len {
+                    &raw[..span.start() - 1]
+                } else if span.end() < raw.len() {
+                    &raw[span.end() + 1..]
+                } else {
+                    ""
+                };
+
+                let name_str = name_str.trim();
+                if !name_str.is_empty() {
+                    name = Some(name_str.to_string());
+                }
+            }
+        }
     }
 
-    DateTime::parse_from_str(&cleaned, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)).ok()
-}
-
-// Parses a timestamp from a potentially RFC-2822 formatted timestamp
-fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
-    // Clean the input string by applying each of the regex fixes
-    let mut cleaned = original.trim().to_string();
-    for PatSub(regex, replacement) in fixes::rfc2822() {
-        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    // If we didn't find an email, assume the raw text is simply a name
+    if email.is_none() {
+        name = Some(raw.trim().to_string());
     }
 
-    DateTime::parse_from_rfc2822(&cleaned).map(|t| t.with_timezone(&Utc)).ok()
-}
-
-// Parses a timestamp from a potentially RFC-3339 formatted string
-fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
-    // Clean the input string by applying each of the regex fixes
-    let mut cleaned = original.trim().to_string();
-    for PatSub(regex, replacement) in fixes::rfc3339() {
-        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    Person {
+        name,
+        email,
+        uri: None,
+        role: None,
     }
-
-    DateTime::parse_from_rfc3339(cleaned.trim()).map(|t| t.with_timezone(&Utc)).ok()
-}
-
-/// Generates a new UUID.
-pub(crate) fn uuid_gen() -> String {
-    Uuid::new_v4().to_string()
 }
 
 /// Parses "normal play time" per the RSS media spec
@@ -257,6 +231,11 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     None
 }
 
+/// Generates a new UUID.
+pub(crate) fn uuid_gen() -> String {
+    Uuid::new_v4().to_string()
+}
+
 // Adds the fractional seconds if present
 fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
     if let Some(frac) = captures.name("f") {
@@ -270,68 +249,38 @@ fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use chrono::{TimeZone, Utc};
-
-    use super::*;
-
-    // Verify we can parse non-spec compliant date strings
-    // Regression tests for https://github.com/feed-rs/feed-rs/issues/7
-    #[test]
-    fn test_timestamp_rss2() {
-        let tests = vec![
-            //
-            ("26 August 2019 10:00:00 +0000", Utc.with_ymd_and_hms(2019, 8, 26, 10, 0, 0).unwrap()),
-            // UTC is not a valid timezone in RFC-2822
-            ("Mon, 01 Jan 0001 00:00:00 UTC", Utc.with_ymd_and_hms(1, 1, 1, 0, 0, 0).unwrap()),
-            // -0000 is not considered a timezone in the parser
-            ("Wed, 22 Jan 2020 10:58:02 -0000", Utc.with_ymd_and_hms(2020, 1, 22, 10, 58, 2).unwrap()),
-            // The 25th of August 2012 was a Saturday, not a Wednesday
-            ("Wed, 25 Aug 2012 03:25:42 GMT", Utc.with_ymd_and_hms(2012, 8, 25, 3, 25, 42).unwrap()),
-            // Long month names are not allowed
-            ("2 September 2019 20:00:00 +0000", Utc.with_ymd_and_hms(2019, 9, 2, 20, 0, 0).unwrap()),
-            // RSS2 should be RFC-2822 but we get Atom/RFC-3339 formats
-            ("2016-10-01T00:00:00+10:00", Utc.with_ymd_and_hms(2016, 9, 30, 14, 0, 0).unwrap()),
-            // Single digit hours should be padded
-            ("24 Sep 2013 1:27 PDT", Utc.with_ymd_and_hms(2013, 9, 24, 8, 27, 0).unwrap()),
-            // Consider an invalid hour specification as start-of-day
-            ("5 Jun 2017 24:05 PDT", Utc.with_ymd_and_hms(2017, 6, 5, 7, 5, 0).unwrap()),
-            // We even see RFC1123
-            ("Tue, 15 Nov 2022 20:15:04 Z", Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap()),
-            // And RFC1123 with languages other than English...
-            ("mer, 16 nov 2022 00:38:15 +0100", Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap()),
-        ];
-
-        for (source, expected) in tests {
-            let parsed = parse_timestamp_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
-            assert_eq!(parsed, expected);
-        }
+// Parses a timestamp from a potentially RFC-1123 formatted timestamp (which isn't part of any feed standard, but hey
+// its the internet, why follow standards?
+fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
+    let mut cleaned = original.trim().to_string();
+    for PatSub(regex, replacement) in fixes::rfc1123() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    #[test]
-    fn test_timestamp_atom() {
-        let tests = vec![
-            // properly formated rfc3339 string
-            ("2014-12-29T14:53:35+02:00", Utc.with_ymd_and_hms(2014, 12, 29, 12, 53, 35).unwrap()),
-            // missing colon in timezone
-            ("2014-12-29T14:53:35+0200", Utc.with_ymd_and_hms(2014, 12, 29, 12, 53, 35).unwrap()),
-        ];
-
-        for (source, expected) in tests {
-            let parsed = parse_timestamp_lenient(source).unwrap_or_else(|| panic!("failed to parse {}", source));
-            assert_eq!(parsed, expected);
-        }
-    }
-
-    // Verify we can parse NPT times
-    #[test]
-    fn test_parse_npt() {
-        assert_eq!(parse_npt("12:05:35").unwrap(), Duration::from_secs(12 * 3600 + 5 * 60 + 35));
-        assert_eq!(
-            parse_npt("12:05:35.123").unwrap(),
-            Duration::from_millis(12 * 3600000 + 5 * 60000 + 35 * 1000 + 123)
-        );
-        assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
-    }
+    DateTime::parse_from_str(&cleaned, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)).ok()
 }
+
+// Parses a timestamp from a potentially RFC-2822 formatted timestamp
+fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
+    // Clean the input string by applying each of the regex fixes
+    let mut cleaned = original.trim().to_string();
+    for PatSub(regex, replacement) in fixes::rfc2822() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    }
+
+    DateTime::parse_from_rfc2822(&cleaned).map(|t| t.with_timezone(&Utc)).ok()
+}
+
+// Parses a timestamp from a potentially RFC-3339 formatted string
+fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
+    // Clean the input string by applying each of the regex fixes
+    let mut cleaned = original.trim().to_string();
+    for PatSub(regex, replacement) in fixes::rfc3339() {
+        cleaned = regex.replace(&cleaned, *replacement).to_string();
+    }
+
+    DateTime::parse_from_rfc3339(cleaned.trim()).map(|t| t.with_timezone(&Utc)).ok()
+}
+
+#[cfg(test)]
+mod tests;
