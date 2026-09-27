@@ -22,11 +22,6 @@ that fields with a media type of `text/plain` will not be sanitized, to avoid
 potential data loss and should be sanitized by the consumer of the feed if
 rendered as HTML.
 
-```toml
-[dependencies]
-feed-rs = { version = "2.2.1", features = ["sanitize"] }
-```
-
 ## Reading
 
 A feed can be parsed from any object that implements the `Read` trait.
