@@ -84,6 +84,13 @@ fn test_parse_person_name_email() {
             Some("Simon St.Laurent"),
             Some("simonstl@simonstl.com"),
         ),
+        ("a@b.co€", Some("€"), Some("a@b.co")),
+        ("€a@b.co", Some("€"), Some("a@b.co")),
+        ("jose@example.com（José）", Some("José"), Some("jose@example.com")),
+        ("Zoë Long Name «zoe@example.com»", Some("Zoë Long Name"), Some("zoe@example.com")),
+        ("lawyer@boyer.net (Lawyer Boyer)", Some("Lawyer Boyer"), Some("lawyer@boyer.net")),
+        ("（a@b.co）", None, Some("a@b.co")),
+        ("«zoe@example.com» Zoë Long Name Here", Some("Zoë Long Name Here"), Some("zoe@example.com")),
     ];
 
     for (raw, expected_name, expected_email) in tests {

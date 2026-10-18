@@ -134,35 +134,28 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
 }
 
 static EMAIL_REGEX: OnceLock<Regex> = OnceLock::new();
+static EMAIL_DELIM: &[char] = &['<', '>', '(', '（', ')', '）', '[', '［', ']', '］', '«', '»'];
 
 pub(crate) fn parse_person_name_email(raw: &str) -> Person {
-    let regex = EMAIL_REGEX.get_or_init(|| Regex::new(r"\b(<\[\()?(mailto:)?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})(>]\))?\b").unwrap());
+    let regex = EMAIL_REGEX.get_or_init(|| {
+        Regex::new(r"(?<prefix>.*?)?([\[<(«])?(mailto:)?(?<email>[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})([>)»\]])?(?<suffix>.*)").unwrap()
+    });
 
     let mut email = None;
     let mut name = None;
     if let Some(captures) = regex.captures(raw) {
         // Discard the potential delimiters and optional mailto: prefix, and process the capture group containing the email address
-        if let Some(email_group) = captures.get(3) {
+        if let Some(email_group) = captures.name("email") {
             email = Some(email_group.as_str().trim().to_string());
 
-            // The remainder of the string is considered to be the name
-            if let Some(span) = captures.get(0) {
-                // Assume the longest remaining span (prefix or suffix) is the name
-                let prefix_len = span.start();
-                let suffix_len = raw.len() - span.end();
-
-                let name_str = if prefix_len > suffix_len {
-                    &raw[..span.start() - 1]
-                } else if span.end() < raw.len() {
-                    &raw[span.end() + 1..]
-                } else {
-                    ""
-                };
-
-                let name_str = name_str.trim();
-                if !name_str.is_empty() {
-                    name = Some(name_str.to_string());
-                }
+            // The remainder of the string is considered to be the name, but it might be present as a prefix or suffix, so we retain the longest one as the name
+            let prefix = captures.name("prefix").map_or_else(|| "", |m| m.as_str().trim());
+            let suffix = captures.name("suffix").map_or_else(|| "", |m| m.as_str().trim());
+            let mut name_str = (if prefix.len() > suffix.len() { prefix } else { suffix }).to_string();
+            name_str.retain(|c| !EMAIL_DELIM.contains(&c));
+            let name_str = name_str.trim();
+            if !name_str.is_empty() {
+                name = Some(name_str.to_string());
             }
         }
     }
