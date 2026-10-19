@@ -829,13 +829,13 @@ fn test_podcast_items() {
     }
 
     let expected_people = [
-      PodcastPerson {
-          name: String::from("Adam Leventhal"),
-          role: Role::Host,
-          group: Group::Cast,
-          img: Url::parse("https://img.transistor.fm/E-Msi0WvVNEZBkhzuCGyhA-guzdy1j2EPCN77Zw5MHQ/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yYjVl/NDY2NWFlOTNkODgz/MGQ5ZjYwZmFkMzdm/MmVmZC5wbmc.jpg").ok(),
-          href: Url::parse("https://ahl.dtrace.org/").ok(),
-      },
+        PodcastPerson {
+            name: String::from("Adam Leventhal"),
+            role: Role::Host,
+            group: Group::Cast,
+            img: Url::parse("https://img.transistor.fm/E-Msi0WvVNEZBkhzuCGyhA-guzdy1j2EPCN77Zw5MHQ/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yYjVl/NDY2NWFlOTNkODgz/MGQ5ZjYwZmFkMzdm/MmVmZC5wbmc.jpg").ok(),
+            href: Url::parse("https://ahl.dtrace.org/").ok(),
+        },
         PodcastPerson {
             name: String::from("Bryan Cantrill"),
             role: Role::Host,
@@ -900,12 +900,17 @@ fn test_peertube_mediarss() {
 
 // Verify we handle feeds with missing schema versions (!)
 #[test]
-fn test_iprogrammer_missing_rss_version() {
+fn test_missing_rss_version() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_iprogrammer.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Don't need to check much, just that we can parse it into a valid graph
-    assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())))
+    assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())));
+
+    // Also check feeds that are missing their version attribute entirely
+    let test_data = r#"<?xml version="1.0"?><rss><channel><title>A</title><item><title>a</title><link>https://a.example/1</link></item></channel></rss>"#;
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    assert_eq!(actual.title, Some(Text::new("A".into())))
 }
 
 // Verify we extract comments links correctly
