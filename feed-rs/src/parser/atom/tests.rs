@@ -333,6 +333,56 @@ fn test_example_reddit() {
     }
 }
 
+#[test]
+fn test_media_description_empty() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("atom/atom_media_description_empty.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Expected feed
+    let expected = Feed::new(FeedType::Atom)
+        .author(
+            Person::parse("D!NG")
+                .uri("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA")
+                .role("author"),
+        )
+        .id("yt:channel:lq42foiSgl7sSpLupnugGA")
+        .link(Link::new("http://www.youtube.com/feeds/videos.xml?channel_id=UClq42foiSgl7sSpLupnugGA", None).rel("self"))
+        .link(Link::new("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA", None).rel("alternate"))
+        .title(Text::new("D!NG".into()))
+        .entry(
+            Entry::default()
+                .author(
+                    Person::parse("D!NG")
+                        .uri("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA")
+                        .role("author"),
+                )
+                .id("yt:video:whjJNaEZKIM")
+                .link(Link::new("https://www.youtube.com/watch?v=whjJNaEZKIM", None).rel("alternate"))
+                .published("2019-02-16T15:16:04+00:00")
+                .title(Text::new("Will A Watched Pot Boil?".into()))
+                .updated_parsed("2026-10-17T21:33:04+00:00")
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS)
+                        .community(MediaCommunity::new().star_rating(75311, 5.0, 1, 5).statistics(Some(1206136), None))
+                        .content(
+                            MediaContent::new()
+                                .content_type("application/x-shockwave-flash")
+                                .height(390)
+                                .url("https://www.youtube.com/v/whjJNaEZKIM?version=3")
+                                .width(640),
+                        )
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://i4.ytimg.com/vi/whjJNaEZKIM/hqdefault.jpg".into()).height(360).width(480),
+                        ))
+                        .title("Will A Watched Pot Boil?"),
+                ),
+        );
+
+    // Check
+    assert_eq!(actual, expected);
+}
+
 // Verify we can parse the example contained in the Atom specification
 // https://tools.ietf.org/html/rfc4287#section-1.1
 #[test]
