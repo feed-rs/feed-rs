@@ -381,16 +381,9 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
         })),
     }?;
 
-    element
-        .child_as_text()
-        .map(|content| {
-            let mut text = Text::new(content);
-            text.content_type = mime;
-            Some(text)
-        })
-        // Need the text for a text element
-        .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
-            position: element.buffer_pos,
-            reference: "text",
-        }))
+    Ok(element.child_as_text().map(|content| {
+        let mut text = Text::new(content);
+        text.content_type = mime;
+        text
+    }))
 }
