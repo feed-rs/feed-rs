@@ -573,7 +573,7 @@ impl Generator {
     }
 }
 
-/// Represents a a link to an image.
+/// Represents a link to an image.
 ///
 /// [Atom spec]:  http://www.atomenabled.org/developers/syndication/#optionalFeedElements
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
@@ -828,6 +828,7 @@ pub(crate) enum MediaObjectSource {
     MediaRSS,
     ITunes,
     Podcast,
+    JsonFeed,
 }
 
 /// Represents a "media:community" item from the RSS Media spec

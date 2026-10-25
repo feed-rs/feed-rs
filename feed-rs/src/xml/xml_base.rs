@@ -169,7 +169,7 @@ mod tests {
         let root = source.root();
         match root {
             // Nothing required, we expect this
-            Err(XmlError::ValidationError { msg }) => {}
+            Err(XmlError::ValidationError { msg: _ }) => {}
 
             // Anything else should be an error
             _ => panic!("Expected validation error, got {:?}", root),
@@ -187,7 +187,7 @@ mod tests {
         let child = root.children().next().unwrap();
         match child {
             // Nothing required, we expect this
-            Err(XmlError::ValidationError { msg }) => {}
+            Err(XmlError::ValidationError { msg: _ }) => {}
 
             // Anything else should be an error
             _ => panic!("Expected validation error, got {:?}", root),

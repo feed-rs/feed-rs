@@ -1,10 +1,10 @@
 use std::io::Read;
 
-use mediatype::{MediaTypeBuf, names};
-
-use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, Person, Text};
+use crate::model::{Category, Content, Entry, Feed, FeedType, Image, Link, MediaContent, MediaObject, MediaObjectSource, MediaThumbnail, Person, Text};
 use crate::parser::util::if_some_then;
 use crate::parser::{ParseFeedError, ParseFeedResult, Parser};
+use mediatype::{MediaTypeBuf, names};
+use url::Url;
 
 #[cfg(test)]
 mod tests;
@@ -47,9 +47,11 @@ fn convert(parser: &Parser, jf: JsonFeed) -> ParseFeedResult<Feed> {
     handle_authors(&mut feed.authors, &jf.author, &jf.authors);
 
     // Convert items within the JSON feed
-    jf.items.into_iter().for_each(|ji| {
-        feed.entries.push(handle_item(parser, ji));
-    });
+    if let Some(items) = jf.items {
+        items.into_iter().for_each(|ji| {
+            feed.entries.push(handle_item(parser, ji));
+        });
+    }
 
     // Per the spec, any items without an author inherit the feed
     if !feed.authors.is_empty() {
@@ -136,6 +138,8 @@ fn handle_item(parser: &Parser, ji: JsonItem) -> Entry {
         }
     }
 
+    handle_images(&mut entry.media, ji.image, ji.banner_image);
+
     if_some_then(ji.date_published, |published| entry.published = parser.parse_timestamp(&published));
 
     if_some_then(ji.date_modified, |modified| entry.updated = parser.parse_timestamp(&modified));
@@ -153,6 +157,35 @@ fn handle_item(parser: &Parser, ji: JsonItem) -> Entry {
     entry
 }
 
+fn handle_images(media_objs: &mut Vec<MediaObject>, image: Option<String>, banner_image: Option<String>) {
+    // If we have either an image or banner image then emit a MediaObject
+    if image.is_some() || banner_image.is_some() {
+        let mut media = MediaObject::new(MediaObjectSource::JsonFeed);
+
+        // Emit the image as a content
+        if let Some(image) = image {
+            if let Ok(image_url) = Url::parse(&image) {
+                let mut media_content = MediaContent::new();
+                media_content.url = Some(image_url);
+                media.content.push(media_content);
+            }
+        }
+
+        // Emit the banner as a thumbnail (not strictly the same as other feeds, but its primary usage is a smaller banner at the top of the content so its semantically reasonable close)
+        if let Some(banner_image) = banner_image {
+            if Url::parse(&banner_image).is_ok() {
+                let media_thumbnail_image = Image::new(banner_image);
+                let media_thumbnail = MediaThumbnail::new(media_thumbnail_image);
+                media.thumbnails.push(media_thumbnail);
+            }
+        }
+
+        if media.is_not_empty() {
+            media_objs.push(media);
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 struct JsonFeed {
     pub version: String,
@@ -165,7 +198,7 @@ struct JsonFeed {
     pub favicon: Option<String>,
     pub author: Option<JsonAuthor>,
     pub authors: Option<Vec<JsonAuthor>>,
-    pub items: Vec<JsonItem>,
+    pub items: Option<Vec<JsonItem>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -191,6 +224,8 @@ struct JsonItem {
     pub content_html: Option<String>,
     pub content_text: Option<String>,
     pub summary: Option<String>,
+    pub image: Option<String>,
+    pub banner_image: Option<String>,
     pub date_published: Option<String>,
     pub date_modified: Option<String>,
     pub author: Option<JsonAuthor>,
