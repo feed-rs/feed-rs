@@ -139,7 +139,11 @@ impl Feed {
 
 impl Debug for Feed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        f.write_str(serde_json::to_string(self).unwrap().as_str())
+        // Serialization should never fail for a feed we parsed, but do not panic if it does
+        match serde_json::to_string(self) {
+            Ok(json) => f.write_str(json.as_str()),
+            Err(_) => f.write_str("<Unable to serialise as JSON>"),
+        }
     }
 }
 
