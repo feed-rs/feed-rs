@@ -63,6 +63,21 @@ fn test_parse_npt() {
     assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
 }
 
+// Verify NPT times which overflow u64 are dropped rather than causing a panic
+#[test]
+fn test_parse_npt_overflow() {
+    // npt-hhmmss hours that do not fit in a u64, or which overflow when converted to seconds
+    assert_eq!(parse_npt("99999999999999999999999:05:35"), Some(Duration::from_secs(335)));
+    assert_eq!(
+        parse_npt(format!("{}:00:00", u64::MAX / 3600 + 1).as_str()),
+        Some(Duration::from_secs(15461882262000))
+    );
+
+    // npt-sec values that do not fit in a u64, plus the largest valid value
+    assert_eq!(parse_npt("99999999999999999999999"), Some(Duration::from_nanos(0)));
+    assert_eq!(parse_npt(u64::MAX.to_string().as_str()), Some(Duration::from_secs(u64::MAX)));
+}
+
 // Test various forms of email and names in a string
 #[test]
 fn test_parse_person_name_email() {

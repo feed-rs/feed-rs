@@ -188,11 +188,12 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
         let s = captures.name("s");
 
         if let (Some(h), Some(m), Some(s)) = (h, m, s) {
-            // Parse the hours, minutes and seconds
-            let mut seconds = s.as_str().parse::<u64>().unwrap();
-            seconds += m.as_str().parse::<u64>().unwrap() * 60;
-            seconds += h.as_str().parse::<u64>().unwrap() * 3600;
-            let mut duration = Duration::from_secs(seconds);
+            // Parse the hours, minutes and seconds, clamping to reasonable values
+            let seconds = s.as_str().parse::<u64>().unwrap_or(0).clamp(0, 59);
+            let minutes = m.as_str().parse::<u64>().unwrap_or(0).clamp(0, 59);
+            let hours = h.as_str().parse::<u64>().unwrap_or(0).clamp(0, u32::MAX as u64);
+            let total = hours * 3600 + minutes * 60 + seconds;
+            let mut duration = Duration::from_secs(total);
 
             // Add fractional seconds if present
             duration = parse_npt_add_frac_sec(duration, captures);
@@ -209,8 +210,8 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     });
     if let Some(captures) = npt_sec.captures(text) {
         if let Some(s) = captures.name("s") {
-            // Parse the seconds
-            let seconds = s.as_str().parse::<u64>().unwrap();
+            // Parse the seconds, using zero if it is out of range
+            let seconds = s.as_str().parse::<u64>().unwrap_or(0);
             let mut duration = Duration::from_secs(seconds);
 
             // Add fractional seconds if present
