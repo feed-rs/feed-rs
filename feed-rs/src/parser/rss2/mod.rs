@@ -51,10 +51,10 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
 
             (NS::RSS, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
 
-            (NS::RSS, "pubDate") => feed.published = common::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => feed.published = common::handle_timestamp(parser, child),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = common::handle_timestamp(parser, child),
+            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") | (NS::Atom, "updated") => feed.updated = common::handle_timestamp(parser, child),
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
