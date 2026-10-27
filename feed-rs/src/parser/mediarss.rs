@@ -23,9 +23,7 @@ struct Scope {
     rating: Option<MediaRating>,
     texts: Vec<MediaText>,
     thumbnails: Vec<MediaThumbnail>,
-
-    // <media:content> elements we have discovered at this scope which we process later into media objects
-    pending: Vec<MediaContent>,
+    content: Vec<MediaContent>,
 
     // Children (i.e. <media:group> elements that nest MediaRSS content below them)
     children: Vec<Scope>,
@@ -69,20 +67,31 @@ impl MediaRssState {
 }
 
 fn emit_media_objects(mut scope: Scope, entry: &mut Entry) {
-    // If we have content at this scope, then build a media object for it
-    if !scope.pending.is_empty() {
+    let children = mem::take(&mut scope.children);
+
+    // We emit a media object under these scenarios:
+    //
+    // 1) Content is defined at this scope. Thumbnails are attached to this content. Children are processed, with thumbnails propagating down.
+    //      Per the spec at https://www.rssboard.org/media-rss#optional-elements - when an element appears at a shallow level, such as <channel> or <item>, it means that the element should be applied to every media object within its scope.
+    let content_is_present = !scope.content.is_empty();
+
+    // 2) Thumbnails are defined at this scope and children are NOT defined. In this case we build a media object for this scope and attach the thumbnails to it.
+    //    This tends to be summary feeds that are text heavy or summaries that link directly to a more detailed page.
+    let thumbnails_no_children = !scope.thumbnails.is_empty() && children.is_empty();
+
+    // If we have content at this scope, even just thumbnails, then build a media object for it
+    if content_is_present || thumbnails_no_children {
         // Build a media object for this scope
         let mut media_obj = MediaObject::new(MediaObjectSource::MediaRSS);
         media_obj.title = scope.title.clone();
         media_obj.description = scope.description.clone();
         media_obj.thumbnails = scope.thumbnails.clone();
         media_obj.community = scope.community.clone();
-        media_obj.thumbnails = scope.thumbnails.clone();
         media_obj.texts = scope.texts.clone();
         media_obj.credits = scope.credits.clone();
 
         // Propagate the rating to the content if not already set
-        let mut pending = mem::take(&mut scope.pending);
+        let mut pending = mem::take(&mut scope.content);
         if scope.rating.is_some() {
             pending.iter_mut().for_each(|content| {
                 if content.rating.is_none() {
@@ -97,7 +106,6 @@ fn emit_media_objects(mut scope: Scope, entry: &mut Entry) {
     }
 
     // Process each of the children
-    let children = mem::take(&mut scope.children);
     children.into_iter().for_each(|mut child| {
         // Propagate this scope to the child
         merge_parent_scope_into_child(&scope, &mut child);
@@ -274,7 +282,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut Scope) 
     // If we found a URL from the content element or the player, we consider this valid
     if content.url.is_some() {
         // Emit this parsed content
-        media_obj.pending.push(content);
+        media_obj.content.push(content);
     }
 
     Ok(())

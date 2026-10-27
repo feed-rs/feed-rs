@@ -33,5 +33,8 @@ siphasher = "1.0.4"
 url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.28.0", features = ["v4"] }
 
+[dev-dependencies]
+assert-json-diff = "2.0.2"
+
 [features]
 sanitize = ["dep:ammonia"]
