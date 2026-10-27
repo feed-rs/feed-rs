@@ -1004,3 +1004,17 @@ fn test_volpeon_hybrid_rss_atom() {
     let entry1 = &actual.entries[1];
     assert_eq!(entry1.updated, Some(Utc.with_ymd_and_hms(2024, 7, 1, 0, 0, 0).unwrap()));
 }
+
+// The channel accepts the same DublinCore and Atom dates as an item
+#[test]
+fn test_channel_dc_date_and_atom_updated() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_channel_dates.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let published = Some(Utc.with_ymd_and_hms(2026, 10, 1, 8, 0, 0).unwrap());
+    let updated = Some(Utc.with_ymd_and_hms(2026, 10, 20, 9, 30, 0).unwrap());
+    assert_eq!(actual.entries[0].published, published);
+    assert_eq!(actual.entries[0].updated, updated);
+    assert_eq!(actual.published, published);
+    assert_eq!(actual.updated, updated);
+}

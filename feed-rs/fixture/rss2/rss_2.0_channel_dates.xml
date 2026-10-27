@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+  <channel>
+    <title>Channel dates</title>
+    <link>https://example.com/</link>
+    <dc:date>2026-10-01T08:00:00Z</dc:date>
+    <atom:updated>2026-10-20T09:30:00Z</atom:updated>
+    <item>
+      <title>First post</title>
+      <link>https://example.com/first</link>
+      <guid>https://example.com/first</guid>
+      <dc:date>2026-10-01T08:00:00Z</dc:date>
+      <atom:updated>2026-10-20T09:30:00Z</atom:updated>
+    </item>
+  </channel>
+</rss>
