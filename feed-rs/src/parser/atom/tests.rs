@@ -4,6 +4,7 @@ use crate::model::{
 };
 use crate::parser;
 use crate::util::test;
+use assert_json_diff::assert_json_eq;
 
 // Verify we can parse a more complete example than the one provided in the standard
 #[test]
@@ -283,7 +284,14 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::parse("markpritchard").role("author")),
+                .author(Person::parse("markpritchard").role("author"))
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars3.githubusercontent.com/u/8234070?s=60&v=4".into())
+                            .height(30)
+                            .width(30),
+                    )),
+                ),
         )
         .entry(
             Entry::default()
@@ -296,11 +304,18 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::parse("kumabook").role("author")),
+                .author(Person::parse("kumabook").role("author"))
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".into())
+                            .height(30)
+                            .width(30),
+                    )),
+                ),
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Verify that we don't trim essential whitespace
@@ -549,6 +564,24 @@ fn test_mediarss_newscred() {
     let entry = &actual.entries[0];
     let media_obj = &entry.media[0];
     assert_eq!(media_obj, &expected);
+}
+
+// Verifies that a lone media:thumbnail element still results in a media object
+// This was the behaviour in 2.4, and is commonly found in RSS feeds (e.g. BBCI and Yahoo).
+#[test]
+fn test_media_thumbnail_standalone_regression() {
+    let test_data = test::fixture_as_string("atom/atom_feed-rs_releases.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(!actual.entries.is_empty());
+    for entry in actual.entries {
+        let media_obj = &entry.media[0];
+        assert_eq!(Some(MediaObjectSource::MediaRSS), media_obj.source);
+        assert_eq!(media_obj.thumbnails.len(), 1);
+        assert!(!media_obj.thumbnails[0].image.uri.is_empty());
+        assert_eq!(media_obj.thumbnails[0].image.width, Some(30));
+        assert_eq!(media_obj.thumbnails[0].image.height, Some(30));
+    }
 }
 
 // Handle text/html specified as a mime type on content

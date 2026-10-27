@@ -1,7 +1,7 @@
-use std::time::Duration;
-
+use assert_json_diff::assert_json_eq;
 use chrono::{TimeZone, Utc};
 use mediatype::{MediaType, names};
+use std::time::Duration;
 use url::Url;
 
 use crate::model::*;
@@ -106,10 +106,11 @@ fn test_example_3() {
             .category(Category::new("News / Q. & A."))
             .published("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated_parsed("Fri, 02 Aug 2019 15:35:34 +0000")
+            .media(MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(Image::new("https://media.newyorker.com/photos/5d4211a4ba8a9c0009a57cfd/master/pass/Chotiner-ReaganRacismNaftali-3.jpg".into()).height(1819).width(2560))))
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Structured event data on earthquakes
@@ -780,6 +781,24 @@ fn test_media_content_player() {
     let entry = &actual.entries[0];
     let content_url = entry.media[0].content[0].url.as_ref().unwrap();
     assert_eq!("https://player.vimeo.com/video/1013595996?h=b1b80eff69", content_url.as_str());
+}
+
+// Verifies that a lone media:thumbnail element still results in a media object
+// This was the behaviour in 2.4, and is commonly found in RSS feeds (e.g. BBCI and Yahoo).
+#[test]
+fn test_media_thumbnail_standalone_regression() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_bbci.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(!actual.entries.is_empty());
+    for entry in actual.entries {
+        let media_obj = &entry.media[0];
+        assert_eq!(Some(MediaObjectSource::MediaRSS), media_obj.source);
+        assert_eq!(media_obj.thumbnails.len(), 1);
+        assert!(!media_obj.thumbnails[0].image.uri.is_empty());
+        assert_eq!(media_obj.thumbnails[0].image.width, Some(240));
+        assert_eq!(media_obj.thumbnails[0].image.height, Some(134));
+    }
 }
 
 // Verifies we correctly extract iTunes season and episode objects

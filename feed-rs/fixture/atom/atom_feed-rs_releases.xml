@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
+    <id>tag:github.com,2008:https://github.com/feed-rs/feed-rs/releases</id>
+    <link type="text/html" rel="alternate" href="https://github.com/feed-rs/feed-rs/releases"/>
+    <link type="application/atom+xml" rel="self" href="https://github.com/feed-rs/feed-rs/releases.atom"/>
+    <title>Release notes from feed-rs</title>
+    <updated>2026-09-27T13:06:31+10:00</updated>
+    <entry>
+        <id>tag:github.com,2008:Repository/90976281/v3.0.0</id>
+        <updated>2026-09-27T13:27:48+10:00</updated>
+        <link rel="alternate" type="text/html" href="https://github.com/feed-rs/feed-rs/releases/tag/v3.0.0"/>
+        <title>v3.0.0</title>
+        <content type="html">&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;&lt;/p&gt;
+            &lt;p&gt;This is a breaking upgrade as various changes to the data model and APIs may require compilation fixes in your project.&lt;br&gt;
+            The change to the data model and parsers have also changed the serialised form (new fields, different parser output etc).&lt;/p&gt;
+            &lt;p&gt;More details below.&lt;/p&gt;
+            &lt;h2&gt;Breaking Changes&lt;/h2&gt;
+            &lt;ul&gt;
+            &lt;li&gt;&lt;code&gt;IdGenerator&lt;/code&gt; and &lt;code&gt;TimestampParser&lt;/code&gt; are now &lt;code&gt;Send + Sync&lt;/code&gt; to make feed-rs easier to use in async code (thanks &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/JayceFayne/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/JayceFayne&quot;&gt;@JayceFayne&lt;/a&gt; !)&lt;/li&gt;
+            &lt;li&gt;Improve contact information parsing, separating email from name and assigning it to the appropriate fields in &lt;code&gt;Person&lt;/code&gt; along with correctly populating the &lt;code&gt;role&lt;/code&gt; field. Thanks for the report and initial PR &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/smason/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/smason&quot;&gt;@smason&lt;/a&gt; !&lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;h2&gt;Improvements&lt;/h2&gt;
+            &lt;ul&gt;
+            &lt;li&gt;Add support for podcasts (thanks &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/Lynnesbian/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/Lynnesbian&quot;&gt;@Lynnesbian&lt;/a&gt; )&lt;/li&gt;
+            &lt;li&gt;Implement Media RSS scoped items. This is a significant change in the way feed-rs parses media content, correctly propagating top level elements through the scope to children.&lt;/li&gt;
+            &lt;li&gt;Add position within the source document to error messages (thanks for the bug report and initial PR &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/pseudofractal/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/pseudofractal&quot;&gt;@pseudofractal&lt;/a&gt; !)&lt;/li&gt;
+            &lt;li&gt;Support RSS comments and WFW comments feeds (thanks for the feature request &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/0xlua/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/0xlua&quot;&gt;@0xlua&lt;/a&gt; !)&lt;/li&gt;
+            &lt;li&gt;Upgrade dependencies&lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;h2&gt;Bug fixes&lt;/h2&gt;
+            &lt;ul&gt;
+            &lt;li&gt;Handle feeds with missing RSS version by defaulting to RSS 2 (as its the dominant format)&lt;/li&gt;
+            &lt;li&gt;Fix xhtml in atom (thanks &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/kevincox/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/kevincox&quot;&gt;@kevincox&lt;/a&gt; !)&lt;/li&gt;
+            &lt;li&gt;Handle &lt;code&gt;mmm dd yyyy&lt;/code&gt; date format (thanks for the bug report &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/zaregata/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/zaregata&quot;&gt;@zaregata&lt;/a&gt; !)&lt;/li&gt;
+            &lt;li&gt;Handle Atom &lt;code&gt;updated&lt;/code&gt; elements in RSS2 feeds (thanks for the bug report &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/zaregata/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/zaregata&quot;&gt;@zaregata&lt;/a&gt; !)&lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;p&gt;&lt;strong&gt;Full Changelog&lt;/strong&gt;: &lt;a class=&quot;commit-link&quot; href=&quot;https://github.com/feed-rs/feed-rs/compare/v2.4.0...v3.0.0&quot;&gt;&lt;tt&gt;v2.4.0...v3.0.0&lt;/tt&gt;&lt;/a&gt;&lt;/p&gt;</content>
+        <author>
+            <name>markpritchard</name>
+        </author>
+        <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/8234070?s=60&amp;v=4"/>
+    </entry>
+    <entry>
+        <id>tag:github.com,2008:Repository/90976281/v2.4.0</id>
+        <updated>2026-07-07T12:47:37+10:00</updated>
+        <link rel="alternate" type="text/html" href="https://github.com/feed-rs/feed-rs/releases/tag/v2.4.0"/>
+        <title>v2.4.0</title>
+        <content type="html">&lt;h2&gt;What&#39;s Changed&lt;/h2&gt;
+            &lt;p&gt;Motivated by RUSTSEC-2026-0194 and RUSTSEC-2026-0195, this release upgrades quick-xml and other dependencies.&lt;br&gt;
+            It also bumps the MSRV to 1.96.1 per freedesktop-sdk&#39;s dependencies.&lt;/p&gt;
+            &lt;p&gt;Thanks to &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/gebruder/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/gebruder&quot;&gt;@gebruder&lt;/a&gt; for raising the issue and &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/adam-symbolica/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/adam-symbolica&quot;&gt;@adam-symbolica&lt;/a&gt; for the fix.&lt;/p&gt;
+            &lt;p&gt;&lt;strong&gt;Full Changelog&lt;/strong&gt;: &lt;a class=&quot;commit-link&quot; href=&quot;https://github.com/feed-rs/feed-rs/compare/v2.3.1...v2.4.0&quot;&gt;&lt;tt&gt;v2.3.1...v2.4.0&lt;/tt&gt;&lt;/a&gt;&lt;/p&gt;</content>
+        <author>
+            <name>markpritchard</name>
+        </author>
+        <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/8234070?s=60&amp;v=4"/>
+    </entry>
+</feed>
