@@ -182,8 +182,21 @@ struct JsonAuthor {
     url: Option<String>,
 }
 
+// The spec says a reader should coerce a numeric id to a string
+fn deserialize_item_id<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match <Option<serde_json::Value> as serde::Deserialize>::deserialize(deserializer)? {
+        Some(serde_json::Value::String(id)) => Some(id),
+        Some(serde_json::Value::Number(id)) => Some(id.to_string()),
+        _ => None,
+    })
+}
+
 #[derive(Debug, Deserialize)]
 struct JsonItem {
+    #[serde(default, deserialize_with = "deserialize_item_id")]
     pub id: Option<String>,
     pub url: Option<String>,
     pub external_url: Option<String>,
