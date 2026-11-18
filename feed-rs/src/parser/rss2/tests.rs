@@ -2,11 +2,11 @@ use std::time::Duration;
 
 use assert_json_diff::assert_json_eq;
 use mediatype::{MediaType, names};
-use std::time::Duration;
 use url::Url;
 
 use crate::model::*;
 use crate::parser;
+use crate::parser::tests::zoned_utc;
 use crate::parser::util;
 use crate::util::test;
 
@@ -701,7 +701,7 @@ fn test_rfc1123_ilgiornale() {
     let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
-    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2022, 11, 15, 20, 15, 4));
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2022, 11, 15, 20, 15, 4));
 }
 
 // Verifies we can handle an RFC1123 date in an RSS 2.0 feed where the week day name is in a different language
@@ -712,7 +712,7 @@ fn test_rfc1123_ilmessaggero() {
     let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
-    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2022, 11, 15, 23, 38, 15));
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2022, 11, 15, 23, 38, 15));
 }
 
 // Verifies we trim leading and trailing whitespace in text fields
@@ -737,7 +737,7 @@ fn test_published_from_dc_date() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_dbengines.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.first().expect("feed has 1 entry");
-    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2023, 1, 3, 15, 0, 0));
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2023, 1, 3, 15, 0, 0));
 }
 
 // Verifies that an custom parser is correctly called and can return a useful date
@@ -757,7 +757,7 @@ fn test_custom_timestamp_parser() {
         .parse(test_data.as_bytes())
         .unwrap();
     let entry = actual.entries.first().expect("feed has 1 entry");
-    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned(2023, 12, 16, 19, 2, 33));
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2023, 12, 16, 19, 2, 33));
 }
 
 // Verifies we correctly extract subcategories from the iTunes NS
@@ -978,9 +978,9 @@ fn test_verdagon_broken_date_fmt() {
 
     // Verify the dates in the feed
     let entry0 = &actual.entries[0];
-    assert_eq!(entry0.published, Some(crate::parser::tests::zoned(2022, 11, 9, 14, 15, 0)));
+    assert_eq!(entry0.published, Some(crate::parser::tests::zoned_utc(2022, 11, 9, 14, 15, 0)));
     let entry1 = &actual.entries[1];
-    assert_eq!(entry1.published, Some(crate::parser::tests::zoned(2022, 10, 7, 14, 15, 0)));
+    assert_eq!(entry1.published, Some(crate::parser::tests::zoned_utc(2022, 10, 7, 14, 15, 0)));
 }
 
 // This feed uses the Atom namespace to represent standard RSS fields
@@ -1001,9 +1001,9 @@ fn test_volpeon_hybrid_rss_atom() {
 
     // And we should have extracted the updated date for the entries
     let entry0 = &actual.entries[0];
-    assert_eq!(entry0.updated, Some(crate::parser::tests::zoned(2025, 03, 29, 0, 0, 0)));
+    assert_eq!(entry0.updated, Some(crate::parser::tests::zoned_utc(2025, 03, 29, 0, 0, 0)));
     let entry1 = &actual.entries[1];
-    assert_eq!(entry1.updated, Some(crate::parser::tests::zoned(2024, 7, 1, 0, 0, 0)));
+    assert_eq!(entry1.updated, Some(crate::parser::tests::zoned_utc(2024, 7, 1, 0, 0, 0)));
 }
 
 // The channel accepts the same DublinCore and Atom dates as an item
@@ -1012,8 +1012,8 @@ fn test_channel_dc_date_and_atom_updated() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_channel_dates.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let published = Some(Utc.with_ymd_and_hms(2026, 10, 1, 8, 0, 0).unwrap());
-    let updated = Some(Utc.with_ymd_and_hms(2026, 10, 20, 9, 30, 0).unwrap());
+    let published = Some(zoned_utc(2026, 10, 1, 8, 0, 0));
+    let updated = Some(zoned_utc(2026, 10, 20, 9, 30, 0));
     assert_eq!(actual.entries[0].published, published);
     assert_eq!(actual.entries[0].updated, updated);
     assert_eq!(actual.published, published);
@@ -1026,9 +1026,9 @@ fn test_retain_valid_dates() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_retain_date.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    let channel_published = Some(Utc.with_ymd_and_hms(2013, 1, 1, 0, 0, 0).unwrap());
+    let channel_published = Some(zoned_utc(2013, 1, 1, 0, 0, 0));
     assert_eq!(actual.published, channel_published);
 
-    let item_published = Some(Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
+    let item_published = Some(zoned_utc(2023, 1, 3, 15, 0, 0));
     assert_eq!(actual.entries[0].published, item_published);
 }
