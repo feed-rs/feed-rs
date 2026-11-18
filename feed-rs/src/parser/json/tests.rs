@@ -147,6 +147,14 @@ fn test_elastic_v1_1() {
     );
 }
 
+// A numeric item id should be coerced, not fail the whole feed
+#[test]
+fn test_numeric_entry_id() {
+    let json = br#"{"version":"https://jsonfeed.org/version/1.1","title":"t","items":[{"id":"1","content_text":"a"},{"id":2,"content_text":"b"}]}"#;
+    let actual = parser::parse(&json[..]).unwrap();
+    assert_eq!(actual.entries[1].id, "2");
+}
+
 // Check that we extract the images from a feed
 #[test]
 fn test_images() {
