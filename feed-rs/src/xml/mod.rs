@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use std::io::BufRead;
 use std::mem;
 
+use crate::xml::xml_base::XmlBase;
 use quick_xml::encoding::DecodingReader;
 use quick_xml::events::{BytesEnd, BytesStart, Event};
 use quick_xml::name::ResolveResult;
@@ -215,7 +216,8 @@ impl<R: BufRead> ElementSource<R> {
                     state.current_depth += 1;
 
                     // Update the xml-base if required
-                    ElementSource::xml_base_push(&mut state, &attributes)?;
+                    let current_depth = state.current_depth;
+                    state.xml_base.push(current_depth, &attributes)?;
 
                     // If we are at the correct depth we found a node of interest
                     if state.current_depth == iter_depth {
@@ -223,7 +225,7 @@ impl<R: BufRead> ElementSource<R> {
                             namespace: namespace.unwrap_or(state.default_namespace),
                             name,
                             attributes,
-                            xml_base: ElementSource::xml_base_fetch(&state),
+                            xml_base: state.xml_base.fetch(),
                             source: self,
                             depth: state.current_depth,
                             buffer_pos,
@@ -235,9 +237,8 @@ impl<R: BufRead> ElementSource<R> {
                 // The end of an element moves back up the hierarchy
                 XmlEvent::End { .. } => {
                     state.current_depth -= 1;
-
-                    // Update the xml-base if required
-                    ElementSource::xml_base_pop(&mut state);
+                    let current_depth = state.current_depth;
+                    state.xml_base.pop(current_depth);
                 }
 
                 // Not interested in other events when looking for elements
@@ -280,52 +281,6 @@ impl<R: BufRead> ElementSource<R> {
 
         buffer
     }
-
-    // Fetches the currently active xml-base
-    fn xml_base_fetch(state: &SourceState<R>) -> Option<Url> {
-        // Return the last entry on the stack if it exists
-        state.base_uris.last().map(|(_, uri)| uri.clone())
-    }
-
-    // Pops xml-base entries off the stack as required
-    fn xml_base_pop(state: &mut SourceState<R>) {
-        // Pop any URIs off the stack if they are deeper than our new depth
-        while !state.base_uris.is_empty() {
-            let (depth, _) = state.base_uris.last().unwrap();
-            if depth > &state.current_depth {
-                state.base_uris.pop();
-            } else {
-                break;
-            }
-        }
-    }
-
-    // Pushes an updated xml-base on to the stack as required
-    fn xml_base_push(state: &mut SourceState<R>, attributes: &[NameValue]) -> XmlResult<()> {
-        // Find the xml-base attribute
-        let xml_base = attributes.iter().find(|nv| nv.name == "xml:base").map(|nv| &nv.value);
-
-        if let Some(xml_base) = xml_base {
-            match Url::parse(xml_base) {
-                Ok(uri) => {
-                    // It is an absolute URI so push it straight on to the stack
-                    state.base_uris.push((state.current_depth, uri));
-                }
-                Err(url::ParseError::RelativeUrlWithoutBase) => {
-                    // Try and form a new URL and push it to the stack
-                    if let Some((_, last)) = state.base_uris.last() {
-                        if let Ok(with_base) = last.join(xml_base) {
-                            state.base_uris.push((state.current_depth, with_base));
-                        }
-                    }
-                }
-                Err(e) => return Err(XmlError::Url { e }),
-            }
-        }
-
-        // No xml-base found
-        Ok(())
-    }
 }
 
 // Wraps the XML source and current depth of iteration
@@ -336,20 +291,13 @@ struct SourceState<R: BufRead> {
     // An event stashed while coalescing text (e.g. the start tag terminating a run of text and entity references)
     pending_text: Option<XmlEvent>,
     current_depth: u32,
-    base_uris: Vec<(u32, Url)>,
+    xml_base: XmlBase,
     default_namespace: NS,
 }
 
 impl<R: BufRead> SourceState<R> {
     // Wrap the reader in additional state (buffers, tree depth etc)
     fn new(reader: NsReader<DecodingReader<R>>, xml_base_uri: Option<&str>) -> XmlResult<SourceState<R>> {
-        // If we have a base URI, parse it and init at the root
-        let mut base_uris = Vec::new();
-        if let Some(xml_base_uri) = xml_base_uri {
-            let uri = Url::parse(xml_base_uri)?;
-            base_uris.push((0, uri));
-        }
-
         let buf_event = Vec::with_capacity(512);
         let mut state = SourceState {
             reader,
@@ -357,7 +305,7 @@ impl<R: BufRead> SourceState<R> {
             next: Ok(None),
             pending_text: None,
             current_depth: 0,
-            base_uris,
+            xml_base: XmlBase::new(xml_base_uri)?,
             default_namespace: NS::Unknown,
         };
         state.next = state.fetch_next();
@@ -631,6 +579,7 @@ pub enum XmlError {
     Url { e: url::ParseError },
     Encoding { e: quick_xml::encoding::EncodingError },
     Escape { e: quick_xml::escape::EscapeError },
+    ValidationError { msg: String },
 }
 
 impl fmt::Display for XmlError {
@@ -640,6 +589,7 @@ impl fmt::Display for XmlError {
             XmlError::Url { e } => write!(f, "Url error: {}", e),
             XmlError::Encoding { e } => write!(f, "Encoding error: {}", e),
             XmlError::Escape { e } => write!(f, "Escape error: {}", e),
+            XmlError::ValidationError { msg } => write!(f, "Validation error: {}", msg),
         }
     }
 }
@@ -764,3 +714,4 @@ fn append_element_text(buffer: &mut String, text: &str) {
 
 #[cfg(test)]
 mod tests;
+mod xml_base;

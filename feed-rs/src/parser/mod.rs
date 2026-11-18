@@ -204,13 +204,13 @@ impl Parser {
                     element_source.set_default_default_namespace(NS::Atom);
                     return atom::parse_entry(self, root);
                 }
-                ("rss", Some("2.0")) | ("rss", Some("")) => {
-                    element_source.set_default_default_namespace(NS::RSS);
-                    return rss2::parse(self, root);
-                }
                 ("rss", Some("0.91")) | ("rss", Some("0.92")) => {
                     element_source.set_default_default_namespace(NS::RSS);
                     return rss0::parse(self, root);
+                }
+                ("rss", Some("2.0")) | ("rss", _) => {
+                    element_source.set_default_default_namespace(NS::RSS);
+                    return rss2::parse(self, root);
                 }
                 ("RDF", _) => {
                     element_source.set_default_default_namespace(NS::RSS);

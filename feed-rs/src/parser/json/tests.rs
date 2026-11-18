@@ -1,6 +1,7 @@
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
+use url::Url;
 
 // Verify we can parse a more complete feed
 #[test]
@@ -143,5 +144,32 @@ fn test_elastic_v1_1() {
     assert_eq!(
         entry.authors,
         vec!(Person::parse("Fake Author 3").role("author"), Person::parse("Fake Author 4").role("author"))
+    );
+}
+
+// A numeric item id should be coerced, not fail the whole feed
+#[test]
+fn test_numeric_entry_id() {
+    let json = br#"{"version":"https://jsonfeed.org/version/1.1","title":"t","items":[{"id":"1","content_text":"a"},{"id":2,"content_text":"b"}]}"#;
+    let actual = parser::parse(&json[..]).unwrap();
+    assert_eq!(actual.entries[1].id, "2");
+}
+
+// Check that we extract the images from a feed
+#[test]
+fn test_images() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_microblog_1.1.json");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Validate we extracted the image and banner image
+    let entry = actual.entries.first().unwrap();
+    assert_eq!(
+        entry.media[0].content[0].url,
+        Some(Url::parse("https://www.manton.org/uploads/2020/f53a913d74.jpg").unwrap())
+    );
+    assert_eq!(
+        entry.media[0].thumbnails[0].image.uri,
+        "https://www.manton.org/uploads/2020/f53a913d74_banner.jpg"
     );
 }
