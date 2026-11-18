@@ -1,7 +1,3 @@
-use mediatype::{MediaTypeBuf, names};
-use std::collections::HashSet;
-use std::io::BufRead;
-
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, LinkTarget, MediaContent, MediaObject, MediaObjectSource, Person};
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::podcast::{handle_podcast_channel_element, handle_podcast_item_element};
@@ -10,6 +6,9 @@ use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::parser::{Parser, atom};
 use crate::parser::{common, util};
 use crate::xml::{Element, NS};
+use mediatype::{MediaTypeBuf, names};
+use std::collections::HashSet;
+use std::io::BufRead;
 
 #[cfg(test)]
 mod tests;
@@ -51,10 +50,12 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
 
             (NS::RSS, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
 
-            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => feed.published = common::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => feed.published = feed.published.or_else(|| common::handle_timestamp(parser, child)),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") | (NS::Atom, "updated") => feed.updated = common::handle_timestamp(parser, child),
+            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") | (NS::Atom, "updated") => {
+                feed.updated = feed.updated.or_else(|| common::handle_timestamp(parser, child))
+            }
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
@@ -228,9 +229,9 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
             (NS::RSS, "enclosure") => handle_enclosure(child, &mut enclosure_media_obj),
 
-            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = entry.published.or_else(|| common::handle_timestamp(parser, child)),
 
-            (NS::RSS, "updated") | (NS::Atom, "updated") => entry.updated = common::handle_timestamp(parser, child),
+            (NS::RSS, "updated") | (NS::Atom, "updated") => entry.updated = entry.updated.or_else(|| common::handle_timestamp(parser, child)),
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 

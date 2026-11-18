@@ -1018,3 +1018,16 @@ fn test_channel_dc_date_and_atom_updated() {
     assert_eq!(actual.published, published);
     assert_eq!(actual.updated, updated);
 }
+
+// Verifies we retain a valid date
+#[test]
+fn test_retain_valid_dates() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_retain_date.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let channel_published = Some(Utc.with_ymd_and_hms(2013, 1, 1, 0, 0, 0).unwrap());
+    assert_eq!(actual.published, channel_published);
+
+    let item_published = Some(Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
+    assert_eq!(actual.entries[0].published, item_published);
+}
