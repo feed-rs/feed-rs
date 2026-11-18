@@ -5,7 +5,7 @@ use crate::util::test;
 
 use super::*;
 
-type TestResult = std::result::Result<(), Box<dyn Error>>;
+pub(crate) type TestResult = Result<(), Box<dyn Error>>;
 
 fn handle_book<R: BufRead>(book: Element<R>) -> TestResult {
     // Iterate over the children of the book
@@ -136,76 +136,6 @@ fn test_rss_decoding() -> TestResult {
         let parsed = title.child_as_text().unwrap();
         assert_eq!(expected, parsed);
     }
-
-    Ok(())
-}
-
-fn assert_title_bases<R: BufRead>(feed: Element<R>, expected: Vec<&str>) -> TestResult {
-    // Find the actual title bases
-    let mut title_bases = Vec::new();
-    for entry in feed.children() {
-        let entry = entry?;
-        for title in entry.children() {
-            let title = title?;
-            title_bases.push(title.xml_base.unwrap());
-        }
-    }
-
-    // Verify the are as we expect
-    let expected = expected.iter().map(|uri| Url::parse(uri).unwrap()).collect::<Vec<Url>>();
-    assert_eq!(expected, title_bases);
-
-    Ok(())
-}
-
-// Verifies the XML parser handles the xml:base schema
-#[test]
-fn test_xml_base() -> TestResult {
-    let xml = r#"
-        <feed version="0.3" xml:base="http://1.example.com/">
-        <entry>
-        <title type="application/xhtml+xml" xml:base="test/"><div xmlns="http://www.w3.org/1999/xhtml">Example <a href="test.html">test</a></div></title>
-        </entry>
-        <entry xml:base="http://2.example.com/">
-        <title type="application/xhtml+xml" xml:base="test1/test2"><div xmlns="http://www.w3.org/1999/xhtml">Example <a href="test.html">test</a></div></title>
-        </entry>
-        <entry xml:base="http://3.example.com/">
-        <title type="application/xhtml+xml" xml:base="/test3"><div xmlns="http://www.w3.org/1999/xhtml">Example <a href="test.html">test</a></div></title>
-        </entry>
-        </feed>
-    "#;
-
-    let source = ElementSource::new(xml.as_bytes(), None)?;
-    let feed = source.root()?.unwrap();
-    assert_eq!(&Url::parse("http://1.example.com/")?, feed.xml_base.as_ref().unwrap());
-
-    assert_title_bases(
-        feed,
-        vec!["http://1.example.com/test/", "http://2.example.com/test1/test2", "http://3.example.com/test3"],
-    )?;
-
-    Ok(())
-}
-
-// Verifies the XML parser handles the xml:base schema
-#[test]
-fn test_xml_base_header() -> TestResult {
-    let xml = r#"
-        <feed version="0.3" xmlns="http://purl.org/atom/ns#" xml:base="feed/base/">
-        <entry>
-          <title type="application/xhtml+xml" xml:base="../"><div xmlns="http://www.w3.org/1999/xhtml">Example <a href="test.html">test</a></div></title>
-        </entry>
-        <entry xml:base="/feed2/entry/base/">
-          <title type="application/xhtml+xml" xml:base="../"><div xmlns="http://www.w3.org/1999/xhtml">Example <a href="test.html">test</a></div></title>
-        </entry>
-        </feed>
-    "#;
-
-    let source = ElementSource::new(xml.as_bytes(), Some("http://example.com"))?;
-    let feed = source.root()?.unwrap();
-    assert_eq!(&Url::parse("http://example.com/feed/base/")?, feed.xml_base.as_ref().unwrap());
-
-    assert_title_bases(feed, vec!["http://example.com/feed/", "http://example.com/feed2/entry/"])?;
 
     Ok(())
 }

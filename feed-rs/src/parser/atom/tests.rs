@@ -4,6 +4,7 @@ use crate::model::{
 };
 use crate::parser;
 use crate::util::test;
+use assert_json_diff::assert_json_eq;
 
 // Verify we can parse a more complete example than the one provided in the standard
 #[test]
@@ -283,7 +284,14 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::parse("markpritchard").role("author")),
+                .author(Person::parse("markpritchard").role("author"))
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars3.githubusercontent.com/u/8234070?s=60&v=4".into())
+                            .height(30)
+                            .width(30),
+                    )),
+                ),
         )
         .entry(
             Entry::default()
@@ -296,11 +304,18 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::parse("kumabook").role("author")),
+                .author(Person::parse("kumabook").role("author"))
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".into())
+                            .height(30)
+                            .width(30),
+                    )),
+                ),
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Verify that we don't trim essential whitespace
@@ -331,6 +346,56 @@ fn test_example_reddit() {
     for entry in feed.entries {
         assert!(entry.updated.is_some());
     }
+}
+
+#[test]
+fn test_media_description_empty() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("atom/atom_media_description_empty.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Expected feed
+    let expected = Feed::new(FeedType::Atom)
+        .author(
+            Person::parse("D!NG")
+                .uri("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA")
+                .role("author"),
+        )
+        .id("yt:channel:lq42foiSgl7sSpLupnugGA")
+        .link(Link::new("http://www.youtube.com/feeds/videos.xml?channel_id=UClq42foiSgl7sSpLupnugGA", None).rel("self"))
+        .link(Link::new("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA", None).rel("alternate"))
+        .title(Text::new("D!NG".into()))
+        .entry(
+            Entry::default()
+                .author(
+                    Person::parse("D!NG")
+                        .uri("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA")
+                        .role("author"),
+                )
+                .id("yt:video:whjJNaEZKIM")
+                .link(Link::new("https://www.youtube.com/watch?v=whjJNaEZKIM", None).rel("alternate"))
+                .published("2019-02-16T15:16:04+00:00")
+                .title(Text::new("Will A Watched Pot Boil?".into()))
+                .updated_parsed("2026-10-17T21:33:04+00:00")
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS)
+                        .community(MediaCommunity::new().star_rating(75311, 5.0, 1, 5).statistics(Some(1206136), None))
+                        .content(
+                            MediaContent::new()
+                                .content_type("application/x-shockwave-flash")
+                                .height(390)
+                                .url("https://www.youtube.com/v/whjJNaEZKIM?version=3")
+                                .width(640),
+                        )
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://i4.ytimg.com/vi/whjJNaEZKIM/hqdefault.jpg".into()).height(360).width(480),
+                        ))
+                        .title("Will A Watched Pot Boil?"),
+                ),
+        );
+
+    // Check
+    assert_eq!(actual, expected);
 }
 
 // Verify we can parse the example contained in the Atom specification
@@ -499,6 +564,24 @@ fn test_mediarss_newscred() {
     let entry = &actual.entries[0];
     let media_obj = &entry.media[0];
     assert_eq!(media_obj, &expected);
+}
+
+// Verifies that a lone media:thumbnail element still results in a media object
+// This was the behaviour in 2.4, and is commonly found in RSS feeds (e.g. BBCI and Yahoo).
+#[test]
+fn test_media_thumbnail_standalone_regression() {
+    let test_data = test::fixture_as_string("atom/atom_feed-rs_releases.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(!actual.entries.is_empty());
+    for entry in actual.entries {
+        let media_obj = &entry.media[0];
+        assert_eq!(Some(MediaObjectSource::MediaRSS), media_obj.source);
+        assert_eq!(media_obj.thumbnails.len(), 1);
+        assert!(!media_obj.thumbnails[0].image.uri.is_empty());
+        assert_eq!(media_obj.thumbnails[0].image.width, Some(30));
+        assert_eq!(media_obj.thumbnails[0].image.height, Some(30));
+    }
 }
 
 // Handle text/html specified as a mime type on content

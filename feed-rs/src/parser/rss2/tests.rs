@@ -1,7 +1,7 @@
-use std::time::Duration;
-
+use assert_json_diff::assert_json_eq;
 use chrono::{TimeZone, Utc};
 use mediatype::{MediaType, names};
+use std::time::Duration;
 use url::Url;
 
 use crate::model::*;
@@ -106,10 +106,11 @@ fn test_example_3() {
             .category(Category::new("News / Q. & A."))
             .published("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated_parsed("Fri, 02 Aug 2019 15:35:34 +0000")
+            .media(MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(Image::new("https://media.newyorker.com/photos/5d4211a4ba8a9c0009a57cfd/master/pass/Chotiner-ReaganRacismNaftali-3.jpg".into()).height(1819).width(2560))))
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Structured event data on earthquakes
@@ -782,6 +783,24 @@ fn test_media_content_player() {
     assert_eq!("https://player.vimeo.com/video/1013595996?h=b1b80eff69", content_url.as_str());
 }
 
+// Verifies that a lone media:thumbnail element still results in a media object
+// This was the behaviour in 2.4, and is commonly found in RSS feeds (e.g. BBCI and Yahoo).
+#[test]
+fn test_media_thumbnail_standalone_regression() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_bbci.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(!actual.entries.is_empty());
+    for entry in actual.entries {
+        let media_obj = &entry.media[0];
+        assert_eq!(Some(MediaObjectSource::MediaRSS), media_obj.source);
+        assert_eq!(media_obj.thumbnails.len(), 1);
+        assert!(!media_obj.thumbnails[0].image.uri.is_empty());
+        assert_eq!(media_obj.thumbnails[0].image.width, Some(240));
+        assert_eq!(media_obj.thumbnails[0].image.height, Some(134));
+    }
+}
+
 // Verifies we correctly extract iTunes season and episode objects
 #[test]
 fn test_itunes_episode_season() {
@@ -829,13 +848,13 @@ fn test_podcast_items() {
     }
 
     let expected_people = [
-      PodcastPerson {
-          name: String::from("Adam Leventhal"),
-          role: Role::Host,
-          group: Group::Cast,
-          img: Url::parse("https://img.transistor.fm/E-Msi0WvVNEZBkhzuCGyhA-guzdy1j2EPCN77Zw5MHQ/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yYjVl/NDY2NWFlOTNkODgz/MGQ5ZjYwZmFkMzdm/MmVmZC5wbmc.jpg").ok(),
-          href: Url::parse("https://ahl.dtrace.org/").ok(),
-      },
+        PodcastPerson {
+            name: String::from("Adam Leventhal"),
+            role: Role::Host,
+            group: Group::Cast,
+            img: Url::parse("https://img.transistor.fm/E-Msi0WvVNEZBkhzuCGyhA-guzdy1j2EPCN77Zw5MHQ/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yYjVl/NDY2NWFlOTNkODgz/MGQ5ZjYwZmFkMzdm/MmVmZC5wbmc.jpg").ok(),
+            href: Url::parse("https://ahl.dtrace.org/").ok(),
+        },
         PodcastPerson {
             name: String::from("Bryan Cantrill"),
             role: Role::Host,
@@ -900,12 +919,17 @@ fn test_peertube_mediarss() {
 
 // Verify we handle feeds with missing schema versions (!)
 #[test]
-fn test_iprogrammer_missing_rss_version() {
+fn test_missing_rss_version() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_iprogrammer.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Don't need to check much, just that we can parse it into a valid graph
-    assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())))
+    assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())));
+
+    // Also check feeds that are missing their version attribute entirely
+    let test_data = r#"<?xml version="1.0"?><rss><channel><title>A</title><item><title>a</title><link>https://a.example/1</link></item></channel></rss>"#;
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    assert_eq!(actual.title, Some(Text::new("A".into())))
 }
 
 // Verify we extract comments links correctly
@@ -979,4 +1003,31 @@ fn test_volpeon_hybrid_rss_atom() {
     assert_eq!(entry0.updated, Some(Utc.with_ymd_and_hms(2025, 03, 29, 0, 0, 0).unwrap()));
     let entry1 = &actual.entries[1];
     assert_eq!(entry1.updated, Some(Utc.with_ymd_and_hms(2024, 7, 1, 0, 0, 0).unwrap()));
+}
+
+// The channel accepts the same DublinCore and Atom dates as an item
+#[test]
+fn test_channel_dc_date_and_atom_updated() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_channel_dates.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let published = Some(Utc.with_ymd_and_hms(2026, 10, 1, 8, 0, 0).unwrap());
+    let updated = Some(Utc.with_ymd_and_hms(2026, 10, 20, 9, 30, 0).unwrap());
+    assert_eq!(actual.entries[0].published, published);
+    assert_eq!(actual.entries[0].updated, updated);
+    assert_eq!(actual.published, published);
+    assert_eq!(actual.updated, updated);
+}
+
+// Verifies we retain a valid date
+#[test]
+fn test_retain_valid_dates() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_retain_date.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let channel_published = Some(Utc.with_ymd_and_hms(2013, 1, 1, 0, 0, 0).unwrap());
+    assert_eq!(actual.published, channel_published);
+
+    let item_published = Some(Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
+    assert_eq!(actual.entries[0].published, item_published);
 }

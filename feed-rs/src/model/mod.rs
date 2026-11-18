@@ -139,7 +139,11 @@ impl Feed {
 
 impl Debug for Feed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        f.write_str(serde_json::to_string(self).unwrap().as_str())
+        // Serialization should never fail for a feed we parsed, but do not panic if it does
+        match serde_json::to_string(self) {
+            Ok(json) => f.write_str(json.as_str()),
+            Err(_) => f.write_str("<Unable to serialise as JSON>"),
+        }
     }
 }
 
@@ -573,7 +577,7 @@ impl Generator {
     }
 }
 
-/// Represents a a link to an image.
+/// Represents a link to an image.
 ///
 /// [Atom spec]:  http://www.atomenabled.org/developers/syndication/#optionalFeedElements
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
@@ -828,6 +832,7 @@ pub(crate) enum MediaObjectSource {
     MediaRSS,
     ITunes,
     Podcast,
+    JsonFeed,
 }
 
 /// Represents a "media:community" item from the RSS Media spec
