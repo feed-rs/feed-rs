@@ -13,7 +13,7 @@ fn test_example_1() {
     // Expected feed
     let expected = Feed::new(FeedType::JSON)
         .id(&actual.id)                 // not in test content
-        .updated(actual.updated)        // not in test content
+        .updated(actual.updated.clone())        // not in test content
         .title(Text::new("Daring Fireball".into()))
         .link(Link::new("https://daringfireball.net/", None))
         .link(Link::new("https://daringfireball.net/feeds/json", None))
@@ -63,7 +63,7 @@ fn test_spec_1() {
     // Expected feed
     let expected = Feed::new(FeedType::JSON)
         .id(&actual.id)                 // not in test content
-        .updated(actual.updated)        // not in test content
+        .updated(actual.updated.clone())        // not in test content
         .title(Text::new("JSON Feed".into()))
         .description(Text::new("JSON Feed is a pragmatic syndication format for blogs, microblogs, and other time-based content.".into()))
         .link(Link::new("https://jsonfeed.org/", None))
@@ -72,7 +72,7 @@ fn test_spec_1() {
             .role("author")
             .uri("https://jsonfeed.org/"))
         .entry(Entry::default()
-            .updated(actual.entries[0].updated)             // not in test content
+            .updated(actual.entries[0].updated.clone())             // not in test content
             .id("https://jsonfeed.org/2017/05/17/announcing_json_feed")
             .title(Text::new("Announcing JSON Feed".into()))
             .published("2017-05-17T08:02:12-07:00")

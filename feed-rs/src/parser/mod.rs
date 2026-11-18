@@ -8,7 +8,7 @@ use crate::model;
 use crate::parser::util::{IdGenerator, TimestampParser};
 use crate::xml;
 use crate::xml::NS;
-use chrono::{DateTime, Utc};
+use jiff::ZonedDateTime;
 use siphasher::sip128::{Hasher128, SipHasher};
 
 mod atom;
@@ -184,7 +184,7 @@ impl Parser {
     }
 
     // Parses timestamps with the configured parser (internal, or supplied via the builder)
-    fn parse_timestamp(&self, text: &str) -> Option<DateTime<Utc>> {
+    fn parse_timestamp(&self, text: &str) -> Option<ZonedDateTime> {
         (self.timestamp_parser)(text)
     }
 
@@ -300,7 +300,7 @@ impl Builder {
     /// Registers a custom timestamp parser
     pub fn timestamp_parser<F>(mut self, ts_parser: F) -> Self
     where
-        F: Fn(&str) -> Option<DateTime<Utc>> + 'static + Send + Sync,
+        F: Fn(&str) -> Option<ZonedDateTime> + 'static + Sync + Send,
     {
         self.timestamp_parser = Box::new(ts_parser);
         self

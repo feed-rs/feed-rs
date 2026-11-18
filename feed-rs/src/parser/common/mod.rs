@@ -1,7 +1,7 @@
 use crate::model::{Episode, Link, LinkTarget, Season, Text};
 use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
-use chrono::{DateTime, Utc};
+use jiff::ZonedDateTime;
 use std::io::BufRead;
 
 /// Handles <content:encoded>
@@ -40,7 +40,7 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> Option<Text> {
 }
 
 /// Handles date/time
-pub(crate) fn handle_timestamp<R: BufRead>(parser: &Parser, element: Element<R>) -> Option<DateTime<Utc>> {
+pub(crate) fn handle_timestamp<R: BufRead>(parser: &Parser, element: Element<R>) -> Option<ZonedDateTime> {
     if let Some(text) = element.child_as_text() {
         parser.parse_timestamp(&text)
     } else {

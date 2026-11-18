@@ -273,7 +273,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
     // If we have a published date, copy this to updated too for consistency
     if entry.updated.is_none() && entry.published.is_some() {
-        entry.updated = entry.published;
+        entry.updated = entry.published.clone();
     }
 
     // Remove any comment links that simply target the entry
