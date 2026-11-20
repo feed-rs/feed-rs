@@ -471,6 +471,35 @@ fn test_mediarss_youtube() {
     assert_eq!(media_obj, &expected);
 }
 
+#[test]
+fn test_mediarss_empty_title_and_description() {
+    let test_data = r#"
+        <feed xmlns="http://www.w3.org/2005/Atom"
+              xmlns:media="http://search.yahoo.com/mrss/"
+              xmlns:yt="http://www.youtube.com/xml/schemas/2015">
+          <title>Test channel</title>
+          <id>yt:channel:test</id>
+          <entry>
+            <id>yt:video:test</id>
+            <title>Test video</title>
+            <media:group>
+              <media:title></media:title>
+              <media:description></media:description>
+              <media:content
+                url="https://www.youtube.com/v/test"
+                type="application/x-shockwave-flash"/>
+            </media:group>
+          </entry>
+        </feed>
+    "#;
+
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    let entry = &actual.entries[0];
+    assert_eq!(entry.media.len(), 1);
+    assert!(entry.media[0].title.is_none());
+    assert!(entry.media[0].description.is_none());
+}
+
 // Verify we can parse MediaRSS extensions from newscred (don't use the media:group)
 #[test]
 fn test_mediarss_newscred() {
