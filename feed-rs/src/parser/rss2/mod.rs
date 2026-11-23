@@ -343,8 +343,16 @@ fn postprocess_merge_media(source: MediaObject, target: &mut MediaObject) {
     if target.title.is_none() {
         target.title = source.title;
     }
-    if target.content.is_empty() {
-        target.content = source.content;
+    // media:content can list other files than the enclosure (e.g. an author image), so keep
+    // each file that is not already there by URL, or by size and type
+    for content in source.content {
+        let duplicate = target
+            .content
+            .iter()
+            .any(|c| c.url == content.url || (c.size.is_some() && c.size == content.size && c.content_type == content.content_type));
+        if !duplicate {
+            target.content.push(content);
+        }
     }
     if target.duration.is_none() {
         target.duration = source.duration;

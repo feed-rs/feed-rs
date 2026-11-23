@@ -411,6 +411,11 @@ fn test_spiegel() {
                         .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large")
                         .content_type("image/jpeg")
                     )
+                    .content(MediaContent::new()
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
+                        .content_type("audio/mpeg")
+                        .size(2519606)
+                    )
                     .duration(Duration::from_secs(312))
                 )
         );
@@ -979,4 +984,18 @@ fn test_volpeon_hybrid_rss_atom() {
     assert_eq!(entry0.updated, Some(Utc.with_ymd_and_hms(2025, 03, 29, 0, 0, 0).unwrap()));
     let entry1 = &actual.entries[1];
     assert_eq!(entry1.updated, Some(Utc.with_ymd_and_hms(2024, 7, 1, 0, 0, 0).unwrap()));
+}
+
+// An enclosure is kept when media:content lists another file, such as the author image WordPress adds
+#[test]
+fn test_enclosure_with_unrelated_media_content() {
+    let test_data = r#"<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>t</title><item>
+        <title>Sunday sermon</title>
+        <enclosure url="https://example.com/sunday.mp3" length="31457280" type="audio/mpeg" />
+        <media:content url="https://example.com/avatar.jpg" medium="image" />
+        </item></channel></rss>"#;
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let urls: Vec<String> = actual.entries[0].media[0].content.iter().map(|c| c.url.as_ref().unwrap().to_string()).collect();
+    assert_eq!(urls, vec!["https://example.com/avatar.jpg", "https://example.com/sunday.mp3"]);
 }
