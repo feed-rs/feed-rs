@@ -3,6 +3,7 @@ use crate::model::{
     MediaThumbnail, Person, Text,
 };
 use crate::parser;
+use crate::parser::atom::unwrap_xhtml;
 use crate::util::test;
 use assert_json_diff::assert_json_eq;
 
@@ -54,7 +55,7 @@ fn test_example_1() {
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Real-life example from the Register - https://www.theregister.co.uk/science/headlines.atom
@@ -111,7 +112,7 @@ fn test_example_2() {
                 .content_type("text/html")));
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Real-life example from Akamai (includes categories and elements from a different namespace, along with locally declared namespaces on atom 1.0 elements)
@@ -335,7 +336,7 @@ fn test_example_7() {
         .map(|c| c.body.as_ref())
         .unwrap()
         .unwrap();
-    assert_eq!(body, expected_body);
+    assert_json_eq!(body, expected_body);
 }
 
 // Verify that the Reddit ATOM feed parses correctly
@@ -607,7 +608,7 @@ fn test_atom_content_src() {
     let test_data = test::fixture_as_string("atom/atom_content_src.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    assert_eq!(
+    assert_json_eq!(
         actual.entries[0].content,
         Some(Content {
             body: None,
@@ -630,10 +631,10 @@ fn test_atom_content_src() {
 #[test]
 fn test_example_xhtml() {
     let expected_body = r#"<p>
-While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&amp;nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
+While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
 </p>
 <p>
-In this example it's ok to remove the spaces between <code>&lt;/li>&lt;li></code> but it's <em>not</em> ok to remove the spaces between <code>&lt;/i> &lt;b></code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code>&lt;pre></code> or <code>&lt;script></code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
+In this example it's ok to remove the spaces between <code></li><li></code> but it's <em>not</em> ok to remove the spaces between <code></i> <b></code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code><pre></code> or <code><script></code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
 </p>"#;
     let test_data = test::fixture_as_string("atom/atom_example_xhtml.xml");
     let p = parser::Builder::new().sanitize_content(false).build();
@@ -646,7 +647,7 @@ In this example it's ok to remove the spaces between <code>&lt;/li>&lt;li></code
         .map(|c| c.body.as_ref())
         .unwrap()
         .unwrap();
-    assert_eq!(body, expected_body);
+    assert_json_eq!(body, expected_body);
 }
 
 // Handle xml:base attribute on content
@@ -668,4 +669,23 @@ fn test_comments_1() {
 
     let comments_feed_link = entry.links.iter().find(|link| link.target == Some(LinkTarget::CommentsFeed)).unwrap();
     assert_eq!(comments_feed_link.href, "http://example.org/2005/04/02/atom/feed".to_string());
+}
+
+// Verify we unwrap xhtml content correctly
+#[test]
+fn test_unwrap_xhtml() {
+    let tests = [
+        ("plain", "plain"),
+        (" ws ", " ws "),
+        ("<b>not wrapped</b>", "<b>not wrapped</b>"),
+        (" <b>not wrapped</b> ", " <b>not wrapped</b> "),
+        ("<div>wrapped</div>", "wrapped"),
+        (" <div>wrapped</div> ", "wrapped"),
+        (" <div> wrapped </div> ", " wrapped "),
+        (" <div> <b>wrapped</b> </div> ", " <b>wrapped</b> "),
+        (" <div> wrapped</b> </div> ", " wrapped</b> "),
+    ];
+    for (content, expected) in tests {
+        assert_eq!(unwrap_xhtml(content.to_string()), expected);
+    }
 }

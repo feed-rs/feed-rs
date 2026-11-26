@@ -1,7 +1,6 @@
+use crate::util::test;
 use std::error::Error;
 use std::io::BufRead;
-
-use crate::util::test;
 
 use super::*;
 
@@ -15,17 +14,17 @@ fn handle_book<R: BufRead>(book: Element<R>) -> TestResult {
         match child.name.as_str() {
             "author" => {
                 count += 1;
-                assert_eq!(child.child_as_text().unwrap(), "Gambardella, Matthew");
+                assert_eq!(child.content_as_literal_markup()?.unwrap(), "Gambardella, Matthew");
             }
             "title" => {
                 count += 1;
-                assert_eq!(child.child_as_text().unwrap(), "XML Developer's Guide");
+                assert_eq!(child.content_as_literal_markup()?.unwrap(), "XML Developer's Guide");
             }
             "nest1" => {
                 handle_nest1(child)?;
             }
             "empty1" | "empty2" => {
-                assert!(child.child_as_text().is_none());
+                assert!(child.content_as_literal_markup()?.is_none());
             }
             _ => panic!("Unexpected child node: {}", child.name),
         }
@@ -68,7 +67,7 @@ fn handle_nest1<R: BufRead>(nest1: Element<R>) -> TestResult {
         assert_eq!(child.name, "nest2");
 
         // It should have the expected text
-        assert_eq!(child.child_as_text().unwrap(), "Nested");
+        assert_eq!(child.content_as_literal_markup()?.unwrap(), "Nested");
 
         // Should only have a single child at this level
         count += 1;
@@ -105,14 +104,12 @@ fn test_children_as_string() -> TestResult {
     let mut children = catalog.children();
     let book = children.next().unwrap()?;
     assert_eq!(book.name, "book");
-    let expected = "\n        ";
-    assert_eq!(book.child_as_text().unwrap(), expected);
 
     // Next element should be "content:encoded"
     let encoded = children.next().unwrap()?;
     assert_eq!(NS::Content, encoded.namespace);
     assert_eq!(encoded.name, "encoded");
-    let text = encoded.child_as_text().unwrap();
+    let text = encoded.content_as_literal_markup()?.unwrap();
     assert_eq!(text, "<p>10 km, 21.9072&deg; East, 37.102&deg; North. </p>");
 
     Ok(())
@@ -122,6 +119,7 @@ fn test_children_as_string() -> TestResult {
 #[test]
 fn test_rss_decoding() -> TestResult {
     let tests = vec![
+        ("<title>The &#x26;amp; entity</title>", "The &amp; entity"),
         ("<title>AT&#x26;T</title>", "AT&T"),
         ("<title>Bill &#x26; Ted's Excellent Adventure</title>", "Bill & Ted's Excellent Adventure"),
         ("<title>The &#x26;amp; entity</title>", "The &amp; entity"),
@@ -133,8 +131,8 @@ fn test_rss_decoding() -> TestResult {
     for (xml, expected) in tests {
         let source = ElementSource::new(xml.as_bytes(), None)?;
         let title = source.root()?.unwrap();
-        let parsed = title.child_as_text().unwrap();
-        assert_eq!(expected, parsed);
+        let parsed = title.content_as_literal_markup()?;
+        assert_eq!(parsed, Some(expected.to_string()));
     }
 
     Ok(())
@@ -170,20 +168,48 @@ fn test_iso8859_decode() -> TestResult {
 
     let mut elements = item.children();
 
-    let title = elements.next().unwrap()?.child_as_text().unwrap();
+    let title = elements.next().unwrap()?.content_as_literal_markup()?.unwrap();
     assert_eq!(title, "Digitalministerium: Neue Glasfaserförderung mit Schnellkasse");
 
     let expected = "Ab April soll es wieder Förderung für den Ausbau von Glasfaser geben.";
 
-    let description = elements.next().unwrap()?.child_as_text().unwrap();
+    let description = elements.next().unwrap()?.content_as_literal_markup()?.unwrap();
     assert_eq!(description, expected);
 
-    let cdata = elements.next().unwrap()?.child_as_text().unwrap();
+    let cdata = elements.next().unwrap()?.content_as_literal_markup()?.unwrap();
     assert_eq!(cdata, expected);
 
     // The nested XML (or HTML in feeds) breaks the decoding
-    let nested = elements.next().unwrap()?.child_as_text().unwrap();
+    let nested = elements.next().unwrap()?.content_as_literal_markup()?.unwrap();
     assert_eq!(nested, format!("<p>{}</p>", expected));
+
+    Ok(())
+}
+
+// Verifies we handle unescaped content correctly
+#[test]
+fn test_content_as_literal_markup() -> TestResult {
+    let xml = test::fixture_as_raw("xml/xml_escape_parsing.xml");
+    let source = ElementSource::new(xml.as_slice(), None)?;
+    let root = source.root()?.unwrap();
+    let mut elements = root.children();
+
+    // Test returning unescaped content
+    check_content_as_literal_markup(&mut elements, "text", "Plain text")?;
+    check_content_as_literal_markup(&mut elements, "text-escaped", "Some <b>bold</b> text")?;
+    check_content_as_literal_markup(&mut elements, "text-unescaped", "Some <b>bold</b> text")?;
+    check_content_as_literal_markup(&mut elements, "text-in-sub", "<p>text</p>")?;
+    check_content_as_literal_markup(&mut elements, "text-in-sub-escaped", "<p>text</p>")?;
+    check_content_as_literal_markup(&mut elements, "text-cdata", "Some text in Some <html></html> in cdata with a suffix")?;
+    check_content_as_literal_markup(&mut elements, "text-in-cdata", "Some <html></html> in cdata")?;
+
+    Ok(())
+}
+
+fn check_content_as_literal_markup(elements: &mut ElementIter<&[u8]>, name: &str, value: &str) -> TestResult {
+    let element = elements.next().unwrap()?;
+    assert_eq!(element.name, name);
+    assert_eq!(element.content_as_literal_markup()?.unwrap(), value);
 
     Ok(())
 }

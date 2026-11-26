@@ -1051,3 +1051,24 @@ fn test_enclosure_with_unrelated_media_content() {
     let urls: Vec<String> = actual.entries[0].media[0].content.iter().map(|c| c.url.as_ref().unwrap().to_string()).collect();
     assert_eq!(urls, vec!["https://example.com/avatar.jpg", "https://example.com/sunday.mp3"]);
 }
+
+// Regression test to ensure unescaped / literal markup is handled consistently
+#[test]
+fn test_unescaped_markup_regression_handling() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_markup_handling_regression.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert_eq!(actual.title.unwrap().content, "Channel <em>title</em> with markup");
+    assert_eq!(
+        actual.description.as_ref().unwrap().content.as_str(),
+        "<p>Channel description starting with a child</p>"
+    );
+
+    let entry = &actual.entries[0];
+    assert_eq!(entry.title.as_ref().unwrap().content, "Title with <b>markup</b> and a tail");
+    assert_eq!(entry.summary.as_ref().unwrap().content, "<p>raw desc</p>");
+    assert_eq!(
+        entry.content.as_ref().unwrap().body.as_ref().unwrap(),
+        "Lead text <p>then a child</p> and a tail\n            "
+    );
+}

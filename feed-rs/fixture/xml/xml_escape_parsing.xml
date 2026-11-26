@@ -1,0 +1,9 @@
+<sample>
+    <text>Plain text</text>
+    <text-escaped>Some &lt;b&gt;bold&lt;/b&gt; text</text-escaped>
+    <text-unescaped>Some <b>bold</b> text</text-unescaped>
+    <text-in-sub><p>text</p></text-in-sub>
+    <text-in-sub-escaped>&lt;p&gt;text&lt;/p&gt;</text-in-sub-escaped>
+    <text-cdata>Some text in <![CDATA[Some <html></html> in cdata]]> with a suffix</text-cdata>
+    <text-in-cdata><![CDATA[Some <html></html> in cdata]]></text-in-cdata>
+</sample>

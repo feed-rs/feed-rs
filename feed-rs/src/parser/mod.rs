@@ -9,6 +9,7 @@ use crate::parser::util::{IdGenerator, TimestampParser};
 use crate::xml;
 use crate::xml::NS;
 use jiff::ZonedDateTime;
+use rss::{rss0, rss1, rss2};
 use siphasher::sip128::{Hasher128, SipHasher};
 
 mod atom;
@@ -16,9 +17,7 @@ mod common;
 mod itunes;
 mod json;
 mod mediarss;
-mod rss0;
-mod rss1;
-mod rss2;
+mod rss;
 pub(crate) mod util;
 
 pub type ParseFeedResult<T> = Result<T, ParseFeedError>;

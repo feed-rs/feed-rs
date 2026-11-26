@@ -290,7 +290,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut Scope) 
 
 // Handles the "media:credit" element
 fn handle_media_credit<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
-    element.child_as_text().map(MediaCredit::new)
+    element.content_as_text().map(MediaCredit::new)
 }
 
 // Handles the "media:rating" element
@@ -298,7 +298,7 @@ fn handle_media_rating<R: BufRead>(element: Element<R>) -> Option<MediaRating> {
     // Schema is "urn:simple" by default
     let scheme = element.attr_value("scheme").unwrap_or_else(|| "urn:simple".into());
 
-    element.child_as_text().map(|rating| MediaRating::new(rating).urn(scheme.as_str()))
+    element.content_as_text().map(|rating| MediaRating::new(rating).urn(scheme.as_str()))
 }
 
 // Handles the "media:text" element
@@ -323,7 +323,7 @@ fn handle_media_text<R: BufRead>(element: Element<R>) -> Option<MediaText> {
         }
     }
 
-    element.child_as_text().map(|t| {
+    element.content_as_text().map(|t| {
         // Parse out the actual text of this element
         let mut text = Text::new(t);
         text.content_type = mime.unwrap_or(MediaTypeBuf::new(names::TEXT, names::PLAIN));
@@ -389,7 +389,7 @@ fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Text>>
         })),
     }?;
 
-    Ok(element.child_as_text().map(|content| {
+    Ok(element.content_as_text().map(|content| {
         let mut text = Text::new(content);
         text.content_type = mime;
         text
