@@ -350,9 +350,9 @@ fn test_example_reddit() {
 }
 
 #[test]
-fn test_media_description_empty() {
+fn test_media_empty_fields() {
     // Parse the feed
-    let test_data = test::fixture_as_string("atom/atom_media_description_empty.xml");
+    let test_data = test::fixture_as_string("atom/atom_media_empty_fields.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Expected feed
@@ -390,8 +390,7 @@ fn test_media_description_empty() {
                         )
                         .thumbnail(MediaThumbnail::new(
                             Image::new("https://i4.ytimg.com/vi/whjJNaEZKIM/hqdefault.jpg".into()).height(360).width(480),
-                        ))
-                        .title("Will A Watched Pot Boil?"),
+                        )),
                 ),
         );
 
