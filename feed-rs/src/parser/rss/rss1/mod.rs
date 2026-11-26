@@ -2,7 +2,7 @@ use std::io::BufRead;
 
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser::util::if_some_then;
-use crate::parser::{ParseFeedResult, Parser, common};
+use crate::parser::{ParseFeedResult, Parser, common, rss};
 use crate::xml::{Element, NS};
 
 #[cfg(test)]
@@ -34,19 +34,19 @@ fn handle_channel<R: BufRead>(parser: &Parser, feed: &mut Feed, channel: Element
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => feed.title = common::handle_text(child),
+            (NS::RSS, "title") => feed.title = rss::handle_text(child),
 
             (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| feed.links.push(link)),
 
-            (NS::RSS, "description") => feed.description = common::handle_text(child),
+            (NS::RSS, "description") => feed.description = rss::handle_text(child),
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| feed.authors.push(Person::parse(&name).role("creator"))),
+            (NS::DublinCore, "creator") => if_some_then(child.content_as_text(), |name| feed.authors.push(Person::parse(&name).role("creator"))),
 
             (NS::DublinCore, "date") => feed.published = common::handle_timestamp(parser, child),
 
-            (NS::DublinCore, "language") => feed.language = child.child_as_text(),
+            (NS::DublinCore, "language") => feed.language = child.content_as_text(),
 
-            (NS::DublinCore, "rights") => feed.rights = common::handle_text(child),
+            (NS::DublinCore, "rights") => feed.rights = rss::handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}
@@ -63,11 +63,11 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "url") => if_some_then(child.child_as_text(), |url| image.uri = url),
+            (NS::RSS, "url") => if_some_then(child.content_as_text(), |url| image.uri = url),
 
-            (NS::RSS, "title") => image.title = child.child_as_text(),
+            (NS::RSS, "title") => image.title = child.content_as_text(),
 
-            (NS::RSS, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
+            (NS::RSS, "link") => if_some_then(child.content_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
 
             // Nothing required for unknown elements
             _ => {}
@@ -90,21 +90,21 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => entry.title = common::handle_text(child),
+            (NS::RSS, "title") => entry.title = rss::handle_text(child),
 
             (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| entry.links.push(link)),
 
-            (NS::RSS, "description") => entry.summary = common::handle_text(child),
+            (NS::RSS, "description") => entry.summary = rss::handle_text(child),
 
-            (NS::Content, "encoded") => content_encoded = common::handle_encoded(child)?,
+            (NS::Content, "encoded") => content_encoded = rss::handle_encoded(child)?,
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
+            (NS::DublinCore, "creator") => if_some_then(child.content_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
 
             (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
 
-            (NS::DublinCore, "description") if entry.summary.is_none() => entry.summary = common::handle_text(child),
+            (NS::DublinCore, "description") if entry.summary.is_none() => entry.summary = rss::handle_text(child),
 
-            (NS::DublinCore, "rights") => entry.rights = common::handle_text(child),
+            (NS::DublinCore, "rights") => entry.rights = rss::handle_text(child),
 
             // Nothing required for unknown elements
             _ => {}

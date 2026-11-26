@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Channel <em>title</em> with markup
+        </title>
+        <link>http://example.com/</link>
+        <description>
+            <p>Channel description starting with a child</p>
+        </description>
+        <item>
+            <title>Title with <b>markup</b> and a tail
+            </title>
+            <link>http://example.com/1</link>
+            <description>
+                <p>raw desc</p>
+            </description>
+            <content:encoded>Lead text <p>then a child</p> and a tail
+            </content:encoded>
+        </item>
+    </channel>
+</rss>

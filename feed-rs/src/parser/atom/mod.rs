@@ -1,7 +1,3 @@
-use std::io::BufRead;
-
-use mediatype::{MediaTypeBuf, names};
-
 use crate::model::LinkTarget::CommentsFeed;
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, Person, Text};
 use crate::parser::util;
@@ -9,6 +5,8 @@ use crate::parser::util::if_some_then;
 use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
 use crate::parser::{Parser, common};
 use crate::xml::{Element, NS};
+use mediatype::{MediaTypeBuf, names};
+use std::io::BufRead;
 
 #[cfg(test)]
 mod tests;
@@ -23,11 +21,11 @@ pub(crate) fn parse_feed<R: BufRead>(parser: &Parser, root: Element<R>) -> Parse
     for child in root.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::Atom, "id") => if_some_then(child.child_as_text(), |id| feed.id = id),
+            (NS::Atom, "id") => if_some_then(child.content_as_text(), |id| feed.id = id),
 
             (NS::Atom, "title") => feed.title = handle_text(child)?,
 
-            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| feed.updated = parser.parse_timestamp(&text)),
+            (NS::Atom, "updated") => if_some_then(child.content_as_text(), |text| feed.updated = parser.parse_timestamp(&text)),
 
             (NS::Atom, "author") => if_some_then(handle_person("author", child)?, |person| feed.authors.push(person)),
 
@@ -102,7 +100,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
     let content_type = element.attr_value("type");
 
     if let Some(src) = element.attr_value("src") {
-        // > If the "src" attribute is present, the "type" attribute SHOULD be provided and MUST be a MIME media type, rather than "text", "html", or "xhtml".
+        // If the "src" attribute is present, the "type" attribute SHOULD be provided and MUST be a MIME media type, rather than "text", "html", or "xhtml".
         let mime = match &content_type {
             Some(ct) => ct.parse::<MediaTypeBuf>().map_err(|_| {
                 ParseFeedError::ParseError(ParseErrorKind::UnknownMimeType {
@@ -117,8 +115,8 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
             }
         };
 
-        if element.child_as_text().is_some() {
-            // > If the "src" attribute is present, atom:content MUST be empty.
+        if element.content_as_text().is_some() {
+            // If the "src" attribute is present, atom:content MUST be empty.
             // `ParseFeedError` has no appropriate error type, so use `MissingContent` which is what would have been returned before support for `src` was added.
             return Err(ParseFeedError::ParseError(ParseErrorKind::MissingContent {
                 position: element.buffer_pos,
@@ -185,7 +183,7 @@ fn handle_content<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Con
         Some(ct) => {
             if let Ok(mime) = ct.parse::<MediaTypeBuf>() {
                 element
-                    .child_as_text()
+                    .content_as_text()
                     .map(|body| {
                         let content = Content {
                             body: Some(body),
@@ -220,11 +218,11 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
         let child = child?;
         match child.ns_and_tag() {
             // Extract the fields from the spec
-            (NS::Atom, "id") => if_some_then(child.child_as_text(), |id| entry.id = id),
+            (NS::Atom, "id") => if_some_then(child.content_as_text(), |id| entry.id = id),
 
             (NS::Atom, "title") => entry.title = handle_text(child)?,
 
-            (NS::Atom, "updated") => if_some_then(child.child_as_text(), |text| entry.updated = parser.parse_timestamp(&text)),
+            (NS::Atom, "updated") => if_some_then(child.content_as_text(), |text| entry.updated = parser.parse_timestamp(&text)),
 
             (NS::Atom, "author") => if_some_then(handle_person("author", child)?, |person| entry.authors.push(person)),
 
@@ -243,7 +241,7 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
             (NS::Atom, "contributor") => if_some_then(handle_person("contributor", child)?, |person| entry.contributors.push(person)),
 
             // Some feeds have "pubDate" instead of "published"
-            (NS::Atom, "published") | (NS::Atom, "pubDate") => if_some_then(child.child_as_text(), |text| entry.published = parser.parse_timestamp(&text)),
+            (NS::Atom, "published") | (NS::Atom, "pubDate") => if_some_then(child.content_as_text(), |text| entry.published = parser.parse_timestamp(&text)),
 
             (NS::Atom, "rights") => entry.rights = handle_text(child)?,
 
@@ -268,7 +266,7 @@ fn handle_entry<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRe
 
 // Handles an Atom <generator>
 fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
-    element.child_as_text().map(|content| {
+    element.content_as_text().map(|content| {
         let mut generator = Generator::new(&content);
 
         for attr in element.attributes {
@@ -287,7 +285,7 @@ fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
 // Handles an Atom <icon> or <logo>
 fn handle_image<R: BufRead>(element: Element<R>) -> Option<Image> {
     element
-        .child_as_text()
+        .content_as_text()
         .map(|raw_uri| {
             util::parse_uri(&raw_uri, element.xml_base.as_ref())
                 .map(|parsed| parsed.to_string())
@@ -337,7 +335,7 @@ fn handle_person<R: BufRead>(role: &str, element: Element<R>) -> ParseFeedResult
     for child in element.children() {
         let child = child?;
         let tag_name = child.name.as_str();
-        let child_text = child.child_as_text();
+        let child_text = child.content_as_text();
         match (tag_name, child_text) {
             // Extract the fields from the spec
             ("name", Some(name)) => maybe_name = Some(name),
@@ -371,30 +369,37 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 
     let position = element.buffer_pos;
     match type_attr {
+        // Per https://www.rfc-editor.org/info/rfc4287/#section-3.1.1.1 , "text" type content is escaped, but we return it as literal markup given the prevalence of RSS content with markup in these fields
+        // and we want to treat it the same across feed types
         "text" => {
             let s = element
-                .child_as_text_sloppy()?
+                .content_as_literal_markup()?
                 .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent { position, reference: "text" }))?;
 
             let mut text = Text::new(s);
             text.content_type = MediaTypeBuf::new(names::TEXT, names::PLAIN);
             Ok(Some(text))
         }
+        // Per https://www.rfc-editor.org/info/rfc4287/#section-3.1.1.2, "html" content must be escaped too, but the same rationale applies as above for "text"
         "html" | "text/html" => {
             let s = element
-                .child_as_text_sloppy()?
+                .content_as_literal_markup()?
                 .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent { position, reference: "text" }))?;
 
             let mut text = Text::new(s);
             text.content_type = MediaTypeBuf::new(names::TEXT, names::HTML);
             Ok(Some(text))
         }
+        // Per https://www.rfc-editor.org/info/rfc4287/#section-3.1.1.3, "xhtml" content is represented as literal markup
         "xhtml" => {
-            let xml = element
-                .children_as_xhtml()?
+            let mut content = element
+                .content_as_literal_markup()?
                 .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent { position, reference: "text" }))?;
 
-            let mut text = Text::new(xml);
+            // The Atom standard states that xhtml content should be wrapped in a <div> so if its present, we unwrap it
+            content = unwrap_xhtml(content);
+
+            let mut text = Text::new(content);
             text.content_type = MediaTypeBuf::new(names::APPLICATION, names::XHTML);
             Ok(Some(text))
         }
@@ -405,4 +410,26 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
             mime: type_attr.into(),
         })),
     }
+}
+
+// Unwrap xhtml content if it is contained within a <div> element
+//
+// Note that the content may not be valid XML (e.g. mismatched tags), and given the sanitise feature is optional, we can't just parse and serialise.
+// So we clean this up with string manipulation instead.
+// needing to do this by manipulating the string
+fn unwrap_xhtml(content: String) -> String {
+    // If the content is not wrapped in a <div> element, there is nothing to do
+    let trimmed = content.trim();
+    if !trimmed.starts_with("<div") {
+        return content;
+    }
+
+    // Find the end of the div opening tag
+    if let Some(end_open_tag) = trimmed.find('>') {
+        let remainder: String = trimmed.chars().skip(end_open_tag + 1).collect();
+        return remainder.strip_suffix("</div>").unwrap_or(&remainder).to_string();
+    }
+
+    // We couldn't identify a wrapping div so just return the original content
+    content
 }

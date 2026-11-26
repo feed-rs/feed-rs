@@ -1,6 +1,6 @@
+use assert_json_diff::assert_json_eq;
 use std::fs;
 use std::path::{Path, PathBuf};
-
 use uuid::Uuid;
 
 use crate::model::Feed;
@@ -52,7 +52,7 @@ fn serde_regression() {
             // Replace the IDs in the serialised form if UUIDs
             replace_ids(&mut feed, &mut serde_feed);
 
-            assert_eq!(feed, serde_feed);
+            assert_json_eq!(feed, serde_feed);
         }
     });
 }

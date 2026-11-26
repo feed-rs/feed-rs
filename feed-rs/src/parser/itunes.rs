@@ -26,7 +26,7 @@ pub(crate) fn handle_itunes_channel_element<R: BufRead>(element: Element<R>, fee
             }
         }),
 
-        (NS::Itunes, "author") => if_some_then(element.child_as_text(), |person| feed.authors.push(Person::parse(&person).role("author"))),
+        (NS::Itunes, "author") => if_some_then(element.content_as_text(), |person| feed.authors.push(Person::parse(&person).role("author"))),
         (NS::Itunes, "owner") => if_some_then(handle_owner(element)?, |owner| feed.contributors.push(owner)),
 
         // Nothing required for unknown elements
@@ -62,7 +62,7 @@ pub(crate) fn handle_itunes_item_element<R: BufRead>(element: Element<R>, media_
 
 // Handles <itunes:author>
 fn handle_author<R: BufRead>(element: Element<R>) -> Option<MediaCredit> {
-    element.child_as_text().map(MediaCredit::new)
+    element.content_as_text().map(MediaCredit::new)
 }
 
 // Handles <itunes:category>
@@ -89,13 +89,13 @@ fn handle_category<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Ca
 
 // Handles <itunes:duration>
 fn handle_duration<R: BufRead>(element: Element<R>) -> Option<Duration> {
-    element.child_as_text().and_then(|text| parse_npt(&text))
+    element.content_as_text().and_then(|text| parse_npt(&text))
 }
 
 // Handles <itunes:explicit> by mapping to {true|false} and wrapping in MediaRating instance
 fn handle_explicit<R: BufRead>(element: Element<R>) -> Option<MediaRating> {
     element
-        .child_as_text()
+        .content_as_text()
         .filter(|v| v.to_lowercase() == "true")
         .map(|v| MediaRating::new(v).urn("itunes"))
 }
@@ -113,8 +113,8 @@ fn handle_owner<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Perso
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::Itunes, "email") => email = child.child_as_text(),
-            (NS::Itunes, "name") => name = child.child_as_text(),
+            (NS::Itunes, "email") => email = child.content_as_text(),
+            (NS::Itunes, "name") => name = child.content_as_text(),
 
             // Nothing required for unknown elements
             _ => {}

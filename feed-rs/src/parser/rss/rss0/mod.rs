@@ -1,7 +1,8 @@
 use std::io::BufRead;
 
 use crate::model::{Feed, FeedType};
-use crate::parser::{ParseFeedResult, Parser, rss2};
+use crate::parser::rss::rss2;
+use crate::parser::{ParseFeedResult, Parser};
 use crate::xml::Element;
 
 #[cfg(test)]
