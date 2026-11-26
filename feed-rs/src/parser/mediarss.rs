@@ -32,17 +32,15 @@ struct Scope {
 impl MediaRssState {
     /// Initialise parsing for this entry
     pub(crate) fn entry_begin(&self) {
-        // We should not have a scope at this point, since all entries are parsed separately and no media RSS elements are processed at the feed level
-        assert!(self.root.borrow().is_none());
-
-        // Initialise the scope
-        self.root.borrow_mut().replace(Scope::default());
+        // Start with a fresh scope to ensure any prior failed parse doesn't pollute the state
+        *self.root.borrow_mut() = Some(Scope::default());
     }
 
     pub(crate) fn entry_end(&self, entry: &mut Entry) {
         // Emit media objects as required
-        let scope = self.root.replace(None).unwrap();
-        emit_media_objects(scope, entry);
+        if let Some(scope) = self.root.replace(None) {
+            emit_media_objects(scope, entry);
+        }
     }
 
     /// Handle a primary or scoped optional MediaRSS element at the entry level
@@ -50,7 +48,7 @@ impl MediaRssState {
         // We will parse this element into the top-level scope
         if let Some(scope) = self.root.borrow_mut().as_mut() {
             // Pass off to the inner handle to process the element
-            inner_handle_mediarss_element(element, scope)?;
+            inner_handle_mediarss_element(element, scope, 1)?;
 
             Ok(())
         } else {
@@ -115,7 +113,25 @@ fn emit_media_objects(mut scope: Scope, entry: &mut Entry) {
     });
 }
 
-fn inner_handle_mediarss_element<R: BufRead>(element: Element<R>, scope: &mut Scope) -> ParseFeedResult<()> {
+// Maximum nesting depth for MediaRSS elements (media:group, media:content)
+//
+// The nesting depth of elements is controlled by the feed, and the handlers below recurse per level, so we need
+// to bound it to avoid exhausting the stack. Legitimate feeds nest only a couple of levels (e.g. group -> content),
+// so this limit is generous.
+const MAX_MEDIA_DEPTH: usize = 32;
+
+/// Recursively handles an optional MediaRSS element, accumulating the results into the provided scope.
+///
+/// The depth parameter tracks the nesting level of the element so we can bound the recursion (see MAX_MEDIA_DEPTH).
+fn inner_handle_mediarss_element<R: BufRead>(element: Element<R>, scope: &mut Scope, depth: usize) -> ParseFeedResult<()> {
+    // The nesting level of elements is controlled by the feed, so bound the recursion depth here
+    if depth > MAX_MEDIA_DEPTH {
+        return Err(ParseFeedError::ParseError(ParseErrorKind::IllegalState {
+            position: element.buffer_pos,
+            reference: format!("media element nested too deeply (limit {})", MAX_MEDIA_DEPTH),
+        }));
+    }
+
     // A "group" element indicates that the children are different representations of the same content - https://www.rssboard.org/media-rss#media-group
     if let (NS::MediaRSS, "group") = element.ns_and_tag() {
         // Create a new scope for the nested elements
@@ -124,7 +140,7 @@ fn inner_handle_mediarss_element<R: BufRead>(element: Element<R>, scope: &mut Sc
         // Process the children of this group node
         for child in element.children() {
             let child = child?;
-            inner_handle_mediarss_element(child, &mut nested)?;
+            inner_handle_mediarss_element(child, &mut nested, depth + 1)?;
         }
 
         // Add this nested scope
@@ -134,7 +150,7 @@ fn inner_handle_mediarss_element<R: BufRead>(element: Element<R>, scope: &mut Sc
         match element.ns_and_tag() {
             (NS::MediaRSS, "title") => scope.title = handle_text(element)?,
 
-            (NS::MediaRSS, "content") => handle_media_content(element, scope)?,
+            (NS::MediaRSS, "content") => handle_media_content(element, scope, depth)?,
 
             (NS::MediaRSS, "thumbnail") => if_some_then(handle_media_thumbnail(element), |thumbnail| scope.thumbnails.push(thumbnail)),
 
@@ -222,7 +238,9 @@ fn handle_media_community<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
 }
 
 // Handle the core attributes and elements from "media:content"
-fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut Scope) -> ParseFeedResult<()> {
+//
+// The depth parameter tracks the nesting level of the element so we can bound the recursion (see MAX_MEDIA_DEPTH).
+fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut Scope, depth: usize) -> ParseFeedResult<()> {
     let mut content = MediaContent::new();
 
     // Extract attributes from the content element
@@ -272,7 +290,7 @@ fn handle_media_content<R: BufRead>(element: Element<R>, media_obj: &mut Scope) 
             (NS::MediaRSS, "credit") => if_some_then(handle_media_credit(child), |credit| media_obj.credits.push(credit)),
 
             // Other elements in the namespace are handled recursively
-            (NS::MediaRSS, _) => inner_handle_mediarss_element(child, media_obj)?,
+            (NS::MediaRSS, _) => inner_handle_mediarss_element(child, media_obj, depth + 1)?,
 
             // Nothing required for unknown elements
             _ => {}
