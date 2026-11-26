@@ -14,7 +14,7 @@ Add the dependency to your `Cargo.toml`.
 
 ```toml
 [dependencies]
-feed-rs = "3.0.0"
+feed-rs = "3.1.0"
 ```
 
 To automatically sanitize parsed HTML content, use the `sanitize` feature. Note
