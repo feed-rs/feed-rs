@@ -1,11 +1,12 @@
 use std::time::Duration;
 
-use chrono::{TimeZone, Utc};
+use assert_json_diff::assert_json_eq;
 use mediatype::{MediaType, names};
 use url::Url;
 
 use crate::model::*;
 use crate::parser;
+use crate::parser::tests::zoned_utc;
 use crate::parser::util;
 use crate::util::test;
 
@@ -48,8 +49,8 @@ fn test_example_2() {
 
     // Expected feed
     let expected: Feed = Feed::new(FeedType::RSS2)
-        .id(actual.id.as_ref())     // not present in the test data
-        .updated(actual.updated)    // not present in the test data
+        .id(actual.id.as_ref())             // not present in the test data
+        .updated(actual.updated.clone())    // not present in the test data
         .title(Text::new("NASA Breaking News".into()))
         .description(Text::new("A RSS news feed containing the latest NASA news articles and press releases.".into()))
         .link(Link::new("http://www.nasa.gov/", None))
@@ -106,10 +107,11 @@ fn test_example_3() {
             .category(Category::new("News / Q. & A."))
             .published("Fri, 02 Aug 2019 15:35:34 +0000")
             .updated_parsed("Fri, 02 Aug 2019 15:35:34 +0000")
+            .media(MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(Image::new("https://media.newyorker.com/photos/5d4211a4ba8a9c0009a57cfd/master/pass/Chotiner-ReaganRacismNaftali-3.jpg".into()).height(1819).width(2560))))
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Structured event data on earthquakes
@@ -148,7 +150,7 @@ fn test_example_4() {
             .content(Content::default()
                 .body("<p><img class='size-full alignleft' title='Earthquake location 37.102S, 21.9072W' alt='Earthquake location 37.102S, 21.9072W' src='http://www.earthquakenewstoday.com/wp-content/uploads/35_20.jpg' width='146' height='146' />A minor earthquake with magnitude 3.5 (ml/mb) was detected on Tuesday, 8 kilometers (5 miles) from Aris in Greece.Exact location of event, depth 10 km, 21.9072&deg; East, 37.102&deg; North. </p>")
                 .content_type("text/html"))
-            .updated(actual.updated));
+            .updated(actual.updated.clone()));
 
     // Check
     assert_eq!(actual, expected);
@@ -410,6 +412,11 @@ fn test_spiegel() {
                     .content(MediaContent::new()
                         .url("https://www.omnycontent.com/d/programs/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/image.jpg?t=1589902935&size=Large")
                         .content_type("image/jpeg")
+                    )
+                    .content(MediaContent::new()
+                        .url("https://traffic.omny.fm/d/clips/5ac1e950-45c7-4eb7-87c0-aa0f018441b8/bb17ca27-51f4-4349-bc1e-abc00102c975/c7e3cca2-665e-4bc4-bcac-acc6011b9fa2/audio.mp3?utm_source=Podcast&in_playlist=4c18e072-24d2-4d60-9a42-abc00102c97e&t=1612652510")
+                        .content_type("audio/mpeg")
+                        .size(2519606)
                     )
                     .duration(Duration::from_secs(312))
                 )
@@ -699,7 +706,7 @@ fn test_rfc1123_ilgiornale() {
     let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2022, 11, 15, 20, 15, 4));
 }
 
 // Verifies we can handle an RFC1123 date in an RSS 2.0 feed where the week day name is in a different language
@@ -710,7 +717,7 @@ fn test_rfc1123_ilmessaggero() {
     let entry = actual.entries.first().expect("feed has 1 entry");
 
     // Should have the expected date
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2022, 11, 15, 23, 38, 15));
 }
 
 // Verifies we trim leading and trailing whitespace in text fields
@@ -735,7 +742,7 @@ fn test_published_from_dc_date() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_dbengines.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
     let entry = actual.entries.first().expect("feed has 1 entry");
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 1, 3, 15, 0, 0).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2023, 1, 3, 15, 0, 0));
 }
 
 // Verifies that an custom parser is correctly called and can return a useful date
@@ -755,7 +762,7 @@ fn test_custom_timestamp_parser() {
         .parse(test_data.as_bytes())
         .unwrap();
     let entry = actual.entries.first().expect("feed has 1 entry");
-    assert_eq!(entry.published.unwrap(), Utc.with_ymd_and_hms(2023, 12, 16, 19, 2, 33).unwrap());
+    assert_eq!(entry.published.as_ref().unwrap(), crate::parser::tests::zoned_utc(2023, 12, 16, 19, 2, 33));
 }
 
 // Verifies we correctly extract subcategories from the iTunes NS
@@ -780,6 +787,24 @@ fn test_media_content_player() {
     let entry = &actual.entries[0];
     let content_url = entry.media[0].content[0].url.as_ref().unwrap();
     assert_eq!("https://player.vimeo.com/video/1013595996?h=b1b80eff69", content_url.as_str());
+}
+
+// Verifies that a lone media:thumbnail element still results in a media object
+// This was the behaviour in 2.4, and is commonly found in RSS feeds (e.g. BBCI and Yahoo).
+#[test]
+fn test_media_thumbnail_standalone_regression() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_bbci.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(!actual.entries.is_empty());
+    for entry in actual.entries {
+        let media_obj = &entry.media[0];
+        assert_eq!(Some(MediaObjectSource::MediaRSS), media_obj.source);
+        assert_eq!(media_obj.thumbnails.len(), 1);
+        assert!(!media_obj.thumbnails[0].image.uri.is_empty());
+        assert_eq!(media_obj.thumbnails[0].image.width, Some(240));
+        assert_eq!(media_obj.thumbnails[0].image.height, Some(134));
+    }
 }
 
 // Verifies we correctly extract iTunes season and episode objects
@@ -829,13 +854,13 @@ fn test_podcast_items() {
     }
 
     let expected_people = [
-      PodcastPerson {
-          name: String::from("Adam Leventhal"),
-          role: Role::Host,
-          group: Group::Cast,
-          img: Url::parse("https://img.transistor.fm/E-Msi0WvVNEZBkhzuCGyhA-guzdy1j2EPCN77Zw5MHQ/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yYjVl/NDY2NWFlOTNkODgz/MGQ5ZjYwZmFkMzdm/MmVmZC5wbmc.jpg").ok(),
-          href: Url::parse("https://ahl.dtrace.org/").ok(),
-      },
+        PodcastPerson {
+            name: String::from("Adam Leventhal"),
+            role: Role::Host,
+            group: Group::Cast,
+            img: Url::parse("https://img.transistor.fm/E-Msi0WvVNEZBkhzuCGyhA-guzdy1j2EPCN77Zw5MHQ/rs:fill:800:800:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS8yYjVl/NDY2NWFlOTNkODgz/MGQ5ZjYwZmFkMzdm/MmVmZC5wbmc.jpg").ok(),
+            href: Url::parse("https://ahl.dtrace.org/").ok(),
+        },
         PodcastPerson {
             name: String::from("Bryan Cantrill"),
             role: Role::Host,
@@ -900,12 +925,17 @@ fn test_peertube_mediarss() {
 
 // Verify we handle feeds with missing schema versions (!)
 #[test]
-fn test_iprogrammer_missing_rss_version() {
+fn test_missing_rss_version() {
     let test_data = test::fixture_as_string("rss2/rss_2.0_iprogrammer.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
     // Don't need to check much, just that we can parse it into a valid graph
-    assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())))
+    assert_eq!(actual.entries[0].title, Some(Text::new("MotionDisco For Extreme LocoManipulation".into())));
+
+    // Also check feeds that are missing their version attribute entirely
+    let test_data = r#"<?xml version="1.0"?><rss><channel><title>A</title><item><title>a</title><link>https://a.example/1</link></item></channel></rss>"#;
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+    assert_eq!(actual.title, Some(Text::new("A".into())))
 }
 
 // Verify we extract comments links correctly
@@ -953,9 +983,9 @@ fn test_verdagon_broken_date_fmt() {
 
     // Verify the dates in the feed
     let entry0 = &actual.entries[0];
-    assert_eq!(entry0.published, Some(Utc.with_ymd_and_hms(2022, 11, 9, 14, 15, 0).unwrap()));
+    assert_eq!(entry0.published, Some(crate::parser::tests::zoned_utc(2022, 11, 9, 14, 15, 0)));
     let entry1 = &actual.entries[1];
-    assert_eq!(entry1.published, Some(Utc.with_ymd_and_hms(2022, 10, 7, 14, 15, 0).unwrap()));
+    assert_eq!(entry1.published, Some(crate::parser::tests::zoned_utc(2022, 10, 7, 14, 15, 0)));
 }
 
 // This feed uses the Atom namespace to represent standard RSS fields
@@ -976,7 +1006,104 @@ fn test_volpeon_hybrid_rss_atom() {
 
     // And we should have extracted the updated date for the entries
     let entry0 = &actual.entries[0];
-    assert_eq!(entry0.updated, Some(Utc.with_ymd_and_hms(2025, 03, 29, 0, 0, 0).unwrap()));
+    assert_eq!(entry0.updated, Some(crate::parser::tests::zoned_utc(2025, 03, 29, 0, 0, 0)));
     let entry1 = &actual.entries[1];
-    assert_eq!(entry1.updated, Some(Utc.with_ymd_and_hms(2024, 7, 1, 0, 0, 0).unwrap()));
+    assert_eq!(entry1.updated, Some(crate::parser::tests::zoned_utc(2024, 7, 1, 0, 0, 0)));
+}
+
+// The channel accepts the same DublinCore and Atom dates as an item
+#[test]
+fn test_channel_dc_date_and_atom_updated() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_channel_dates.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let published = Some(zoned_utc(2026, 10, 1, 8, 0, 0));
+    let updated = Some(zoned_utc(2026, 10, 20, 9, 30, 0));
+    assert_eq!(actual.entries[0].published, published);
+    assert_eq!(actual.entries[0].updated, updated);
+    assert_eq!(actual.published, published);
+    assert_eq!(actual.updated, updated);
+}
+
+// Verifies we retain a valid date
+#[test]
+fn test_retain_valid_dates() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_retain_date.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let channel_published = Some(zoned_utc(2013, 1, 1, 0, 0, 0));
+    assert_eq!(actual.published, channel_published);
+
+    let item_published = Some(zoned_utc(2023, 1, 3, 15, 0, 0));
+    assert_eq!(actual.entries[0].published, item_published);
+}
+
+// An enclosure is kept when media:content lists another file, such as the author image WordPress adds
+#[test]
+fn test_enclosure_with_unrelated_media_content() {
+    let test_data = r#"<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>t</title><item>
+        <title>Sunday sermon</title>
+        <enclosure url="https://example.com/sunday.mp3" length="31457280" type="audio/mpeg" />
+        <media:content url="https://example.com/avatar.jpg" medium="image" />
+        </item></channel></rss>"#;
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    let urls: Vec<String> = actual.entries[0].media[0].content.iter().map(|c| c.url.as_ref().unwrap().to_string()).collect();
+    assert_eq!(urls, vec!["https://example.com/avatar.jpg", "https://example.com/sunday.mp3"]);
+}
+
+// Regression test to ensure unescaped / literal markup is handled consistently
+#[test]
+fn test_unescaped_markup_regression_handling() {
+    let test_data = test::fixture_as_string("rss2/rss_2.0_markup_handling_regression.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert_eq!(actual.title.unwrap().content, "Channel <em>title</em> with markup");
+    assert_eq!(
+        actual.description.as_ref().unwrap().content.as_str(),
+        "<p>Channel description starting with a child</p>"
+    );
+
+    let entry = &actual.entries[0];
+    assert_eq!(entry.title.as_ref().unwrap().content, "Title with <b>markup</b> and a tail");
+    assert_eq!(entry.summary.as_ref().unwrap().content, "<p>raw desc</p>");
+    assert_eq!(
+        entry.content.as_ref().unwrap().body.as_ref().unwrap(),
+        "Lead text <p>then a child</p> and a tail\n            "
+    );
+}
+
+// Validates that MediaRSS NPT attributes containing non-ASCII digits do not trigger a panic when parsed.
+#[test]
+fn test_media_npt_unicode_digits() {
+    let source = r#"<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+    <channel>
+        <title>Unicode NPT test</title>
+        <link>http://example.org/</link>
+        <description>MediaRSS NPT attributes with Arabic-Indic digits</description>
+        <item>
+            <title>Item 1</title>
+            <media:text start="1:02:03.٣" end="٣.٤">hello</media:text>
+            <media:thumbnail url="http://example.org/thumb.jpg" time="٣.٤"/>
+            <itunes:duration>١:٠٢:٣</itunes:duration>
+        </item>
+    </channel>
+</rss>"#;
+    let feed = parser::parse(source.as_bytes()).unwrap();
+    assert_eq!(1, feed.entries.len());
+    let entry = &feed.entries[0];
+
+    // The leading ASCII portion of "1:02:03.٣" still gives a valid start time, the rest is dropped
+    let media_text = &entry.media[0].texts;
+    assert_eq!(1, media_text.len());
+    assert_eq!(Some(std::time::Duration::from_secs(3723)), media_text[0].start_time);
+    assert_eq!(None, media_text[0].end_time);
+
+    // The Arabic-Indic "time" attribute on the thumbnail is ignored
+    assert_eq!(1, entry.media[0].thumbnails.len());
+    assert_eq!(None, entry.media[0].thumbnails[0].time);
+
+    // The Arabic-Indic itunes:duration is ignored (mapped onto the media object)
+    assert!(entry.media.iter().all(|media_obj| media_obj.duration.is_none()));
 }

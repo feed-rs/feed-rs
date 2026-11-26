@@ -47,7 +47,7 @@ fn test_sanitize_atom_plain_text() {
     assert_eq!(feed_description.content_type.as_str(), "text/plain");
     assert_eq!(feed_title.content, r#"<script>title</script>"#);
     assert_eq!(feed_title.content_type.as_str(), "text/plain");
-    assert_eq!(feed_author.name, r#"Erika <tag /> Mustermann"#);
+    assert_eq!(feed_author.name.unwrap(), r#"Erika <tag /> Mustermann"#);
 
     assert_eq!(entry_title.content, "<script>alert('xyzzy');</script>title");
     assert_eq!(entry_title.content_type.as_str(), "text/plain");
@@ -117,10 +117,7 @@ fn test_sanitize_atom() {
     assert_eq!(feed_description.content_type.as_str(), "text/html");
 
     // noopener/noreferrer inserted by ammonia
-    assert_eq!(
-        entry_title.content,
-        r#"<a href="http://example.com" rel="noopener noreferrer">Safe&lt;iframe src="http://www.example.com/"&gt;&lt;/iframe&gt; title</a>"#
-    );
+    assert_eq!(entry_title.content, r#"<a href="http://example.com" rel="noopener noreferrer">Safe title</a>"#);
     assert_eq!(entry_title.content_type.as_str(), "text/html");
     assert_eq!(entry_summary.content, "Safe summary.");
     assert_eq!(entry_summary.content_type.as_str(), "text/html");

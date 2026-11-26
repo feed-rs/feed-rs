@@ -3,7 +3,9 @@ use crate::model::{
     MediaThumbnail, Person, Text,
 };
 use crate::parser;
+use crate::parser::atom::unwrap_xhtml;
 use crate::util::test;
+use assert_json_diff::assert_json_eq;
 
 // Verify we can parse a more complete example than the one provided in the standard
 #[test]
@@ -53,7 +55,7 @@ fn test_example_1() {
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Real-life example from the Register - https://www.theregister.co.uk/science/headlines.atom
@@ -110,7 +112,7 @@ fn test_example_2() {
                 .content_type("text/html")));
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Real-life example from Akamai (includes categories and elements from a different namespace, along with locally declared namespaces on atom 1.0 elements)
@@ -283,7 +285,14 @@ fn test_example_6() {
                         )
                         .content_type("text/html"),
                 )
-                .author(Person::parse("markpritchard").role("author")),
+                .author(Person::parse("markpritchard").role("author"))
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars3.githubusercontent.com/u/8234070?s=60&v=4".into())
+                            .height(30)
+                            .width(30),
+                    )),
+                ),
         )
         .entry(
             Entry::default()
@@ -296,11 +305,18 @@ fn test_example_6() {
                 )
                 .title(Text::new("0.1.3".into()))
                 .content(Content::default().body(r#"<p>Update version to 0.1.3</p>"#).content_type("text/html"))
-                .author(Person::parse("kumabook").role("author")),
+                .author(Person::parse("kumabook").role("author"))
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS).thumbnail(MediaThumbnail::new(
+                        Image::new("https://avatars1.githubusercontent.com/u/753703?s=60&v=4".into())
+                            .height(30)
+                            .width(30),
+                    )),
+                ),
         );
 
     // Check
-    assert_eq!(actual, expected);
+    assert_json_eq!(actual, expected);
 }
 
 // Verify that we don't trim essential whitespace
@@ -320,7 +336,7 @@ fn test_example_7() {
         .map(|c| c.body.as_ref())
         .unwrap()
         .unwrap();
-    assert_eq!(body, expected_body);
+    assert_json_eq!(body, expected_body);
 }
 
 // Verify that the Reddit ATOM feed parses correctly
@@ -331,6 +347,55 @@ fn test_example_reddit() {
     for entry in feed.entries {
         assert!(entry.updated.is_some());
     }
+}
+
+#[test]
+fn test_media_empty_fields() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("atom/atom_media_empty_fields.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Expected feed
+    let expected = Feed::new(FeedType::Atom)
+        .author(
+            Person::parse("D!NG")
+                .uri("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA")
+                .role("author"),
+        )
+        .id("yt:channel:lq42foiSgl7sSpLupnugGA")
+        .link(Link::new("http://www.youtube.com/feeds/videos.xml?channel_id=UClq42foiSgl7sSpLupnugGA", None).rel("self"))
+        .link(Link::new("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA", None).rel("alternate"))
+        .title(Text::new("D!NG".into()))
+        .entry(
+            Entry::default()
+                .author(
+                    Person::parse("D!NG")
+                        .uri("https://www.youtube.com/channel/UClq42foiSgl7sSpLupnugGA")
+                        .role("author"),
+                )
+                .id("yt:video:whjJNaEZKIM")
+                .link(Link::new("https://www.youtube.com/watch?v=whjJNaEZKIM", None).rel("alternate"))
+                .published("2019-02-16T15:16:04+00:00")
+                .title(Text::new("Will A Watched Pot Boil?".into()))
+                .updated_parsed("2026-10-17T21:33:04+00:00")
+                .media(
+                    MediaObject::new(MediaObjectSource::MediaRSS)
+                        .community(MediaCommunity::new().star_rating(75311, 5.0, 1, 5).statistics(Some(1206136), None))
+                        .content(
+                            MediaContent::new()
+                                .content_type("application/x-shockwave-flash")
+                                .height(390)
+                                .url("https://www.youtube.com/v/whjJNaEZKIM?version=3")
+                                .width(640),
+                        )
+                        .thumbnail(MediaThumbnail::new(
+                            Image::new("https://i4.ytimg.com/vi/whjJNaEZKIM/hqdefault.jpg".into()).height(360).width(480),
+                        )),
+                ),
+        );
+
+    // Check
+    assert_eq!(actual, expected);
 }
 
 // Verify we can parse the example contained in the Atom specification
@@ -501,6 +566,24 @@ fn test_mediarss_newscred() {
     assert_eq!(media_obj, &expected);
 }
 
+// Verifies that a lone media:thumbnail element still results in a media object
+// This was the behaviour in 2.4, and is commonly found in RSS feeds (e.g. BBCI and Yahoo).
+#[test]
+fn test_media_thumbnail_standalone_regression() {
+    let test_data = test::fixture_as_string("atom/atom_feed-rs_releases.xml");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    assert!(!actual.entries.is_empty());
+    for entry in actual.entries {
+        let media_obj = &entry.media[0];
+        assert_eq!(Some(MediaObjectSource::MediaRSS), media_obj.source);
+        assert_eq!(media_obj.thumbnails.len(), 1);
+        assert!(!media_obj.thumbnails[0].image.uri.is_empty());
+        assert_eq!(media_obj.thumbnails[0].image.width, Some(30));
+        assert_eq!(media_obj.thumbnails[0].image.height, Some(30));
+    }
+}
+
 // Handle text/html specified as a mime type on content
 #[test]
 fn test_scattered() {
@@ -524,7 +607,7 @@ fn test_atom_content_src() {
     let test_data = test::fixture_as_string("atom/atom_content_src.xml");
     let actual = parser::parse(test_data.as_bytes()).unwrap();
 
-    assert_eq!(
+    assert_json_eq!(
         actual.entries[0].content,
         Some(Content {
             body: None,
@@ -547,10 +630,10 @@ fn test_atom_content_src() {
 #[test]
 fn test_example_xhtml() {
     let expected_body = r#"<p>
-While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&amp;nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
+While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
 </p>
 <p>
-In this example it's ok to remove the spaces between <code>&lt;/li>&lt;li></code> but it's <em>not</em> ok to remove the spaces between <code>&lt;/i> &lt;b></code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code>&lt;pre></code> or <code>&lt;script></code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
+In this example it's ok to remove the spaces between <code></li><li></code> but it's <em>not</em> ok to remove the spaces between <code></i> <b></code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code><pre></code> or <code><script></code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
 </p>"#;
     let test_data = test::fixture_as_string("atom/atom_example_xhtml.xml");
     let p = parser::Builder::new().sanitize_content(false).build();
@@ -563,7 +646,7 @@ In this example it's ok to remove the spaces between <code>&lt;/li>&lt;li></code
         .map(|c| c.body.as_ref())
         .unwrap()
         .unwrap();
-    assert_eq!(body, expected_body);
+    assert_json_eq!(body, expected_body);
 }
 
 // Handle xml:base attribute on content
@@ -585,4 +668,23 @@ fn test_comments_1() {
 
     let comments_feed_link = entry.links.iter().find(|link| link.target == Some(LinkTarget::CommentsFeed)).unwrap();
     assert_eq!(comments_feed_link.href, "http://example.org/2005/04/02/atom/feed".to_string());
+}
+
+// Verify we unwrap xhtml content correctly
+#[test]
+fn test_unwrap_xhtml() {
+    let tests = [
+        ("plain", "plain"),
+        (" ws ", " ws "),
+        ("<b>not wrapped</b>", "<b>not wrapped</b>"),
+        (" <b>not wrapped</b> ", " <b>not wrapped</b> "),
+        ("<div>wrapped</div>", "wrapped"),
+        (" <div>wrapped</div> ", "wrapped"),
+        (" <div> wrapped </div> ", " wrapped "),
+        (" <div> <b>wrapped</b> </div> ", " <b>wrapped</b> "),
+        (" <div> wrapped</b> </div> ", " wrapped</b> "),
+    ];
+    for (content, expected) in tests {
+        assert_eq!(unwrap_xhtml(content.to_string()), expected);
+    }
 }

@@ -3,7 +3,7 @@ use std::ops::Add;
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use jiff::{ZonedDateTime, tz::TimeZone};
 use regex::{Captures, Regex};
 use url::Url;
 use uuid::Uuid;
@@ -81,7 +81,7 @@ mod fixes {
 static RFC1123_FORMAT_STR: &str = "%d %b %Y %H:%M:%S %z";
 
 /// Pluggable timestamp parser
-pub(crate) type TimestampParser = dyn Fn(&str) -> Option<DateTime<Utc>> + 'static + Send + Sync;
+pub(crate) type TimestampParser = dyn Fn(&str) -> Option<ZonedDateTime> + 'static + Send + Sync;
 
 /// Pluggable ID (feed or entry) generator
 pub(crate) type IdGenerator = dyn Fn(&[Link], &Option<Text>, Option<&str>) -> String + Send + Sync;
@@ -102,7 +102,7 @@ pub(crate) fn if_ok_then_some<T, F: FnOnce(Option<T>)>(v: Result<T, impl Error>,
 
 /// Parses a timestamp using a variety of strategies to try and deal with the remarkable variability and non-standards
 /// compliant text on the internet.
-pub(crate) fn parse_timestamp_lenient(original: &str) -> Option<DateTime<Utc>> {
+pub(crate) fn parse_timestamp_lenient(original: &str) -> Option<ZonedDateTime> {
     // Curiously, we see RFC-3339 dates in RSS 2 feeds, and it is supposed to be the format for Atom and Json too so we try this first
     try_parse_timestamp_rfc3339_lenient(original)
         // Next is the format for RSS 2, which is used often
@@ -134,35 +134,28 @@ pub(crate) fn parse_uri(uri: &str, base: Option<&Url>) -> Option<Url> {
 }
 
 static EMAIL_REGEX: OnceLock<Regex> = OnceLock::new();
+static EMAIL_DELIM: &[char] = &['<', '>', '(', '（', ')', '）', '[', '［', ']', '］', '«', '»'];
 
 pub(crate) fn parse_person_name_email(raw: &str) -> Person {
-    let regex = EMAIL_REGEX.get_or_init(|| Regex::new(r"\b(<\[\()?(mailto:)?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})(>]\))?\b").unwrap());
+    let regex = EMAIL_REGEX.get_or_init(|| {
+        Regex::new(r"(?<prefix>.*?)?([\[<(«])?(mailto:)?(?<email>[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})([>)»\]])?(?<suffix>.*)").unwrap()
+    });
 
     let mut email = None;
     let mut name = None;
     if let Some(captures) = regex.captures(raw) {
         // Discard the potential delimiters and optional mailto: prefix, and process the capture group containing the email address
-        if let Some(email_group) = captures.get(3) {
+        if let Some(email_group) = captures.name("email") {
             email = Some(email_group.as_str().trim().to_string());
 
-            // The remainder of the string is considered to be the name
-            if let Some(span) = captures.get(0) {
-                // Assume the longest remaining span (prefix or suffix) is the name
-                let prefix_len = span.start();
-                let suffix_len = raw.len() - span.end();
-
-                let name_str = if prefix_len > suffix_len {
-                    &raw[..span.start() - 1]
-                } else if span.end() < raw.len() {
-                    &raw[span.end() + 1..]
-                } else {
-                    ""
-                };
-
-                let name_str = name_str.trim();
-                if !name_str.is_empty() {
-                    name = Some(name_str.to_string());
-                }
+            // The remainder of the string is considered to be the name, but it might be present as a prefix or suffix, so we retain the longest one as the name
+            let prefix = captures.name("prefix").map_or_else(|| "", |m| m.as_str().trim());
+            let suffix = captures.name("suffix").map_or_else(|| "", |m| m.as_str().trim());
+            let mut name_str = (if prefix.len() > suffix.len() { prefix } else { suffix }).to_string();
+            name_str.retain(|c| !EMAIL_DELIM.contains(&c));
+            let name_str = name_str.trim();
+            if !name_str.is_empty() {
+                name = Some(name_str.to_string());
             }
         }
     }
@@ -187,7 +180,8 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     static NPT_HHMMSS: OnceLock<Regex> = OnceLock::new();
     let npt_hhmmss = NPT_HHMMSS.get_or_init(|| {
         // Extract hours (h), minutes (m), seconds (s) and fractional seconds (f)
-        Regex::new(r"(?P<h>\d+):(?P<m>\d{2}):(?P<s>\d{2})(\.(?P<f>\d+))?").unwrap()
+        // Note ASCII digits only as \d also matches Unicode digits which cannot then be parsed as numbers
+        Regex::new(r"(?P<h>[0-9]+):(?P<m>[0-9]{2}):(?P<s>[0-9]{2})(\.(?P<f>[0-9]+))?").unwrap()
     });
     if let Some(captures) = npt_hhmmss.captures(text) {
         let h = captures.name("h");
@@ -195,11 +189,12 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
         let s = captures.name("s");
 
         if let (Some(h), Some(m), Some(s)) = (h, m, s) {
-            // Parse the hours, minutes and seconds
-            let mut seconds = s.as_str().parse::<u64>().unwrap();
-            seconds += m.as_str().parse::<u64>().unwrap() * 60;
-            seconds += h.as_str().parse::<u64>().unwrap() * 3600;
-            let mut duration = Duration::from_secs(seconds);
+            // Parse the hours, minutes and seconds, clamping to reasonable values
+            let seconds = s.as_str().parse::<u64>().unwrap_or(0).clamp(0, 59);
+            let minutes = m.as_str().parse::<u64>().unwrap_or(0).clamp(0, 59);
+            let hours = h.as_str().parse::<u64>().unwrap_or(0).clamp(0, u32::MAX as u64);
+            let total = hours * 3600 + minutes * 60 + seconds;
+            let mut duration = Duration::from_secs(total);
 
             // Add fractional seconds if present
             duration = parse_npt_add_frac_sec(duration, captures);
@@ -212,12 +207,13 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     static NPT_SEC: OnceLock<Regex> = OnceLock::new();
     let npt_sec = NPT_SEC.get_or_init(|| {
         // Extract seconds (s) and fractional seconds (f)
-        Regex::new(r"(?P<s>\d+)(\.(?P<f>\d+))?").unwrap()
+        // Note ASCII digits only as \d also matches Unicode digits which cannot then be parsed as numbers
+        Regex::new(r"(?P<s>[0-9]+)(\.(?P<f>[0-9]+))?").unwrap()
     });
     if let Some(captures) = npt_sec.captures(text) {
         if let Some(s) = captures.name("s") {
-            // Parse the seconds
-            let seconds = s.as_str().parse::<u64>().unwrap();
+            // Parse the seconds, using zero if it is out of range
+            let seconds = s.as_str().parse::<u64>().unwrap_or(0);
             let mut duration = Duration::from_secs(seconds);
 
             // Add fractional seconds if present
@@ -241,8 +237,11 @@ fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
     if let Some(frac) = captures.name("f") {
         let frac = frac.as_str();
         let denom = 10f32.powi(frac.len() as i32);
-        let num = frac.parse::<f32>().unwrap();
+
+        // The capture is ASCII digits so parsing should fail, but default to zero rather than panic
+        let num = frac.parse::<f32>().unwrap_or_default();
         let millis = (1000f32 * (num / denom)) as u64;
+
         duration.add(Duration::from_millis(millis))
     } else {
         duration
@@ -251,35 +250,36 @@ fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
 
 // Parses a timestamp from a potentially RFC-1123 formatted timestamp (which isn't part of any feed standard, but hey
 // its the internet, why follow standards?
-fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<DateTime<Utc>> {
+fn try_parse_timestamp_rfc1123_lenient(original: &str) -> Option<ZonedDateTime> {
     let mut cleaned = original.trim().to_string();
     for PatSub(regex, replacement) in fixes::rfc1123() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    DateTime::parse_from_str(&cleaned, RFC1123_FORMAT_STR).map(|t| t.with_timezone(&Utc)).ok()
+    ZonedDateTime::strptime(RFC1123_FORMAT_STR, &cleaned).ok()
 }
 
 // Parses a timestamp from a potentially RFC-2822 formatted timestamp
-fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<DateTime<Utc>> {
+fn try_parse_timestamp_rfc2822_lenient(original: &str) -> Option<ZonedDateTime> {
     // Clean the input string by applying each of the regex fixes
     let mut cleaned = original.trim().to_string();
     for PatSub(regex, replacement) in fixes::rfc2822() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    DateTime::parse_from_rfc2822(&cleaned).map(|t| t.with_timezone(&Utc)).ok()
+    jiff::fmt::rfc2822::parse(&cleaned).ok()
 }
 
 // Parses a timestamp from a potentially RFC-3339 formatted string
-fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<DateTime<Utc>> {
+fn try_parse_timestamp_rfc3339_lenient(original: &str) -> Option<ZonedDateTime> {
     // Clean the input string by applying each of the regex fixes
     let mut cleaned = original.trim().to_string();
     for PatSub(regex, replacement) in fixes::rfc3339() {
         cleaned = regex.replace(&cleaned, *replacement).to_string();
     }
 
-    DateTime::parse_from_rfc3339(cleaned.trim()).map(|t| t.with_timezone(&Utc)).ok()
+    let parser = jiff::fmt::temporal::DateTimeParser::new();
+    parser.parse_timestamp(cleaned.trim()).map(|t| t.to_zoned_datetime(TimeZone::UTC)).ok()
 }
 
 #[cfg(test)]

@@ -27,19 +27,19 @@ fn test_0_91_spec_1() {
             .width(88)
             .height(31)
             .description("News for web users that write back"))
-        .updated(actual.updated)        // not in source data
+        .updated(actual.updated.clone())        // not in source data
         .entry(Entry::default()
             .title(Text::new("Giving the world a pluggable Gnutella".into()))
             .link(Link::new("http://writetheweb.com/read.php?item=24", None))
             .summary(Text::html("WorldOS is a framework on which to build programs that work like Freenet or Gnutella -allowing\n                distributed applications using peer-to-peer routing.\n            ".into()))
             .id(entry0.id.as_ref())     // not in source data
-            .updated(entry0.updated))   // not in source data
+            .updated(entry0.updated.clone()))   // not in source data
         .entry(Entry::default()
             .title(Text::new("Syndication discussions hot up".into()))
             .link(Link::new("http://writetheweb.com/read.php?item=23", None))
             .summary(Text::html("After a period of dormancy, the Syndication mailing list has become active again, with\n                contributions from leaders in traditional media and Web syndication.\n            ".into()))
             .id(entry1.id.as_ref())     // not in source data
-            .updated(entry1.updated)); // not in source data
+            .updated(entry1.updated.clone())); // not in source data
 
     // Check
     assert_eq!(actual, expected);
@@ -105,13 +105,13 @@ fn test_0_92_spec_1() {
         .entry(Entry::default()
             .summary(Text::html("Kevin Drennan started a <a href=\"http://deadend.editthispage.com/\">Grateful\n                Dead Weblog</a>. Hey it's cool, he even has a <a href=\"http://deadend.editthispage.com/directory/61\">directory</a>.\n                <i>A Frontier 7 feature.</i>\n            ".into()))
             .id(entry0.id.as_ref())     // not in source data
-            .updated(entry0.updated))   // not in source data
+            .updated(entry0.updated.clone()))   // not in source data
         .entry(Entry::default()
             .summary(Text::html("<a href=\"http://arts.ucsc.edu/GDead/AGDL/other1.html\">The Other One</a>,
                 live instrumental, One From The Vault. Very rhythmic very spacy, you can listen to it many times, and
                 enjoy something new every time.\n            ".into()))
             .id(entry1.id.as_ref())     // not in source data
-            .updated(entry1.updated)   // not in source data
+            .updated(entry1.updated.clone())   // not in source data
             .media(MediaObject::new(MediaObjectSource::RSS)
                 .content(MediaContent::new()
                     .url("http://www.scripting.com/mp3s/theOtherOne.mp3")
@@ -120,7 +120,7 @@ fn test_0_92_spec_1() {
         .entry(Entry::default()
             .summary(Text::html("This is a test of a change I just made. Still diggin..".into()))
             .id(entry2.id.as_ref())     // not in source data
-            .updated(entry2.updated)); // not in source data
+            .updated(entry2.updated.clone())); // not in source data
 
     // Check
     assert_eq!(actual, expected);

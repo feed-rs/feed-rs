@@ -1,6 +1,7 @@
 use crate::model::{Content, Entry, Feed, FeedType, Image, Link, Person, Text};
 use crate::parser;
 use crate::util::test;
+use url::Url;
 
 // Verify we can parse a more complete feed
 #[test]
@@ -12,7 +13,7 @@ fn test_example_1() {
     // Expected feed
     let expected = Feed::new(FeedType::JSON)
         .id(&actual.id)                 // not in test content
-        .updated(actual.updated)        // not in test content
+        .updated(actual.updated.clone())        // not in test content
         .title(Text::new("Daring Fireball".into()))
         .link(Link::new("https://daringfireball.net/", None))
         .link(Link::new("https://daringfireball.net/feeds/json", None))
@@ -62,7 +63,7 @@ fn test_spec_1() {
     // Expected feed
     let expected = Feed::new(FeedType::JSON)
         .id(&actual.id)                 // not in test content
-        .updated(actual.updated)        // not in test content
+        .updated(actual.updated.clone())        // not in test content
         .title(Text::new("JSON Feed".into()))
         .description(Text::new("JSON Feed is a pragmatic syndication format for blogs, microblogs, and other time-based content.".into()))
         .link(Link::new("https://jsonfeed.org/", None))
@@ -71,7 +72,7 @@ fn test_spec_1() {
             .role("author")
             .uri("https://jsonfeed.org/"))
         .entry(Entry::default()
-            .updated(actual.entries[0].updated)             // not in test content
+            .updated(actual.entries[0].updated.clone())             // not in test content
             .id("https://jsonfeed.org/2017/05/17/announcing_json_feed")
             .title(Text::new("Announcing JSON Feed".into()))
             .published("2017-05-17T08:02:12-07:00")
@@ -143,5 +144,32 @@ fn test_elastic_v1_1() {
     assert_eq!(
         entry.authors,
         vec!(Person::parse("Fake Author 3").role("author"), Person::parse("Fake Author 4").role("author"))
+    );
+}
+
+// A numeric item id should be coerced, not fail the whole feed
+#[test]
+fn test_numeric_entry_id() {
+    let json = br#"{"version":"https://jsonfeed.org/version/1.1","title":"t","items":[{"id":"1","content_text":"a"},{"id":2,"content_text":"b"}]}"#;
+    let actual = parser::parse(&json[..]).unwrap();
+    assert_eq!(actual.entries[1].id, "2");
+}
+
+// Check that we extract the images from a feed
+#[test]
+fn test_images() {
+    // Parse the feed
+    let test_data = test::fixture_as_string("jsonfeed/jsonfeed_microblog_1.1.json");
+    let actual = parser::parse(test_data.as_bytes()).unwrap();
+
+    // Validate we extracted the image and banner image
+    let entry = actual.entries.first().unwrap();
+    assert_eq!(
+        entry.media[0].content[0].url,
+        Some(Url::parse("https://www.manton.org/uploads/2020/f53a913d74.jpg").unwrap())
+    );
+    assert_eq!(
+        entry.media[0].thumbnails[0].image.uri,
+        "https://www.manton.org/uploads/2020/f53a913d74_banner.jpg"
     );
 }

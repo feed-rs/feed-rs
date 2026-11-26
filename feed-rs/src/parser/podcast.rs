@@ -37,7 +37,7 @@ pub(crate) fn handle_podcast_item_element<R: BufRead>(element: Element<R>, media
 fn handle_person<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<PodcastPerson>> {
     if let Some(role) = element.attr_value("role") {
         let role = Role::parse(element.buffer_pos, &role)?;
-        if let Some(name) = element.child_as_text() {
+        if let Some(name) = element.content_as_text() {
             return Ok(Some(PodcastPerson {
                 name,
                 role,

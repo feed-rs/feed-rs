@@ -1,5 +1,3 @@
-use chrono::{TimeZone, Utc};
-
 use super::*;
 
 // Verify we can parse non-spec compliant date strings
@@ -8,27 +6,27 @@ use super::*;
 fn test_timestamp_rss2() {
     let tests = vec![
         // Incorrect order for month and day
-        ("Fri, Oct 7 2022 10:15:00 -0400", Utc.with_ymd_and_hms(2022, 10, 7, 14, 15, 00).unwrap()),
+        ("Fri, Oct 7 2022 10:15:00 -0400", crate::parser::tests::zoned_utc(2022, 10, 7, 14, 15, 00)),
         // Standard format
-        ("26 August 2019 10:00:00 +0000", Utc.with_ymd_and_hms(2019, 8, 26, 10, 0, 0).unwrap()),
+        ("26 August 2019 10:00:00 +0000", crate::parser::tests::zoned_utc(2019, 8, 26, 10, 0, 0)),
         // UTC is not a valid timezone in RFC-2822
-        ("Mon, 01 Jan 0001 00:00:00 UTC", Utc.with_ymd_and_hms(1, 1, 1, 0, 0, 0).unwrap()),
+        ("Mon, 01 Jan 0001 00:00:00 UTC", crate::parser::tests::zoned_utc(1, 1, 1, 0, 0, 0)),
         // -0000 is not considered a timezone in the parser
-        ("Wed, 22 Jan 2020 10:58:02 -0000", Utc.with_ymd_and_hms(2020, 1, 22, 10, 58, 2).unwrap()),
+        ("Wed, 22 Jan 2020 10:58:02 -0000", crate::parser::tests::zoned_utc(2020, 1, 22, 10, 58, 2)),
         // The 25th of August 2012 was a Saturday, not a Wednesday
-        ("Wed, 25 Aug 2012 03:25:42 GMT", Utc.with_ymd_and_hms(2012, 8, 25, 3, 25, 42).unwrap()),
+        ("Wed, 25 Aug 2012 03:25:42 GMT", crate::parser::tests::zoned_utc(2012, 8, 25, 3, 25, 42)),
         // Long month names are not allowed
-        ("2 September 2019 20:00:00 +0000", Utc.with_ymd_and_hms(2019, 9, 2, 20, 0, 0).unwrap()),
+        ("2 September 2019 20:00:00 +0000", crate::parser::tests::zoned_utc(2019, 9, 2, 20, 0, 0)),
         // RSS2 should be RFC-2822 but we get Atom/RFC-3339 formats
-        ("2016-10-01T00:00:00+10:00", Utc.with_ymd_and_hms(2016, 9, 30, 14, 0, 0).unwrap()),
+        ("2016-10-01T00:00:00+10:00", crate::parser::tests::zoned_utc(2016, 9, 30, 14, 0, 0)),
         // Single digit hours should be padded
-        ("24 Sep 2013 1:27 PDT", Utc.with_ymd_and_hms(2013, 9, 24, 8, 27, 0).unwrap()),
+        ("24 Sep 2013 1:27 PDT", crate::parser::tests::zoned_utc(2013, 9, 24, 8, 27, 0)),
         // Consider an invalid hour specification as start-of-day
-        ("5 Jun 2017 24:05 PDT", Utc.with_ymd_and_hms(2017, 6, 5, 7, 5, 0).unwrap()),
+        ("5 Jun 2017 24:05 PDT", crate::parser::tests::zoned_utc(2017, 6, 5, 7, 5, 0)),
         // We even see RFC1123
-        ("Tue, 15 Nov 2022 20:15:04 Z", Utc.with_ymd_and_hms(2022, 11, 15, 20, 15, 4).unwrap()),
+        ("Tue, 15 Nov 2022 20:15:04 Z", crate::parser::tests::zoned_utc(2022, 11, 15, 20, 15, 4)),
         // And RFC1123 with languages other than English...
-        ("mer, 16 nov 2022 00:38:15 +0100", Utc.with_ymd_and_hms(2022, 11, 15, 23, 38, 15).unwrap()),
+        ("mer, 16 nov 2022 00:38:15 +0100", crate::parser::tests::zoned_utc(2022, 11, 15, 23, 38, 15)),
     ];
 
     for (source, expected) in tests {
@@ -41,9 +39,9 @@ fn test_timestamp_rss2() {
 fn test_timestamp_atom() {
     let tests = vec![
         // properly formated rfc3339 string
-        ("2014-12-29T14:53:35+02:00", Utc.with_ymd_and_hms(2014, 12, 29, 12, 53, 35).unwrap()),
+        ("2014-12-29T14:53:35+02:00", crate::parser::tests::zoned_utc(2014, 12, 29, 12, 53, 35)),
         // missing colon in timezone
-        ("2014-12-29T14:53:35+0200", Utc.with_ymd_and_hms(2014, 12, 29, 12, 53, 35).unwrap()),
+        ("2014-12-29T14:53:35+0200", crate::parser::tests::zoned_utc(2014, 12, 29, 12, 53, 35)),
     ];
 
     for (source, expected) in tests {
@@ -61,6 +59,34 @@ fn test_parse_npt() {
         Duration::from_millis(12 * 3600000 + 5 * 60000 + 35 * 1000 + 123)
     );
     assert_eq!(parse_npt("123.45").unwrap(), Duration::from_millis(123450));
+}
+
+// Verify NPT times which overflow u64 are dropped rather than causing a panic
+#[test]
+fn test_parse_npt_overflow() {
+    // npt-hhmmss hours that do not fit in a u64, or which overflow when converted to seconds
+    assert_eq!(parse_npt("99999999999999999999999:05:35"), Some(Duration::from_secs(335)));
+    assert_eq!(
+        parse_npt(format!("{}:00:00", u64::MAX / 3600 + 1).as_str()),
+        Some(Duration::from_secs(15461882262000))
+    );
+
+    // npt-sec values that do not fit in a u64, plus the largest valid value
+    assert_eq!(parse_npt("99999999999999999999999"), Some(Duration::from_nanos(0)));
+    assert_eq!(parse_npt(u64::MAX.to_string().as_str()), Some(Duration::from_secs(u64::MAX)));
+}
+
+// Verify NPT times containing non-ASCII (Unicode) digits are handled without a panic
+// Regression test: \d matched Unicode digits which then failed to parse as numbers
+#[test]
+fn test_parse_npt_unicode_digits() {
+    // Arabic-Indic digits are not treated as numbers; the leading ASCII portion still matches where valid
+    assert_eq!(parse_npt("1:02:03.\u{663}"), Some(Duration::from_secs(3723)));
+    assert_eq!(parse_npt("123.\u{664}5"), Some(Duration::from_secs(123)));
+
+    // Pure Unicode digit values do not match at all
+    assert_eq!(parse_npt("\u{663}.\u{664}"), None);
+    assert_eq!(parse_npt("\u{661}:\u{660}\u{662}:\u{663}"), None);
 }
 
 // Test various forms of email and names in a string
@@ -84,6 +110,13 @@ fn test_parse_person_name_email() {
             Some("Simon St.Laurent"),
             Some("simonstl@simonstl.com"),
         ),
+        ("a@b.co€", Some("€"), Some("a@b.co")),
+        ("€a@b.co", Some("€"), Some("a@b.co")),
+        ("jose@example.com（José）", Some("José"), Some("jose@example.com")),
+        ("Zoë Long Name «zoe@example.com»", Some("Zoë Long Name"), Some("zoe@example.com")),
+        ("lawyer@boyer.net (Lawyer Boyer)", Some("Lawyer Boyer"), Some("lawyer@boyer.net")),
+        ("（a@b.co）", None, Some("a@b.co")),
+        ("«zoe@example.com» Zoë Long Name Here", Some("Zoë Long Name Here"), Some("zoe@example.com")),
     ];
 
     for (raw, expected_name, expected_email) in tests {

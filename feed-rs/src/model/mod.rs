@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use jiff::ZonedDateTime;
 use mediatype::{MediaTypeBuf, names};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -51,7 +51,8 @@ pub struct Feed {
     /// The time at which the feed was last modified. If not provided in the source, or invalid, it is `None`.
     /// * Atom (required): Indicates the last time the feed was modified in a significant way.
     /// * RSS 2 (optional) "lastBuildDate": The last time the content of the channel changed.
-    pub updated: Option<DateTime<Utc>>,
+    #[serde(with = "serde_zoned")]
+    pub updated: Option<ZonedDateTime>,
 
     /// Atom (recommended): Collection of authors defined at the feed level.
     /// JSON Feed: specifies the feed author.
@@ -92,7 +93,8 @@ pub struct Feed {
     /// * JSON Feed: is the URL of an image for the feed suitable to be used in a timeline
     pub logo: Option<Image>,
     /// RSS 2 (optional): The publication date for the content in the channel.
-    pub published: Option<DateTime<Utc>>,
+    #[serde(with = "serde_zoned")]
+    pub published: Option<ZonedDateTime>,
     /// Rating for the content
     /// * Populated from the media or itunes namespaces
     pub rating: Option<MediaRating>,
@@ -139,7 +141,11 @@ impl Feed {
 
 impl Debug for Feed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        f.write_str(serde_json::to_string(self).unwrap().as_str())
+        // Serialization should never fail for a feed we parsed, but do not panic if it does
+        match serde_json::to_string(self) {
+            Ok(json) => f.write_str(json.as_str()),
+            Err(_) => f.write_str("<Unable to serialise as JSON>"),
+        }
     }
 }
 
@@ -220,7 +226,7 @@ impl Feed {
         self
     }
 
-    pub fn updated(mut self, updated: Option<DateTime<Utc>>) -> Self {
+    pub fn updated(mut self, updated: Option<ZonedDateTime>) -> Self {
         self.updated = updated;
         self
     }
@@ -259,7 +265,8 @@ pub struct Entry {
     /// * Atom (required): Indicates the last time the entry was modified in a significant way.
     /// * RSS doesn't specify this field, so we copy it from the entry 'published' field for consistency.
     /// * JSON Feed: the last modification date of this item
-    pub updated: Option<DateTime<Utc>>,
+    #[serde(with = "serde_zoned")]
+    pub updated: Option<ZonedDateTime>,
 
     /// Authors of this item
     /// * Atom (recommended): Collection of authors defined at the entry level.
@@ -297,7 +304,8 @@ pub struct Entry {
     /// * Atom (optional): Contains the time of the initial creation or first availability of the entry.
     /// * RSS 2 (optional) "pubDate": Indicates when the item was published.
     /// * JSON Feed: the date at which the item was published
-    pub published: Option<DateTime<Utc>>,
+    #[serde(with = "serde_zoned")]
+    pub published: Option<ZonedDateTime>,
     /// Atom (optional): If an entry is copied from one feed into another feed, then this contains the source feed metadata.
     pub source: Option<String>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
@@ -392,7 +400,7 @@ impl Entry {
         self
     }
 
-    pub fn updated(mut self, updated: Option<DateTime<Utc>>) -> Self {
+    pub fn updated(mut self, updated: Option<ZonedDateTime>) -> Self {
         self.updated = updated;
         self
     }
@@ -573,7 +581,7 @@ impl Generator {
     }
 }
 
-/// Represents a a link to an image.
+/// Represents a link to an image.
 ///
 /// [Atom spec]:  http://www.atomenabled.org/developers/syndication/#optionalFeedElements
 /// [RSS 2 spec]: https://validator.w3.org/feed/docs/rss2.html#ltimagegtSubelementOfLtchannelgt
@@ -828,6 +836,7 @@ pub(crate) enum MediaObjectSource {
     MediaRSS,
     ITunes,
     Podcast,
+    JsonFeed,
 }
 
 /// Represents a "media:community" item from the RSS Media spec
@@ -1455,6 +1464,26 @@ impl Text {
     pub fn content_type(mut self, content_type: &str) -> Self {
         self.content_type = content_type.parse::<MediaTypeBuf>().unwrap();
         self
+    }
+}
+
+pub(crate) mod serde_zoned {
+    pub(crate) fn serialize<S>(value: &Option<jiff::ZonedDateTime>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match value {
+            Some(value) => serializer.serialize_str(&value.strftime("%FT%T%:z").to_string()),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub(crate) fn deserialize<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<jiff::ZonedDateTime>, D::Error> {
+        let Some(s) = <Option<&str> as serde::Deserialize>::deserialize(deserializer)? else {
+            return Ok(None);
+        };
+
+        Ok(crate::parser::util::parse_timestamp_lenient(s))
     }
 }
 

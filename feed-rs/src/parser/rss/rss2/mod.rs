@@ -1,15 +1,14 @@
-use mediatype::{MediaTypeBuf, names};
-use std::collections::HashSet;
-use std::io::BufRead;
-
 use crate::model::{Category, Content, Entry, Feed, FeedType, Generator, Image, Link, LinkTarget, MediaContent, MediaObject, MediaObjectSource, Person};
 use crate::parser::itunes::{handle_itunes_channel_element, handle_itunes_item_element};
 use crate::parser::podcast::{handle_podcast_channel_element, handle_podcast_item_element};
 use crate::parser::util::{if_ok_then_some, if_some_then};
-use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult};
+use crate::parser::{ParseErrorKind, ParseFeedError, ParseFeedResult, rss};
 use crate::parser::{Parser, atom};
 use crate::parser::{common, util};
 use crate::xml::{Element, NS};
+use mediatype::{MediaTypeBuf, names};
+use std::collections::HashSet;
+use std::io::BufRead;
 
 #[cfg(test)]
 mod tests;
@@ -35,32 +34,34 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
     for child in channel.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => feed.title = common::handle_text(child),
+            (NS::RSS, "title") => feed.title = rss::handle_text(child),
 
             (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| feed.links.push(link)),
 
             (NS::Atom, "link") => if_some_then(atom::handle_link(child), |link| feed.links.push(link)),
 
-            (NS::RSS, "description") => feed.description = common::handle_text(child),
+            (NS::RSS, "description") => feed.description = rss::handle_text(child),
 
-            (NS::RSS, "language") => feed.language = child.child_as_text().map(|text| text.to_lowercase()),
+            (NS::RSS, "language") => feed.language = child.content_as_text().map(|text| text.to_lowercase()),
 
-            (NS::RSS, "copyright") => feed.rights = common::handle_text(child),
+            (NS::RSS, "copyright") => feed.rights = rss::handle_text(child),
 
             (NS::RSS, "managingEditor") => if_some_then(handle_contact("managingEditor", child), |person| feed.contributors.push(person)),
 
             (NS::RSS, "webMaster") => if_some_then(handle_contact("webMaster", child), |person| feed.contributors.push(person)),
 
-            (NS::RSS, "pubDate") => feed.published = common::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => feed.published = feed.published.or_else(|| common::handle_timestamp(parser, child)),
 
             // Some feeds have "updated" instead of "lastBuildDate"
-            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") => feed.updated = common::handle_timestamp(parser, child),
+            (NS::RSS, "lastBuildDate") | (NS::RSS, "updated") | (NS::Atom, "updated") => {
+                feed.updated = feed.updated.or_else(|| common::handle_timestamp(parser, child))
+            }
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| feed.categories.push(category)),
 
             (NS::RSS, "generator") => feed.generator = handle_generator(child),
 
-            (NS::RSS, "ttl") => if_some_then(child.child_as_text(), |text| if_ok_then_some(text.parse::<u32>(), |ttl| feed.ttl = ttl)),
+            (NS::RSS, "ttl") => if_some_then(child.content_as_text(), |text| if_ok_then_some(text.parse::<u32>(), |ttl| feed.ttl = ttl)),
 
             (NS::RSS, "image") => feed.logo = handle_image(child)?,
 
@@ -80,7 +81,7 @@ fn handle_channel<R: BufRead>(parser: &Parser, channel: Element<R>) -> ParseFeed
 
 // Handles <category>
 fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
-    element.child_as_text().map(|text| {
+    element.content_as_text().map(|text| {
         let mut category = Category::new(&text);
         category.scheme = element.attr_value("domain");
         category
@@ -89,11 +90,11 @@ fn handle_category<R: BufRead>(element: Element<R>) -> Option<Category> {
 
 // Handles <author>, <managingEditor> and <webMaster>
 fn handle_contact<R: BufRead>(role: &str, element: Element<R>) -> Option<Person> {
-    element.child_as_text().map(|text| Person::parse(&text).role(role))
+    element.content_as_text().map(|text| Person::parse(&text).role(role))
 }
 
 fn handle_generator<R: BufRead>(element: Element<R>) -> Option<Generator> {
-    element.child_as_text().map(|c| {
+    element.content_as_text().map(|c| {
         let mut generator = Generator::new(&c);
 
         for attr in element.attributes {
@@ -136,13 +137,13 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "url") => if_some_then(child.child_as_text(), |url| image.uri = url),
+            (NS::RSS, "url") => if_some_then(child.content_as_text(), |url| image.uri = url),
 
-            (NS::RSS, "title") => image.title = child.child_as_text(),
+            (NS::RSS, "title") => image.title = child.content_as_text(),
 
-            (NS::RSS, "link") => if_some_then(child.child_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
+            (NS::RSS, "link") => if_some_then(child.content_as_text(), |uri| image.link = Some(Link::new(uri, element.xml_base.as_ref()))),
 
-            (NS::RSS, "width") => if_some_then(child.child_as_text(), |width| {
+            (NS::RSS, "width") => if_some_then(child.content_as_text(), |width| {
                 if let Ok(width) = width.parse::<u32>() {
                     if width > 0 && width <= 144 {
                         image.width = Some(width)
@@ -150,7 +151,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
                 }
             }),
 
-            (NS::RSS, "height") => if_some_then(child.child_as_text(), |height| {
+            (NS::RSS, "height") => if_some_then(child.content_as_text(), |height| {
                 if let Ok(height) = height.parse::<u32>() {
                     if height > 0 && height <= 400 {
                         image.height = Some(height)
@@ -158,7 +159,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
                 }
             }),
 
-            (NS::RSS, "description") => image.description = child.child_as_text(),
+            (NS::RSS, "description") => image.description = child.content_as_text(),
 
             // Nothing required for unknown elements
             _ => {}
@@ -173,7 +174,7 @@ fn handle_image<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Image
 fn handle_content_encoded<R: BufRead>(element: Element<R>) -> ParseFeedResult<Option<Content>> {
     let src = element.xml_base.as_ref().map(|xml_base| Link::new(xml_base, element.xml_base.as_ref()));
 
-    Ok(element.child_as_text().and_then(|string| {
+    Ok(element.content_as_text().and_then(|string| {
         if string.is_empty() {
             None
         } else {
@@ -214,27 +215,27 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
     for child in element.children() {
         let child = child?;
         match child.ns_and_tag() {
-            (NS::RSS, "title") => entry.title = common::handle_text(child),
+            (NS::RSS, "title") => entry.title = rss::handle_text(child),
 
             (NS::RSS, "link") => if_some_then(common::handle_link(None, child), |link| entry.links.push(link)),
 
-            (NS::RSS, "description") => entry.summary = common::handle_encoded(child)?,
+            (NS::RSS, "description") => entry.summary = rss::handle_encoded(child)?,
 
             (NS::RSS, "author") => if_some_then(handle_contact("author", child), |person| entry.authors.push(person)),
 
             (NS::RSS, "category") => if_some_then(handle_category(child), |category| entry.categories.push(category)),
 
-            (NS::RSS, "guid") => if_some_then(child.child_as_text(), |guid| entry.id = guid.trim().to_string()),
+            (NS::RSS, "guid") => if_some_then(child.content_as_text(), |guid| entry.id = guid.trim().to_string()),
 
             (NS::RSS, "enclosure") => handle_enclosure(child, &mut enclosure_media_obj),
 
-            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = common::handle_timestamp(parser, child),
+            (NS::RSS, "pubDate") | (NS::DublinCore, "date") => entry.published = entry.published.or_else(|| common::handle_timestamp(parser, child)),
 
-            (NS::RSS, "updated") | (NS::Atom, "updated") => entry.updated = common::handle_timestamp(parser, child),
+            (NS::RSS, "updated") | (NS::Atom, "updated") => entry.updated = entry.updated.or_else(|| common::handle_timestamp(parser, child)),
 
             (NS::Content, "encoded") => entry.content = handle_content_encoded(child)?,
 
-            (NS::DublinCore, "creator") => if_some_then(child.child_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
+            (NS::DublinCore, "creator") => if_some_then(child.content_as_text(), |name| entry.authors.push(Person::parse(&name).role("creator"))),
 
             // iTunes elements populate the corresponding MediaObject
             (NS::Itunes, _) => handle_itunes_item_element(child, &mut itunes_media_obj)?,
@@ -272,7 +273,7 @@ fn handle_item<R: BufRead>(parser: &Parser, element: Element<R>) -> ParseFeedRes
 
     // If we have a published date, copy this to updated too for consistency
     if entry.updated.is_none() && entry.published.is_some() {
-        entry.updated = entry.published;
+        entry.updated = entry.published.clone();
     }
 
     // Remove any comment links that simply target the entry
@@ -343,8 +344,16 @@ fn postprocess_merge_media(source: MediaObject, target: &mut MediaObject) {
     if target.title.is_none() {
         target.title = source.title;
     }
-    if target.content.is_empty() {
-        target.content = source.content;
+    // media:content can list other files than the enclosure (e.g. an author image), so keep
+    // each file that is not already there by URL, or by size and type
+    for content in source.content {
+        let duplicate = target
+            .content
+            .iter()
+            .any(|c| c.url == content.url || (c.size.is_some() && c.size == content.size && c.content_type == content.content_type));
+        if !duplicate {
+            target.content.push(content);
+        }
     }
     if target.duration.is_none() {
         target.duration = source.duration;

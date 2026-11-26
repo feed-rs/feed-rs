@@ -1,6 +1,6 @@
+use assert_json_diff::assert_json_eq;
 use std::fs;
 use std::path::{Path, PathBuf};
-
 use uuid::Uuid;
 
 use crate::model::Feed;
@@ -52,7 +52,7 @@ fn serde_regression() {
             // Replace the IDs in the serialised form if UUIDs
             replace_ids(&mut feed, &mut serde_feed);
 
-            assert_eq!(feed, serde_feed);
+            assert_json_eq!(feed, serde_feed);
         }
     });
 }
@@ -86,6 +86,12 @@ fn replace_ids(expected: &mut Feed, actual: &mut Feed) {
             actual_entry.id = expected_entry.id.clone();
         }
     }
+}
+
+pub(crate) fn zoned_utc(year: i16, month: i8, day: i8, hour: i8, minute: i8, second: i8) -> jiff::ZonedDateTime {
+    jiff::civil::DateTime::constant(year, month, day, hour, minute, second, 0)
+        .to_zoned_datetime(jiff::tz::TimeZone::UTC)
+        .unwrap()
 }
 
 #[test]
