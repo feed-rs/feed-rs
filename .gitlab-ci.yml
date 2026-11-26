@@ -13,6 +13,15 @@ test:cargo:
       - target/
       - cargo/
 
+test:cargo_all:
+  script:
+  - rustc --version && cargo --version
+  - cargo test --all-features --verbose --jobs 1
+  cache:
+    paths:
+      - target/
+      - cargo/
+
 lint:clippy:
   allow_failure: false
   script:
