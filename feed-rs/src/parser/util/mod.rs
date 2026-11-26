@@ -180,7 +180,8 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     static NPT_HHMMSS: OnceLock<Regex> = OnceLock::new();
     let npt_hhmmss = NPT_HHMMSS.get_or_init(|| {
         // Extract hours (h), minutes (m), seconds (s) and fractional seconds (f)
-        Regex::new(r"(?P<h>\d+):(?P<m>\d{2}):(?P<s>\d{2})(\.(?P<f>\d+))?").unwrap()
+        // Note ASCII digits only as \d also matches Unicode digits which cannot then be parsed as numbers
+        Regex::new(r"(?P<h>[0-9]+):(?P<m>[0-9]{2}):(?P<s>[0-9]{2})(\.(?P<f>[0-9]+))?").unwrap()
     });
     if let Some(captures) = npt_hhmmss.captures(text) {
         let h = captures.name("h");
@@ -206,7 +207,8 @@ pub(crate) fn parse_npt(text: &str) -> Option<Duration> {
     static NPT_SEC: OnceLock<Regex> = OnceLock::new();
     let npt_sec = NPT_SEC.get_or_init(|| {
         // Extract seconds (s) and fractional seconds (f)
-        Regex::new(r"(?P<s>\d+)(\.(?P<f>\d+))?").unwrap()
+        // Note ASCII digits only as \d also matches Unicode digits which cannot then be parsed as numbers
+        Regex::new(r"(?P<s>[0-9]+)(\.(?P<f>[0-9]+))?").unwrap()
     });
     if let Some(captures) = npt_sec.captures(text) {
         if let Some(s) = captures.name("s") {
@@ -235,8 +237,11 @@ fn parse_npt_add_frac_sec(duration: Duration, captures: Captures) -> Duration {
     if let Some(frac) = captures.name("f") {
         let frac = frac.as_str();
         let denom = 10f32.powi(frac.len() as i32);
-        let num = frac.parse::<f32>().unwrap();
+
+        // The capture is ASCII digits so parsing should fail, but default to zero rather than panic
+        let num = frac.parse::<f32>().unwrap_or_default();
         let millis = (1000f32 * (num / denom)) as u64;
+
         duration.add(Duration::from_millis(millis))
     } else {
         duration

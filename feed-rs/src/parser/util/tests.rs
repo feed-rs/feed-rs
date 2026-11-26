@@ -76,6 +76,19 @@ fn test_parse_npt_overflow() {
     assert_eq!(parse_npt(u64::MAX.to_string().as_str()), Some(Duration::from_secs(u64::MAX)));
 }
 
+// Verify NPT times containing non-ASCII (Unicode) digits are handled without a panic
+// Regression test: \d matched Unicode digits which then failed to parse as numbers
+#[test]
+fn test_parse_npt_unicode_digits() {
+    // Arabic-Indic digits are not treated as numbers; the leading ASCII portion still matches where valid
+    assert_eq!(parse_npt("1:02:03.\u{663}"), Some(Duration::from_secs(3723)));
+    assert_eq!(parse_npt("123.\u{664}5"), Some(Duration::from_secs(123)));
+
+    // Pure Unicode digit values do not match at all
+    assert_eq!(parse_npt("\u{663}.\u{664}"), None);
+    assert_eq!(parse_npt("\u{661}:\u{660}\u{662}:\u{663}"), None);
+}
+
 // Test various forms of email and names in a string
 #[test]
 fn test_parse_person_name_email() {

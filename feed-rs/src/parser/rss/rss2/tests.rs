@@ -1072,3 +1072,38 @@ fn test_unescaped_markup_regression_handling() {
         "Lead text <p>then a child</p> and a tail\n            "
     );
 }
+
+// Validates that MediaRSS NPT attributes containing non-ASCII digits do not trigger a panic when parsed.
+#[test]
+fn test_media_npt_unicode_digits() {
+    let source = r#"<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+    <channel>
+        <title>Unicode NPT test</title>
+        <link>http://example.org/</link>
+        <description>MediaRSS NPT attributes with Arabic-Indic digits</description>
+        <item>
+            <title>Item 1</title>
+            <media:text start="1:02:03.٣" end="٣.٤">hello</media:text>
+            <media:thumbnail url="http://example.org/thumb.jpg" time="٣.٤"/>
+            <itunes:duration>١:٠٢:٣</itunes:duration>
+        </item>
+    </channel>
+</rss>"#;
+    let feed = parser::parse(source.as_bytes()).unwrap();
+    assert_eq!(1, feed.entries.len());
+    let entry = &feed.entries[0];
+
+    // The leading ASCII portion of "1:02:03.٣" still gives a valid start time, the rest is dropped
+    let media_text = &entry.media[0].texts;
+    assert_eq!(1, media_text.len());
+    assert_eq!(Some(std::time::Duration::from_secs(3723)), media_text[0].start_time);
+    assert_eq!(None, media_text[0].end_time);
+
+    // The Arabic-Indic "time" attribute on the thumbnail is ignored
+    assert_eq!(1, entry.media[0].thumbnails.len());
+    assert_eq!(None, entry.media[0].thumbnails[0].time);
+
+    // The Arabic-Indic itunes:duration is ignored (mapped onto the media object)
+    assert!(entry.media.iter().all(|media_obj| media_obj.duration.is_none()));
+}
