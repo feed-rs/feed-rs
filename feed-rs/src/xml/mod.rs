@@ -358,6 +358,11 @@ impl<'a, R: BufRead> Element<'a, R> {
         // Collect content at this level or lower.
         let content = self.source.content(self.depth + 1)?;
 
+        // If this content is just whitespace, we just return None
+        if content.trim().is_empty() {
+            return Ok(None);
+        }
+
         // Convert to its unescaped form
         Ok(content_as_literal_markup(content))
     }

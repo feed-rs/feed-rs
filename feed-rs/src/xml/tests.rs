@@ -213,3 +213,19 @@ fn check_content_as_literal_markup(elements: &mut ElementIter<&[u8]>, name: &str
 
     Ok(())
 }
+
+// Verifies that empty text-based fields just return None rather than error
+//
+// This is behaviour is relied upon by many users of feed-rs, so this behaviour should not change.
+#[test]
+fn test_empty_field_content() -> TestResult {
+    let test_cases = vec!["<f></f>", "<f><![CDATA[]]></f>", "<f> </f>", "<f> \n </f>", "<f>\n<![CDATA[]]>\n</f>"];
+    for xml in test_cases {
+        let source = ElementSource::new(xml.as_bytes(), None)?;
+        let root = source.root()?.unwrap();
+        let content = root.content_as_literal_markup()?;
+        assert!(content.is_none());
+    }
+
+    Ok(())
+}

@@ -1107,3 +1107,25 @@ fn test_media_npt_unicode_digits() {
     // The Arabic-Indic itunes:duration is ignored (mapped onto the media object)
     assert!(entry.media.iter().all(|media_obj| media_obj.duration.is_none()));
 }
+
+// Regression test for https://github.com/feed-rs/feed-rs/issues/325
+#[test]
+fn test_empty_itunes_field() {
+    let rss = br#"<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Example Podcast</title>
+    <link>https://example.com/</link>
+    <description>Example</description>
+    <item>
+      <title>Episode 1</title>
+      <itunes:summary>
+        <![CDATA[]]>
+      </itunes:summary>
+    </item>
+  </channel>
+</rss>"#;
+
+    // Worked in 3.0.0; fails in 3.1.0 with ParseError(MissingContent { ..., reference: "text" })
+    parser::parse(&rss[..]).unwrap();
+}
