@@ -688,3 +688,58 @@ fn test_unwrap_xhtml() {
         assert_eq!(unwrap_xhtml(content.to_string()), expected);
     }
 }
+
+// Verifies that different forms of "empty" do not throw an error, and just return None as the expected value
+#[test]
+fn test_empty_field_handling() {
+    let template = r#"
+        <?xml version="1.0" encoding="utf-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+            <title>Example</title>
+            <id>https://example.com/</id>
+            <updated>2024-05-08T00:00:00Z</updated>
+            <entry>
+                <title>Post</title>
+                <id>https://example.com/post</id>
+                <updated>2024-05-08T00:00:00Z</updated>
+                $FIELD$
+            </entry>
+        </feed>
+        "#;
+
+    let test_cases = vec![
+        r#"<summary type="$TYPE_ATTR$"><![CDATA[]]></summary>"#,
+        r#"<summary type="$TYPE_ATTR$"></summary>"#,
+        r#"<summary type="$TYPE_ATTR$"> </summary>"#,
+        r#"<summary type="$TYPE_ATTR$">
+        <![CDATA[]]>
+        </summary>"#,
+    ];
+
+    for type_attr in vec!["text", "html", "text/html", "xhtml"] {
+        for case in &test_cases {
+            let test_data = template.replace("$FIELD$", case).replace("$TYPE_ATTR$", type_attr);
+            let actual = parser::parse(test_data.as_bytes()).unwrap();
+            assert!(actual.entries[0].summary.is_none());
+        }
+    }
+}
+
+// Regression test for https://github.com/feed-rs/feed-rs/issues/325
+#[test]
+fn test_empty_summary_regression() {
+    let atom = br#"<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example</title>
+  <id>https://example.com/</id>
+  <updated>2024-05-08T00:00:00Z</updated>
+  <entry>
+    <title>Post</title>
+    <id>https://example.com/post</id>
+    <updated>2024-05-08T00:00:00Z</updated>
+    <summary type="html"><![CDATA[]]></summary>
+  </entry>
+</feed>"#;
+
+    parser::parse(&atom[..]).unwrap();
+}

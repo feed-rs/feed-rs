@@ -371,37 +371,27 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
     match type_attr {
         // Per https://www.rfc-editor.org/info/rfc4287/#section-3.1.1.1 , "text" type content is escaped, but we return it as literal markup given the prevalence of RSS content with markup in these fields
         // and we want to treat it the same across feed types
-        "text" => {
-            let s = element
-                .content_as_literal_markup()?
-                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent { position, reference: "text" }))?;
-
+        "text" => Ok(element.content_as_literal_markup()?.map(|s| {
             let mut text = Text::new(s);
             text.content_type = MediaTypeBuf::new(names::TEXT, names::PLAIN);
-            Ok(Some(text))
-        }
+            text
+        })),
         // Per https://www.rfc-editor.org/info/rfc4287/#section-3.1.1.2, "html" content must be escaped too, but the same rationale applies as above for "text"
-        "html" | "text/html" => {
-            let s = element
-                .content_as_literal_markup()?
-                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent { position, reference: "text" }))?;
-
+        "html" | "text/html" => Ok(element.content_as_literal_markup()?.map(|s| {
             let mut text = Text::new(s);
             text.content_type = MediaTypeBuf::new(names::TEXT, names::HTML);
-            Ok(Some(text))
-        }
+            text
+        })),
         // Per https://www.rfc-editor.org/info/rfc4287/#section-3.1.1.3, "xhtml" content is represented as literal markup
         "xhtml" => {
-            let mut content = element
-                .content_as_literal_markup()?
-                .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent { position, reference: "text" }))?;
+            Ok(element.content_as_literal_markup()?.map(|s| {
+                // The Atom standard states that xhtml content should be wrapped in a <div> so if its present, we unwrap it
+                let s = unwrap_xhtml(s);
 
-            // The Atom standard states that xhtml content should be wrapped in a <div> so if its present, we unwrap it
-            content = unwrap_xhtml(content);
-
-            let mut text = Text::new(content);
-            text.content_type = MediaTypeBuf::new(names::APPLICATION, names::XHTML);
-            Ok(Some(text))
+                let mut text = Text::new(s);
+                text.content_type = MediaTypeBuf::new(names::APPLICATION, names::XHTML);
+                text
+            }))
         }
 
         // Unknown content type
