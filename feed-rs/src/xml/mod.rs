@@ -56,7 +56,7 @@ impl<R: BufRead> ElementSource<R> {
     }
 
     /// Collects content (text, sub-elements, CDATA sections etc)
-    fn content(&self, depth: u32) -> XmlResult<String> {
+    fn content(&self, depth: u32, escape_text: bool) -> XmlResult<String> {
         // Read nodes at the current depth or greater and append them to the buffer
         let mut state = self.state.borrow_mut();
         let mut current_depth = depth;
@@ -82,8 +82,12 @@ impl<R: BufRead> ElementSource<R> {
                     }
 
                     XmlEvent::Text(text) => {
-                        // Append text to the buffer
-                        buffer.push_str(text);
+                        // Append text to the buffer, escaped again if the result is to be read as markup
+                        if escape_text {
+                            buffer.push_str(&quick_xml::escape::minimal_escape(text));
+                        } else {
+                            buffer.push_str(text);
+                        }
                     }
 
                     XmlEvent::End { name, .. } => {
@@ -356,7 +360,7 @@ impl<'a, R: BufRead> Element<'a, R> {
     /// Returns the content (text, CDATA sections, mixed content, etc.) of this element with literal markup intact e.g. `&lt;` will be returned as `<`.
     pub(crate) fn content_as_literal_markup(&self) -> XmlResult<Option<String>> {
         // Collect content at this level or lower.
-        let content = self.source.content(self.depth + 1)?;
+        let content = self.source.content(self.depth + 1, false)?;
 
         // Convert to its unescaped form
         Ok(content_as_literal_markup(content))
@@ -364,7 +368,13 @@ impl<'a, R: BufRead> Element<'a, R> {
 
     /// Collect the content (text or children) of this node and return it as a `String` otherwise `None`.
     pub(crate) fn content_as_text(&self) -> Option<String> {
-        self.source.content(self.depth + 1).ok().filter(|content| !content.is_empty())
+        self.source.content(self.depth + 1, false).ok().filter(|content| !content.is_empty())
+    }
+
+    /// Returns the content of this element as markup, with text escaped again (e.g. `a &lt; b` stays `a &lt; b`).
+    pub(crate) fn content_as_xhtml(&self) -> XmlResult<Option<String>> {
+        let content = self.source.content(self.depth + 1, true)?;
+        Ok(Some(content).filter(|content| !content.trim().is_empty()))
     }
 
     /// Returns the namespace + tag name for this element

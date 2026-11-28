@@ -393,7 +393,7 @@ pub(crate) fn handle_text<R: BufRead>(element: Element<R>) -> ParseFeedResult<Op
         // Per https://www.rfc-editor.org/info/rfc4287/#section-3.1.1.3, "xhtml" content is represented as literal markup
         "xhtml" => {
             let mut content = element
-                .content_as_literal_markup()?
+                .content_as_xhtml()?
                 .ok_or(ParseFeedError::ParseError(ParseErrorKind::MissingContent { position, reference: "text" }))?;
 
             // The Atom standard states that xhtml content should be wrapped in a <div> so if its present, we unwrap it
