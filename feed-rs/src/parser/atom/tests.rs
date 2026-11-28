@@ -630,10 +630,10 @@ fn test_atom_content_src() {
 #[test]
 fn test_example_xhtml() {
     let expected_body = r#"<p>
-While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
+While working on my <a href="https://www.redblobgames.com/articles/sdf-fonts/">SDF font guide</a>, I noticed an issue with the white space. There were some spaces missing. It's easy to work around, so I did — I added <kbd>&amp;nbsp;</kbd> in a few places. This has been a problem for a while and I just work around it each time. After I finished the project, I decided to dig into the root cause.
 </p>
 <p>
-In this example it's ok to remove the spaces between <code></li><li></code> but it's <em>not</em> ok to remove the spaces between <code></i> <b></code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code><pre></code> or <code><script></code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
+In this example it's ok to remove the spaces between <code>&lt;/li>&lt;li></code> but it's <em>not</em> ok to remove the spaces between <code>&lt;/i> &lt;b></code>. And it's often ok to collapse multiple spaces into one, but <em>not</em> inside <code>&lt;pre></code> or <code>&lt;script></code>. It's tricky. I looked through my XSLT and found that I had kept adding more rules over the years:
 </p>"#;
     let test_data = test::fixture_as_string("atom/atom_example_xhtml.xml");
     let p = parser::Builder::new().sanitize_content(false).build();
@@ -687,4 +687,13 @@ fn test_unwrap_xhtml() {
     for (content, expected) in tests {
         assert_eq!(unwrap_xhtml(content.to_string()), expected);
     }
+}
+
+// Escaped text inside xhtml content stays escaped, e.g. a code sample
+#[test]
+fn test_xhtml_escaped_text() {
+    let xml = r#"<feed xmlns="http://www.w3.org/2005/Atom"><id>x</id><title>t</title><updated>2024-01-01T00:00:00Z</updated><entry><id>e</id><title>t</title><updated>2024-01-01T00:00:00Z</updated><content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>Use &lt;div&gt; and a &lt; b &amp; c</p></div></content></entry></feed>"#;
+    let feed = parser::Builder::new().sanitize_content(false).build().parse(xml.as_bytes()).unwrap();
+    let body = feed.entries[0].content.as_ref().unwrap().body.as_deref();
+    assert_eq!(body, Some("<p>Use &lt;div> and a &lt; b &amp; c</p>"));
 }
